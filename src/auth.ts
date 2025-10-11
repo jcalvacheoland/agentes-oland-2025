@@ -451,7 +451,11 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
 // ============================================================================
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [BitrixProvider()],
+  providers: [BitrixProvider({
+          clientId: process.env.BITRIX_CLIENT_ID!,
+          clientSecret: process.env.BITRIX_CLIENT_SECRET!,
+          domain: process.env.BITRIX_DOMAIN!
+        })],
   trustHost: true,
   
   // Configuración de sesión

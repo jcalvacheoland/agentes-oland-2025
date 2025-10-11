@@ -15,7 +15,7 @@ export const Header=()=>{
                 className="h-auto w-50 md:h-16 md:w-auto"
                 />
           </div>
-          <Button variant={"oland"} size={"lg"}>
+          <Button variant="oland" size={"lg"}>
             Inicio
           </Button>
         </div>
