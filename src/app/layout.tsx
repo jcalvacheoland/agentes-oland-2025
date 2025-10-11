@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -24,8 +25,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+         <Script
+        src="https://unpkg.com/@bitrix24/b24jssdk@latest/dist/umd/index.min.js"
+        strategy="afterInteractive"
+        ></Script>
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}  
       >
         {children}
       </body>
