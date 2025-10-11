@@ -19,8 +19,8 @@ export default function DashboardHomePage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <main className="">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+      <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
             {error ? (
               <div className="text-red-600">Error: {error}</div>

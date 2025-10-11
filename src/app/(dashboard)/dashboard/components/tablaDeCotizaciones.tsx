@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,6 @@ import { PendienteIcon } from "@/components/icons/Pendiente";
 import { AprobadoIcon } from "@/components/icons/Aprobado";
 import { ValorAprobadoIcon } from "@/components/icons/ValorAprobado";
 import { useDeals } from "@/hooks/useDeals";
-import { useEffect, useMemo, useState } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -31,7 +30,6 @@ import {
 export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
   const { items, err, loading } = useDeals(userId);
 
-  // Paginación: 10 elementos por página, ID visual inicia en 1
   const pageSize = 10;
   const [page, setPage] = useState(1);
   const totalPages = useMemo(
@@ -46,7 +44,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
-  }, [totalPages, page]);
+  }, [page, totalPages]);
 
   const contarCotizaciones = () => items.length;
   const contarPendientes = () =>
@@ -58,22 +56,20 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
 
   return (
     <div className="space-y-6">
-      <header className="grid grid-cols-1  sm:grid-cols-none">
-        {/* Texto en dispositivos moviles */}
-        <div className="mb-6">
-          <h1 className=" text-3xl font-bold">Tus cotizaciones</h1>
-        </div>
-
-        <div className=" flex justify-end">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold text-center sm:text-left">
+          Tus cotizaciones
+        </h1>
+        <div className="flex w-full justify-center sm:w-auto sm:justify-end">
           <Link href="/dashboard/cotizaciones">
-            <Button className="bg-rojo-oland-100 hover:bg-azul-oland-100 ">
-              Crear nueva cotización
+            <Button className="w-full bg-rojo-oland-100 hover:bg-azul-oland-100 sm:w-auto">
+              Crear nueva cotizacion
             </Button>
           </Link>
         </div>
       </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -109,7 +105,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Cotización con comisión
+              Cotizacion con comision
             </CardTitle>
             <ValorAprobadoIcon width={24} height={24} />
           </CardHeader>
@@ -125,51 +121,73 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
         </div>
       )}
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Título</TableHead>
-              <TableHead>Valor cotizado</TableHead>
-              <TableHead>Etapa</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pageItems.map((item, idx) => (
-              <TableRow key={item.ID}>
-                <TableCell className="font-medium">
-                  {items.length - (startIndex + idx)}
-                </TableCell>
-                <TableCell className="max-w-xs">
-                  <div className="truncate" title={item.TITLE}>
-                    {item.TITLE}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {item.OPPORTUNITY ? (
-                    <Badge variant="secondary">{item.OPPORTUNITY}</Badge>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {item.STAGE_ID ? (
-                    <Badge variant="outline">{item.STAGE_ID}</Badge>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table className="min-w-[560px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Titulo</TableHead>
+                <TableHead>Valor cotizado</TableHead>
+                <TableHead>Etapa</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <div className="flex items-center justify-between p-4">
-          <div className="hidden md:block md:text-sm md:text-muted-foreground">
-            Página {page} de {totalPages} · Mostrando {pageItems.length} de{" "}
-            {items.length}
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="py-6 text-center text-muted-foreground"
+                  >
+                    Cargando cotizaciones...
+                  </TableCell>
+                </TableRow>
+              ) : pageItems.length ? (
+                pageItems.map((item, idx) => (
+                  <TableRow key={item.ID}>
+                    <TableCell className="font-medium">
+                      {items.length - (startIndex + idx)}
+                    </TableCell>
+                    <TableCell className="max-w-xs">
+                      <div className="truncate" title={item.TITLE}>
+                        {item.TITLE}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {item.OPPORTUNITY ? (
+                        <Badge variant="secondary">{item.OPPORTUNITY}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">--</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {item.STAGE_ID ? (
+                        <Badge variant="outline">{item.STAGE_ID}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">--</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="py-6 text-center text-muted-foreground"
+                  >
+                    No encontramos cotizaciones para mostrar.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-muted/20 p-4 md:flex-row md:items-center md:justify-between">
+          <div className="text-center text-sm text-muted-foreground md:text-left">
+            Pagina {page} de {totalPages}. Mostrando {pageItems.length} de{" "}
+            {items.length}.
           </div>
-          <div className="flex gap-2">
+          <div className="flex justify-center md:justify-end">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
