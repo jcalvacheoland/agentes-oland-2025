@@ -15,8 +15,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
   return (
     <>
-      <HeaderUser onLogout={handleLogout} />
-      <main>{children}</main>
+    <div >
+       <HeaderUser onLogout={handleLogout} />
+      <main >{children}</main>
+    </div>
+     
     </>
   );
 }
