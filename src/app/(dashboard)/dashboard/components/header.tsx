@@ -87,7 +87,7 @@ export const HeaderUser = ({ onLogout }: HeaderUserProps) => {
             width={48}
             height={48}
             alt="Logo Agentes"
-            className="h-12 w-12 rounded-full object-cover shadow-sm"
+            className="h-auto w-14 rounded-full  shadow-sm"
           />
           <h1 className="text-xl font-bold text-azul-oland-100 sm:text-2xl">
             Agentes
@@ -95,7 +95,7 @@ export const HeaderUser = ({ onLogout }: HeaderUserProps) => {
         </Link>
 
         {/* Navegación Desktop */}
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden border p-1 border-azul-oland-100 rounded-full items-center gap-1 lg:flex">
           {navLinks.map(({ href, label, match }) => {
             const isActive = pathname?.startsWith(match);
             return (
@@ -105,7 +105,7 @@ export const HeaderUser = ({ onLogout }: HeaderUserProps) => {
                 className={cn(
                   "rounded-md px-4 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-azul-oland-100 text-white shadow-sm"
+                    ? "bg-azul-oland-100 rounded-full text-white shadow-sm"
                     : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 )}
               >
