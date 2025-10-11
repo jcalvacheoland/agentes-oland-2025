@@ -1,36 +1,30 @@
 "use client"
-import  {LoginButton} from "./LoginButton";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-
+import { LoginButton } from "./LoginButton"
 
 export const LoginCard = () => {
-    return (
-    <Card className="mx-auto w-auto lg:w-[350] lg:h-[300]   space-y-4 max-w-md boreder-lg  shadow-lg">
+  return (
+    <div className="min-h-screen w-full flex items-center justify-start md:p-8 p-4 relative overflow-hidden">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url(/images/login-background.jpg)",
+        }}
+      >
+        {/* Subtle overlay for better contrast */}
+        <div className="absolute inset-0 bg-black/10" />
+      </div>
 
-        <CardHeader className="space-y-4">
-            <CardTitle className="text-3xl font-bold text-center">Inicia Sesion</CardTitle>
-            <CardDescription className="text-center text-lg">Inicia Sesion con tus Credenciales de Bitrix24</CardDescription>
-        </CardHeader>
-        <form 
-        
-        className="space-y-4" >
-            <CardContent className="space-y-4">
-                <div className="flex flex-col space-y-4">
-                <LoginButton />
-                </div> 
-            </CardContent>
+      <div className="w-full max-w-md space-y-6 relative text-center z-10 backdrop-blur-xl bg-white/20 p-10 rounded-2xl shadow-2xl border border-white/30">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-black tracking-tight">Bienvenido al portal de agentes</h1>
+       
+        </div>
 
-            {/* <CardFooter className="flex flex-col space-y-4">
-                <div className="text-sm text-center text-muted-foreground">
-                    ¿No tienes una cuenta?{" "}
-                    
-                        <Button variant="link" className="p-0 h-auto font-normal">
-                        <Link href="/register">    Crea tu cuenta</Link>
-                        </Button>
-                    
-                </div>
-            </CardFooter> */}
-        </form>
-    </Card>
-    );
+        <div className="pt-4">
+          <LoginButton />
+        </div>
+      </div>
+    </div>
+  )
 }

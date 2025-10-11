@@ -1,15 +1,16 @@
-"use client"
-import { signIn } from "next-auth/react"
-
-export const  LoginButton=()=> { 
+"use client";
+import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+export const LoginButton = () => {
   return (
-    <button
-  type="button"
-  onClick={() => signIn("bitrix", { redirectTo: "/dashboard" })}
-  className="px-4 py-2 bg-azul-oland-100 hover:bg-rojo-oland-100 text-white text-center rounded-lg"
->
-  Iniciar sesión con Bitrix24
-</button>
-
-  )
-}
+    <Button
+      type="button"
+      variant="oland"
+      onClick={() => signIn("bitrix", { redirectTo: "/dashboard" })}
+      className="w-full h-14 text-base font-semibold hover:bg-rojo-oland-100 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-[1.02] rounded-full"
+      size="lg"
+    >
+      Iniciar sesión con Bitrix24
+    </Button>
+  );
+};
