@@ -1,3 +1,8 @@
+"use client"
+
+import React, { use } from "react"
+import { useBitrixUser } from "@/hooks/useBitrixUser";
+
 type HeaderProps = {
   name: string
   vehicle: string
@@ -9,6 +14,7 @@ type HeaderProps = {
 type VehicleInformationCardProps = Pick<HeaderProps, "vehicle" | "model" | "year" | "valorAsegurado">
 
 export const VehicleInformationCard = ({ vehicle, model, year, valorAsegurado }: VehicleInformationCardProps) => {
+  
   return (
     <div className="bg-card border rounded-lg shadow-sm p-6 max-w-6xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -44,12 +50,13 @@ export const VehicleInformationCard = ({ vehicle, model, year, valorAsegurado }:
 }
 
 export const HeaderCotizador = ({ name, vehicle, model, year, valorAsegurado }: HeaderProps) => {
+  const { user, loading, error } = useBitrixUser();
   return (
     <header className="w-full bg-gradient-to-b from-background to-muted/20 border-b">
       <div className="max-w-8xl mx-auto px-4 py-8 ">
         {/* Welcome Message */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-2xl font-bold text-foreground mb-2">Hola</h1>
+          <h1 className="text-3xl md:text-2xl font-bold text-foreground mb-2">Hola {user?.name}</h1>
           <p className="text-muted-foreground text-lg">
             Estos son los planes disponibles para el vehículo de tu cliente <span className="lowercase">{name}</span>
           </p>

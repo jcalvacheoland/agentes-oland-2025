@@ -1,90 +1,83 @@
-"use client";
-const StaticPlanCardData=[{
- name:"ZURICH - PLAN PRO",
- img:"/logo-zurich.png",
- rating:5,
- monthlyPrice:116.78,
- phone:"55 1234 5678",
-},
+type StaticPlan = {
+  name: string;
+  img: string;
+  phone: string;
+};
 
- 
-]
-export const StaticPlanCard=()=> {
+const STATIC_PLANS: StaticPlan[] = [
+  {
+    name: "Generali",
+    img: "/logo-zurich.png",
+    phone: "099 1234 5678",
+  },
+  {
+    name: "Mapfre",
+    img: "/logo-zurich.png",
+    phone: "099 1234 5678",
+  },
+  {
+    name: "Vaz Seguros",
+    img: "/logo-chubb.png",
+    phone: "099 1234 5678",
+  },
+  {
+    name: "AIG",
+    img: "/logo-equinoccial.png",
+    phone: "099 1234 5678",
+  },
+];
+
+export const StaticPlanCard = () => {
   return (
-    <div className="relative p-6 border-2 rounded-xl bg-card hover:border-azul-oland-100 transition-all hover:shadow-lg">
-      
-
-      <div className="grid grid-cols-[auto_1fr_auto] gap-6 items-start">
-        {/* Columna izquierda: logo / nombre aseguradora */}
-        <div className="flex flex-col items-center gap-2 min-w-[120px]">
-          <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
-            <span className="text-2xl font-bold text-muted-foreground">ZU</span>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold text-foreground">ZURICH</div>
-            <div className="flex gap-0.5 mt-1">
-              <svg
-                className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 15l-5.878 3.09L5.82 12.18.94 8.41l6.09-.88L10 2.5l2.97 5.03 6.09.88-4.88 3.77 1.7 5.91z" />
-              </svg>
-              <svg
-                className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 15l-5.878 3.09L5.82 12.18.94 8.41l6.09-.88L10 2.5l2.97 5.03 6.09.88-4.88 3.77 1.7 5.91z" />
-              </svg>
-              <svg
-                className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 15l-5.878 3.09L5.82 12.18.94 8.41l6.09-.88L10 2.5l2.97 5.03 6.09.88-4.88 3.77 1.7 5.91z" />
-              </svg>
-              <svg
-                className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 15l-5.878 3.09L5.82 12.18.94 8.41l6.09-.88L10 2.5l2.97 5.03 6.09.88-4.88 3.77 1.7 5.91z" />
-              </svg>
-              <svg
-                className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                viewBox="0 0 20 20"
-              >
-                <path d="M10 15l-5.878 3.09L5.82 12.18.94 8.41l6.09-.88L10 2.5l2.97 5.03 6.09.88-4.88 3.77 1.7 5.91z" />
-              </svg>
+    <div className="grid gap-4 grid-cols-1">
+      {STATIC_PLANS.map((plan) => (
+        <article
+          key={plan.name}
+          className="relative flex flex-col gap-6 p-6 border-2 border-gray-400 rounded-xl border-border bg-card transition-all hover:shadow-lg"
+        >
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-start">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
+                <span className="text-2xl font-bold text-muted-foreground">
+                  {plan.name.substring(0, 2).toUpperCase()}
+                </span>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-foreground">
+                  {plan.name}
+                </div>
+                <div className="flex gap-0.5 mt-1">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <svg
+                      key={index}
+                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M10 15l-5.878 3.09L5.82 12.18.94 8.41l6.09-.88L10 2.5l2.97 5.03 6.09.88-4.88 3.77 1.7 5.91z" />
+                    </svg>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Columna central: descripción del plan */}
-        <div className="flex-1">
-          <div className="mb-4">
-            <h3 className="text-xl font-bold text-foreground mb-1">
-              ZURICH - PLAN PRO
-            </h3>
-          </div>      
-        </div>
-
-        {/* Columna derecha: precios */}
-       {/*  <div className="flex flex-col items-end gap-4 min-w-[180px]">
-          <div className="text-right">
-            <div className="text-3xl font-bold text-foreground">$116.78</div>
-            <div className="text-xs text-muted-foreground mt-1">
-              12 cuotas mensuales
+            <div className="flex flex-col gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-foreground">
+                  Planes con {plan.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Para obtener planes con estas aseguradoras, contáctate con nuestro equipo.
+                </p>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">Teléfono: {plan.phone}</p>
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Pago con tarjeta de crédito
-            </div>
-          </div>
 
-          <div className="text-right">
-            <div className="text-2xl font-bold text-foreground">$1,401.36</div>
-            <div className="text-xs text-muted-foreground">Incluye impuestos</div>
+          
           </div>
-        </div> */}
-
-      </div>
+        </article>
+      ))}
     </div>
   );
-}
+};

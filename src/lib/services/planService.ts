@@ -11,7 +11,6 @@ const aseguradoras = [
   "chubb",
   "equinoccial",
   "asur",
-  "mapfre",
   "sweaden",
 ] as const;
 

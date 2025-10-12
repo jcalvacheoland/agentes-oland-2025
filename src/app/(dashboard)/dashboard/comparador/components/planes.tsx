@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import type { IPlanRequest } from "@/interfaces/interfaces.type";
-import { Star, Info } from "lucide-react";
+import { Star, Info, ChevronDown } from "lucide-react";
 import ComparisonModal from "./comparisonModal";
 import { StaticPlanCard } from "./StaticPlanCard";
 
@@ -15,6 +15,17 @@ type PlanEntry = {
   isError?: boolean;
   errorMessage?: string | null;
 };
+
+type SectionKey = "coverage" | "deductible" | "benefits";
+type ExpandedSectionsMap = Record<string, Record<SectionKey, boolean>>;
+
+function createSectionState(): Record<SectionKey, boolean> {
+  return {
+    coverage: false,
+    deductible: false,
+    benefits: false,
+  };
+}
 
 interface PlanesProps {
   responses: ResponsesMap;
@@ -31,7 +42,9 @@ export default function Planes({
 }: PlanesProps) {
   const [selected, setSelected] = useState<PlanEntry[]>([]);
   const maxSelect = 3;
-  const [open, setOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<ExpandedSectionsMap>(
+    {}
+  );
   const [openModal, setOpenModal] = useState(false);
 
   function normalizeRespToPlans(resp: RawResp): any[] {
@@ -44,18 +57,19 @@ export default function Planes({
     return [];
   }
 
+  function toggleSection(entryKey: string, section: SectionKey) {
+    setExpandedSections((prev) => {
+      const current = prev[entryKey] ?? createSectionState();
+      const next = { ...current, [section]: !current[section] };
+      return { ...prev, [entryKey]: next };
+    });
+  }
+
   const allByAseg = useMemo(() => {
     const arr: PlanEntry[] = [];
     Object.entries(responses || {}).forEach(([insurerKey, resp]) => {
       // caso de error guardado
       if (resp && typeof resp === "object" && "__error" in resp) {
-        arr.push({
-          insurerKey,
-          planIndex: -1,
-          plan: null,
-          isError: true,
-          errorMessage: (resp as any).__error ?? "error desconocido",
-        });
         return;
       }
       // caso normal: extraer planes
@@ -82,6 +96,11 @@ export default function Planes({
     });
     return arr;
   }, [responses]);
+
+  const successfulPlans = useMemo(
+    () => allByAseg.filter((entry) => !entry.isError),
+    [allByAseg]
+  );
 
   function toggleSelect(entry: PlanEntry) {
     if (entry.isError) {
@@ -216,6 +235,30 @@ export default function Planes({
       .map((s) => s.replace(/\s+/g, " ").trim()) // limpiar espacios/tabulaciones
       .filter((s) => s.length > 0); // eliminar vacíos
   }
+
+  function parseInfoContent(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => {
+          if (typeof item === "string") return item.trim();
+          if (item === null || item === undefined) return "";
+          return String(item);
+        })
+        .filter((item) => item.length > 0);
+    }
+    if (typeof value === "string") {
+      const parsed = splitItems(value);
+      if (parsed.length > 0) return parsed;
+      return value.trim() ? [value.trim()] : [];
+    }
+    if (value === null || value === undefined) {
+      return [];
+    }
+    if (typeof value === "number") {
+      return [value.toString()];
+    }
+    return [String(value)];
+  }
   async function handleChooseDirect(entry: PlanEntry) {
   const payload = { selected: serializeSelected(entry) };
   const body = { ...payload, planRequest };
@@ -241,7 +284,7 @@ export default function Planes({
           Planes disponibles
         </h2>
         <div className="text-sm text-muted-foreground">
-          Detectados: {allByAseg.length}
+          Detectados: {successfulPlans.length}
         </div>
       </div>
 
@@ -255,15 +298,7 @@ export default function Planes({
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {allByAseg.map((e, idx) => {
-          if (e.isError) {
-            return (
-              <h1 key={`error-${idx}`} className="hidden">
-                hola
-              </h1>
-            );
-          }
-
+        {successfulPlans.map((e, idx) => {
           const price = extractPrice(e.plan);
           const isSelected = selected.some(
             (s) => s.insurerKey === e.insurerKey && s.planIndex === e.planIndex
@@ -271,12 +306,29 @@ export default function Planes({
           const coverageDetails = getCoverageDetails(e.plan);
           const monthlyPrice = price ? price / (e.plan?.period || 12) : null;
           const totalWithTax = price ? price * 1.12 : null;
+          const entryKey = `${e.insurerKey}-${e.planIndex}-${idx}`;
+          const sectionState = expandedSections[entryKey] ?? createSectionState();
+          const coverageOpen = sectionState.coverage;
+          const deductibleOpen = sectionState.deductible;
+          const benefitsOpen = sectionState.benefits;
+          const coverageExtras = Array.isArray(e.plan?.secondaries)
+            ? e.plan.secondaries.filter((item: any) => item)
+            : [];
+          const deductibleItems = parseInfoContent(
+            e.plan?.principals?.["DEDUCIBLE"]
+          );
+          const benefitsItems = parseInfoContent(
+            e.plan?.principals?.["BENEFICIOS ESPECIALES"]
+          );
+          const hasCoverageExtras = coverageExtras.length > 0;
+          const hasDeductible = deductibleItems.length > 0;
+          const hasBenefits = benefitsItems.length > 0;
 
           return (
             <div
-              key={`${e.insurerKey}-${e.planIndex}-${idx}`}
+              key={entryKey}
               onClick={() => toggleSelect(e)}
-              className={`relative p-6 border-2 rounded-xl cursor-pointer transition-all hover:shadow-lg ${
+              className={`relative p-6 border-2 border-gray-400 rounded-xl cursor-pointer transition-all hover:shadow-lg ${
                 isSelected
                   ? "border-blue-600 bg-blue-50 dark:bg-blue-950/20 shadow-md"
                   : "border-border bg-card hover:border-blue-300"
@@ -297,9 +349,9 @@ export default function Planes({
                   </svg>
                 </div>
               )}
-
-              <div className="grid grid-cols-[auto_1fr_auto] gap-6 items-start">
-                <div className="flex flex-col items-center gap-2 min-w-[120px]">
+              {/* seccion aseguradora, logo, estrellas */}
+              <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-start">
+                <div className="flex flex-col items-center gap-2 order-1 lg:order-none lg:min-w-[120px]">
                   <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
                     <span className="text-2xl font-bold text-muted-foreground">
                       {e.insurerKey.substring(0, 2).toUpperCase()}
@@ -318,7 +370,7 @@ export default function Planes({
                   </div>
                 </div>
 
-                <div className="flex-1">
+                <div className="order-3 w-full lg:order-none lg:flex-1">
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-foreground mb-1">
                       {e.insurerKey.toUpperCase()} -{" "}
@@ -341,103 +393,171 @@ export default function Planes({
                     </div>
                   )}
 
+                  {/*  botones de secciones desplegables */}
                   <div className="flex gap-4 mt-4">
-                    <div>
-                      {/* Lista visible solo al abrir de coberturas */}
-                      <div>
+                    <div className="flex w-full flex-col gap-3 sm:flex-row">
+                      <div className="sm:w-1/3">
                         <button
+                          type="button"
                           onClick={(ev) => {
-                            ev.stopPropagation(); // para que no active el toggleSelect al clickear
-                            setOpen(!open);
+                            ev.stopPropagation();
+                            if (!hasCoverageExtras) return;
+                            toggleSection(entryKey, "coverage");
                           }}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:text-orange-700 transition"
+                          className={`w-full inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                            hasCoverageExtras
+                              ? coverageOpen
+                                ? "border-orange-300 bg-orange-50 text-orange-700"
+                                : "border-transparent text-orange-600 hover:border-orange-200 hover:bg-orange-50/70 hover:text-orange-700"
+                              : "cursor-not-allowed border-dashed border-neutral-200 text-muted-foreground"
+                          }`}
+                          aria-expanded={coverageOpen}
+                          aria-controls={`${entryKey}-coverage`}
+                          disabled={!hasCoverageExtras}
                         >
-                          <span>Coberturas</span>
-                          <Info className="w-4 h-4" />
+                          <span className="flex items-center gap-2">
+                            <Info className="h-4 w-4" />
+                            Coberturas
+                          </span>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              coverageOpen ? "rotate-180" : ""
+                            }`}
+                          />
                         </button>
+                        {coverageOpen && hasCoverageExtras && (
+                          <div
+                            id={`${entryKey}-coverage`}
+                            className="mt-2 space-y-1 rounded-md border border-orange-100 bg-orange-50/70 p-3 text-sm text-foreground"
+                          >
+                            {coverageExtras.map((item: any, i: number) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <span className="mt-0.5 h-2 w-2 rounded-full bg-orange-400" />
+                                <span className="font-medium">
+                                  {item?.name ?? item?.title ?? String(item)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
-                        {open && e.plan?.secondaries && (
-                          <div className="mt-2 p-2 border rounded bg-gray-50 text-sm">
-                            {e.plan.secondaries.map((s: any, i: number) => (
-                              <div key={i} className="mb-1 font-semibold">
-                                {s.name}
+                      <div className="sm:w-1/3">
+                        <button
+                          type="button"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            if (!hasDeductible) return;
+                            toggleSection(entryKey, "deductible");
+                          }}
+                          className={`w-full inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                            hasDeductible
+                              ? deductibleOpen
+                                ? "border-orange-300 bg-orange-50 text-orange-700"
+                                : "border-transparent text-orange-600 hover:border-orange-200 hover:bg-orange-50/70 hover:text-orange-700"
+                              : "cursor-not-allowed border-dashed border-neutral-200 text-muted-foreground"
+                          }`}
+                          aria-expanded={deductibleOpen}
+                          aria-controls={`${entryKey}-deductible`}
+                          disabled={!hasDeductible}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Info className="h-4 w-4" />
+                            Deducible
+                          </span>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              deductibleOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {deductibleOpen && hasDeductible && (
+                          <div
+                            id={`${entryKey}-deductible`}
+                            className="mt-2 space-y-1 rounded-md border border-orange-100 bg-orange-50/70 p-3 text-sm text-foreground"
+                          >
+                            {deductibleItems.map((item, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <span className="mt-0.5 h-2 w-2 rounded-full bg-orange-400" />
+                                <span className="font-medium">{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="sm:w-1/3">
+                        <button
+                          type="button"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            if (!hasBenefits) return;
+                            toggleSection(entryKey, "benefits");
+                          }}
+                          className={`w-full inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                            hasBenefits
+                              ? benefitsOpen
+                                ? "border-orange-300 bg-orange-50 text-orange-700"
+                                : "border-transparent text-orange-600 hover:border-orange-200 hover:bg-orange-50/70 hover:text-orange-700"
+                              : "cursor-not-allowed border-dashed border-neutral-200 text-muted-foreground"
+                          }`}
+                          aria-expanded={benefitsOpen}
+                          aria-controls={`${entryKey}-benefits`}
+                          disabled={!hasBenefits}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Info className="h-4 w-4" />
+                            Beneficios
+                          </span>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              benefitsOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {benefitsOpen && hasBenefits && (
+                          <div
+                            id={`${entryKey}-benefits`}
+                            className="mt-2 space-y-1 rounded-md border border-orange-100 bg-orange-50/70 p-3 text-sm text-foreground"
+                          >
+                            {benefitsItems.map((item, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <span className="mt-0.5 h-2 w-2 rounded-full bg-orange-400" />
+                                <span className="font-medium">{item}</span>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
                     </div>
-                    <div>
-                      {/* Lista visible solo al abrir de Deducible */}
-                      <div>
-                        <button
-                          onClick={(ev) => {
-                            ev.stopPropagation(); // para que no active el toggleSelect al clickear
-                            setOpen(!open);
-                          }}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:text-orange-700 transition"
-                        >
-                          <span>Deducible</span>
-                          <Info className="w-4 h-4" />
-                        </button>
-
-                         {open && e.plan?.principals && (
-                          <div className="mb-2">
-                           
-                            {e.plan.principals["DEDUCIBLE"]}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      {/* Lista visible solo al abrir de Beneficios */}
-                      <div>
-                        <button
-                          onClick={(ev) => {
-                            ev.stopPropagation(); // para que no active el toggleSelect al clickear
-                            setOpen(!open);
-                          }}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 hover:text-orange-700 transition"
-                        >
-                          <span>Beneficios</span>
-                          <Info className="w-4 h-4" />
-                        </button>
-                          {open && e.plan?.principals && (
-                          <div className="mb-2">
-                            
-                            {e.plan.principals["BENEFICIOS ESPECIALES"]}
-                          </div>
-                        )}
-
-                      </div>
-                      
-                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-4 min-w-[180px]">
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-foreground">
-                      {formatCurrency(monthlyPrice)}
+                {/*  seccion de precios */}
+                <div className="order-2 flex w-full flex-col items-center gap-4 lg:order-none lg:items-end lg:min-w-[180px]">
+                <div className="grid grid-cols-2 lg:grid-cols-1">
+                 
+                  <div className="text-center lg:text-right">
+                      <div className="text-3xl font-bold text-foreground lg:text-4xl">
+                        {formatCurrency(monthlyPrice)}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {e.plan?.period || 12} cuotas mensuales
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Pago con tarjeta de crédito
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {e.plan?.period || 12} cuotas mensuales
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Pago con tarjeta de crédito
-                    </div>
-                  </div>
 
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-foreground">
-                      {formatCurrency(totalWithTax)}
+                    <div className="text-center lg:text-right">
+                      <div className="text-2xl font-bold text-foreground lg:text-3xl">
+                        {formatCurrency(totalWithTax)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Incluido impuestos
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Incluido impuestos
-                    </div>
-                  </div>
-                    
-                  
+                </div>
                 </div>
               </div>
             </div>
