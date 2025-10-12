@@ -1,28 +1,30 @@
+import { AseguradorasLogo } from "@/configuration/constants";
 type StaticPlan = {
   name: string;
   img: string;
   phone: string;
 };
 
+
 const STATIC_PLANS: StaticPlan[] = [
   {
     name: "Generali",
-    img: "/logo-zurich.png",
+    img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("generali".toLowerCase()))?.img || "",
     phone: "099 1234 5678",
   },
   {
     name: "Mapfre",
-    img: "/logo-zurich.png",
+    img:  AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("mapfre".toLowerCase()))?.img || "",
     phone: "099 1234 5678",
   },
   {
     name: "Vaz Seguros",
-    img: "/logo-chubb.png",
+    img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("vaz".toLowerCase()))?.img || "",
     phone: "099 1234 5678",
   },
   {
     name: "AIG",
-    img: "/logo-equinoccial.png",
+    img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("aig".toLowerCase()))?.img || "",
     phone: "099 1234 5678",
   },
 ];
@@ -38,9 +40,7 @@ export const StaticPlanCard = () => {
           <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-start">
             <div className="flex flex-col items-center gap-2">
               <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
-                <span className="text-2xl font-bold text-muted-foreground">
-                  {plan.name.substring(0, 2).toUpperCase()}
-                </span>
+                <img src={plan.img}  alt={plan.name} />
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-foreground">

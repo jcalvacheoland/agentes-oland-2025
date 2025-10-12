@@ -4,6 +4,7 @@ import type { IPlanRequest } from "@/interfaces/interfaces.type";
 import { Star, Info, ChevronDown } from "lucide-react";
 import ComparisonModal from "./comparisonModal";
 import { StaticPlanCard } from "./StaticPlanCard";
+import { AseguradorasLogo } from "@/configuration/constants";
 
 type RawResp = any;
 type ResponsesMap = Record<string, RawResp | null | { __error: string }>;
@@ -46,6 +47,8 @@ export default function Planes({
     {}
   );
   const [openModal, setOpenModal] = useState(false);
+
+
 
   function normalizeRespToPlans(resp: RawResp): any[] {
     if (!resp) return [];
@@ -330,12 +333,12 @@ export default function Planes({
               onClick={() => toggleSelect(e)}
               className={`relative p-6 border-2 border-gray-400 rounded-xl cursor-pointer transition-all hover:shadow-lg ${
                 isSelected
-                  ? "border-blue-600 bg-blue-50 dark:bg-blue-950/20 shadow-md"
+                  ? "border-green-600 bg-blue-50 dark:bg-blue-950/20 shadow-md"
                   : "border-border bg-card hover:border-blue-300"
               }`}
             >
               {isSelected && (
-                <div className="absolute top-4 right-4 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="absolute top-4 right-4 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="currentColor"
@@ -353,9 +356,13 @@ export default function Planes({
               <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-start">
                 <div className="flex flex-col items-center gap-2 order-1 lg:order-none lg:min-w-[120px]">
                   <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
-                    <span className="text-2xl font-bold text-muted-foreground">
-                      {e.insurerKey.substring(0, 2).toUpperCase()}
-                    </span>
+                    <div className="w-24 h-24">
+                        <img
+                      src={AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes(e.insurerKey.toLowerCase()))?.img || ""}
+                      >
+                      </img>
+                    </div>
+                    
                   </div>
                   <div className="text-center">
                     <div className="text-lg font-bold text-foreground">AAA</div>
@@ -373,9 +380,12 @@ export default function Planes({
                 <div className="order-3 w-full lg:order-none lg:flex-1">
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-foreground mb-1">
-                      {e.insurerKey.toUpperCase()} -{" "}
-                      {e.plan?.planName ?? `Plan ${e.planIndex + 1}`}
-                    </h3>
+                    {e.insurerKey.toUpperCase()} -{" "}
+                    {e.plan?.planName && e.plan.planName !== "S123 CHUBB"
+                      ? e.plan.planName
+                      : "CHUBB"}                  
+                  </h3>
+
                   </div>
 
                   {coverageDetails.length > 0 && (
