@@ -1,6 +1,7 @@
 "use client"
 import { X, Check } from "lucide-react"
-
+import { Button } from "@/components/ui/button";
+import { AseguradorasLogo } from "@/configuration/constants";
 type PlanEntry = {
   insurerKey: string
   planIndex: number
@@ -132,10 +133,14 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
                   {selected.map((s, idx) => (
                     <th key={idx} className="py-4 px-4 text-center min-w-[200px]">
                       <div className="flex flex-col items-center gap-2">
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border">
-                          <span className="text-xl font-bold text-blue-600">
-                            {s.insurerKey.substring(0, 2).toUpperCase()}
-                          </span>
+                        <div className=" rounded-lg flex items-center justify-center border">
+                       {/*   logo */}
+                         <div className="w-24 h-24">
+                            <img
+                            src={AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes(s.insurerKey.toLowerCase()))?.img || ""}
+                            >
+                            </img>
+                          </div>
                         </div>
                         <div className="font-bold text-blue-600 text-base">{s.insurerKey.toUpperCase()}</div>
                       </div>
@@ -153,32 +158,7 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
                   ))}
                 </tr>
 
-                {/* Fila de acciones: botón Elegir por columna */}
-                <tr className="border-t-2 border-gray-200 bg-gray-50">
-                  <td className="py-4 px-3"></td>
-                  {selected.map((s, idx) => (
-                    <td key={idx} className="py-4 px-4 text-center">
-                      <button
-                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"
-                        onClick={() => {
-                          const serialize = (entry: PlanEntry) => ({
-                            planName: entry.plan?.planName || `Plan ${entry.planIndex + 1}`,
-                            insurerName: entry.insurerKey,
-                            netPremium: getNetPremium(entry.plan),
-                          })
-                          const payload = {
-                            selected: serialize(s),
-                            compared: selected.filter((_, i) => i !== idx).map(serialize),
-                          }
-                          onConfirm?.(payload)
-                          onClose()
-                        }}
-                      >
-                        Elegir plan
-                      </button>
-                    </td>
-                  ))}
-                </tr>
+                
 
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <td className="py-3 px-3 text-gray-700 font-medium">Prima Total (valor mensual)</td>
@@ -409,10 +389,30 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
                     )
                   })}
                 </tr>
+
+                
               </tbody>
-            </table>
-          </div>
+            </table>           
+          </div>        
         </div>
+            {/*  Descargar PDF */}
+            <div className="flex flex-row items-center px-4 ">
+              <h1 className="ml-4 font-bold">Descargar PDF</h1>
+              <div className="place-content-center space-x-3 mx-auto p-4">
+              
+              <Button
+              variant="oland"
+              >
+                PDF OlandSeguros
+              </Button>
+              <Button
+              variant="oland"
+              >
+                PDF Personalizado
+              </Button>
+            </div>
+            </div>
+            
       </div>
     </div>
   )
