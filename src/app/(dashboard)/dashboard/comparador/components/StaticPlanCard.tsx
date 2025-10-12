@@ -1,6 +1,4 @@
-interface StaticPlanCardProps {
-
-}
+"use client";
 const StaticPlanCardData=[{
  name:"ZURICH - PLAN PRO",
  img:"/logo-zurich.png",

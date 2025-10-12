@@ -1,4 +1,3 @@
-// ./components/Planes.tsx
 "use client";
 import { useMemo, useState } from "react";
 import type { IPlanRequest } from "@/interfaces/interfaces.type";
@@ -259,30 +258,9 @@ export default function Planes({
         {allByAseg.map((e, idx) => {
           if (e.isError) {
             return (
-            <>
-              {/*  <div
-                key={`err-${e.insurerKey}-${idx}`}
-                className="p-6 border-2 border-red-200 dark:bg-azul-oland-100 rounded-xl bg-white text-red-700 dark:text-red-300"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="text-sm font-bold text-red-700 dark:text-red-400 mb-2">
-                      {e.insurerKey.toUpperCase()}
-                    </div>
-                    <div className="text-sm text-red-800 dark:text-red-300 mb-3">
-                      <p className="font-medium mb-1">
-                        Contactate con esta aseguradora
-                      </p>
-                      <p className="text-lg font-semibold">0987748808</p>
-                      <p className="text-xs mt-2 text-red-600 dark:text-red-400">
-                        {e.errorMessage ?? "Error"}
-                      </p>
-                    </div>
-                  </div>
-
-                </div>
-              </div> */}
-             </>
+              <h1 key={`error-${idx}`} className="hidden">
+                hola
+              </h1>
             );
           }
 
