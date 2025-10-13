@@ -177,30 +177,17 @@ export default function ComparadorPage() {
   }, []); // solo se ejecuta al montar
 
   // --- AQUÍ: obtener valores para pasar al HeaderCotizador ---
-  // Intentamos usar `plan` cuando ya exista; si no, leemos localStorage como fallback
-  let vehiculoFromLS: any = null;
-  let clienteFromLS: any = null;
-  try {
-    const rawV = localStorage.getItem("vehiculo");
-    const rawC = localStorage.getItem("clienteVehiculo");
-    vehiculoFromLS = rawV ? JSON.parse(rawV) : null;
-    clienteFromLS = rawC ? JSON.parse(rawC) : null;
-  } catch (e) {
-    // no hacemos nada; solo fallback vacío
-    vehiculoFromLS = null;
-    clienteFromLS = null;
-  }
-
-  const headerName = plan?.name ?? clienteFromLS?.nombres ?? "—";
-  const headerVehicle = plan?.brand ?? vehiculoFromLS?.marca ?? "";
-  const headerModel = plan?.model ?? vehiculoFromLS?.modelo ?? "";
-  const headerYear = plan?.year ?? Number(vehiculoFromLS?.anio ?? 0);
-  const headerValorAsegurado = plan?.vehicleValue ?? Number(vehiculoFromLS?.avaluo ?? vehiculoFromLS?.avaluoOriginal ?? 0);
+  // Renderizamos placeholders hasta que el efecto cargue la información real en `plan`
+  const headerName = plan?.name ?? "-";
+  const headerVehicle = plan?.brand ?? "";
+  const headerModel = plan?.model ?? "";
+  const headerYear = typeof plan?.year === "number" ? plan.year : Number(plan?.year ?? 0);
+  const headerValorAsegurado =
+    typeof plan?.vehicleValue === "number" ? plan.vehicleValue : Number(plan?.vehicleValue ?? 0);
 
   return (
     <div className="p-4">
-
-      {/* Header ahora recibe props desde plan o desde localStorage como fallback */}
+      {/* Header ahora recibe props desde el plan almacenado en estado */}
       <HeaderCotizador
         name={headerName}
         vehicle={headerVehicle}

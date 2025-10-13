@@ -1,14 +1,16 @@
 "use client"
 import { X, Check } from "lucide-react"
+import { PDFDownloadLink } from "@react-pdf/renderer"
 import { Button } from "@/components/ui/button";
 import { AseguradorasLogo } from "@/configuration/constants";
+import { PdfBuild } from "./PdfBuild";
 type PlanEntry = {
   insurerKey: string
   planIndex: number
   plan: any
 }
 
-type ComparedPlanPayload = {
+export type ComparedPlanPayload = {
   insurerKey: string
   planName: string
   logoUrl: string
@@ -189,6 +191,8 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
       rawPlan: s.plan,
     }
   })
+
+  const pdfDocument = <PdfBuild data={comparedPayload} />
 
   const handleConfirm = () => {
     if (!onConfirm) return
@@ -481,24 +485,54 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
             </table>           
           </div>        
         </div>
-            {/*  Descargar PDF */}
-            <div className="flex flex-row items-center px-4 ">
-              <h1 className="ml-4 font-bold">Descargar PDF</h1>
-              <div className="place-content-center space-x-3 mx-auto p-4">
-              
-              <Button
-              variant="oland"
-              onClick={handleConfirm}
-              >
-                PDF OlandSeguros
-              </Button>
-              <Button
-              variant="oland"
-              >
-                PDF Personalizado
-              </Button>
-            </div>
-            </div>
+       {/* Descargar PDF */}
+        <div className="flex flex-row items-center px-4">
+          <h1 className="ml-4 font-bold">Descargar PDF</h1>
+          <div className="place-content-center space-x-3 mx-auto p-4">
+            <PDFDownloadLink
+              document={pdfDocument}
+              fileName="comparacion-oland-seguros.pdf"
+            >
+              {({ loading }) => (
+                <Button
+                  variant="oland"
+                  disabled={loading}
+                  onClick={(event) => {
+                    if (loading) {
+                      event.preventDefault()
+                      return
+                    }
+                    handleConfirm()
+                  }}
+                >
+                  {loading ? "Generando..." : "PDF OlandSeguros"}
+                </Button>
+              )}
+            </PDFDownloadLink>
+
+            <PDFDownloadLink
+              document={pdfDocument}
+              fileName="comparacion-personalizada.pdf"
+            >
+              {({ loading }) => (
+                <Button
+                  variant="oland"
+                  disabled={loading}
+                  onClick={(event) => {
+                    if (loading) {
+                      event.preventDefault()
+                      return
+                    }
+                    handleConfirm()
+                  }}
+                >
+                  {loading ? "Generando..." : "PDF Personalizado"}
+                </Button>
+              )}
+            </PDFDownloadLink>
+          </div>
+        </div>
+        {/* Fin Descargar PDF */}
             
       </div>
     </div>

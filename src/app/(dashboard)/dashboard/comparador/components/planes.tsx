@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import type { IPlanRequest } from "@/interfaces/interfaces.type";
 import { Star, Info, ChevronDown } from "lucide-react";
-import ComparisonModal from "./comparisonModal";
+import ComparisonModal, { type ComparedPlanPayload } from "./comparisonModal";
 import { StaticPlanCard } from "./StaticPlanCard";
 import { AseguradorasLogo } from "@/configuration/constants";
 
@@ -210,6 +210,11 @@ export default function Planes({
 
     return details;
   }
+
+  const handleComparisonConfirm = (payload: { compared: ComparedPlanPayload[] }) => {
+    // Propagamos la comparación para que el contenedor decida si la persiste o la envía a otro flujo.
+    onSendComparison?.(payload);
+  };
 
   async function handleConfirmComparison(payload: {
     selected: { planName: string; insurerName: string; netPremium: number | null };
@@ -594,6 +599,7 @@ export default function Planes({
           <ComparisonModal
             selected={selected}
             onClose={() => setOpenModal(false)}
+            onConfirm={handleComparisonConfirm}
           />
         )}
       </div>
