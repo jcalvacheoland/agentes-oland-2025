@@ -593,7 +593,6 @@ export default function Planes({
         {openModal && (
           <ComparisonModal
             selected={selected}
-            onConfirm={handleConfirmComparison}
             onClose={() => setOpenModal(false)}
           />
         )}

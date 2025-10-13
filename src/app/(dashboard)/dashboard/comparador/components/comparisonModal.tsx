@@ -8,12 +8,44 @@ type PlanEntry = {
   plan: any
 }
 
+type ComparedPlanPayload = {
+  insurerKey: string
+  planName: string
+  logoUrl: string
+  pricing: {
+    totalPremium: number | null
+    period: number
+    monthly: number
+  }
+  netPremium: number | null
+  coverages: {
+    civilLiability: string | boolean
+    accidentalDeath: string | boolean
+    medicalExpenses: string | boolean
+  }
+  deductibles: {
+    partialLoss: string | boolean
+    totalLossDamage: string | boolean
+    totalLossTheftWithDevice: string | boolean
+    totalLossTheftWithoutDevice: string | boolean
+  }
+  benefits: {
+    patrimonialCoverage: string | boolean
+    airbag: string | boolean
+    towService: string | boolean
+    vehicleAssistance: string | boolean
+    legalAssistance: string | boolean
+    exequialAssistance: string | boolean
+    substituteAuto: string | boolean
+  }
+  rawPlan: any
+}
+
 interface ComparisonModalProps {
   selected: PlanEntry[]
   onClose: () => void
   onConfirm?: (payload: {
-    selected: { planName: string; insurerName: string; netPremium: number | null }
-    compared: Array<{ planName: string; insurerName: string; netPremium: number | null }>
+    compared: ComparedPlanPayload[]
   }) => void
 }
 
@@ -111,6 +143,60 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
 
     return { monthly, period }
   }
+
+  const comparedPayload = selected.map((s, idx): ComparedPlanPayload => {
+    const { monthly, period } = getPricing(s.plan)
+    const totalPremiumCandidate = s.plan?.totalPremium
+    const totalPremium =
+      typeof totalPremiumCandidate === "number"
+        ? totalPremiumCandidate
+        : typeof totalPremiumCandidate === "string" && totalPremiumCandidate.trim() !== "" && !isNaN(Number(totalPremiumCandidate))
+          ? Number(totalPremiumCandidate)
+          : null
+    const logoUrl =
+      AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes(s.insurerKey.toLowerCase()))?.img || ""
+
+    return {
+      insurerKey: s.insurerKey,
+      planName: s.plan?.planName || `Plan ${idx + 1}`,
+      logoUrl,
+      pricing: {
+        totalPremium,
+        period,
+        monthly,
+      },
+      netPremium: getNetPremium(s.plan),
+      coverages: {
+        civilLiability: getCoverageValue(s.plan, "civilLiability"),
+        accidentalDeath: getCoverageValue(s.plan, "accidentalDeath"),
+        medicalExpenses: getCoverageValue(s.plan, "medicalExpenses"),
+      },
+      deductibles: {
+        partialLoss: getCoverageValue(s.plan, "partialLoss"),
+        totalLossDamage: getCoverageValue(s.plan, "totalLossDamage"),
+        totalLossTheftWithDevice: getCoverageValue(s.plan, "totalLossTheftWithDevice"),
+        totalLossTheftWithoutDevice: getCoverageValue(s.plan, "totalLossTheftWithoutDevice"),
+      },
+      benefits: {
+        patrimonialCoverage: getCoverageValue(s.plan, "patrimonialCoverage"),
+        airbag: getCoverageValue(s.plan, "airbag"),
+        towService: getCoverageValue(s.plan, "towService"),
+        vehicleAssistance: getCoverageValue(s.plan, "vehicleAssistance"),
+        legalAssistance: getCoverageValue(s.plan, "legalAssistance"),
+        exequialAssistance: getCoverageValue(s.plan, "sexualAssistance"),
+        substituteAuto: getCoverageValue(s.plan, "substituteAuto"),
+      },
+      rawPlan: s.plan,
+    }
+  })
+
+  const handleConfirm = () => {
+    if (!onConfirm) return
+    // We send the enriched payload so the consumer can reproduce the comparison (e.g. when generating a PDF).
+    onConfirm({ compared: comparedPayload })
+  }
+  /* console log para ver que datos captura */
+  /* console.log("ComparisonModal render with selected:", selected) */
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -402,6 +488,7 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
               
               <Button
               variant="oland"
+              onClick={handleConfirm}
               >
                 PDF OlandSeguros
               </Button>
