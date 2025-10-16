@@ -1,7 +1,4 @@
-/* import { CLIENT_SECRET } from "../../configuration/constants";
-import { HOST_TOKEN } from "@/configuration/constants";
-import { HOST_CATALOG } from "../../configuration/constants";
- */
+"use server";
 import {
   guardarTokenAutorizacion,
   leerTokenAutorizacion,
@@ -18,9 +15,7 @@ import {
   IVehiculoAPI,
 } from "@/interfaces/interfaces.type";
 
-const HOST_CATALOG = "https://s123-cat-pro.azurewebsites.net";
-const CLIENT_SECRET = "NMYsnrcJsM7S9dPypVcq5ONnYbPzVoZltlVYXpcT";
-const HOST_TOKEN="https://s123-cat-pro.azurewebsites.net/oauth/token";
+import { HOST_CATALOG,HOST_TOKEN,CLIENT_SECRET } from "@/configuration/constants";
 
 
 
@@ -106,7 +101,6 @@ export const obtenerVehiculoPorPlaca = async (
   );
 
   if (response && response.status === 200) {
-    console.log(response.status)
     return response.data;
   }
 

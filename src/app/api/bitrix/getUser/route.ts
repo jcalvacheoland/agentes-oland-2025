@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-
-const BITRIX_USER_AGENT = "oland-agentes/1.0"
+import { BITRIX_USER_AGENT} from "@/configuration/constants"
 
 type BitrixSession = {
   accessToken?: string

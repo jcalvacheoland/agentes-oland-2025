@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getBitrixAuthContext } from "@/lib/bitrix/session"
+import { BITRIX_USER_AGENT, CATEGORY_ID, STAGE_ID } from "@/configuration/constants"
 
-const CATEGORY_ID = 24
-const STAGE_ID = "C24:NEW"
-const BITRIX_USER_AGENT = "oland-agentes/1.0"
 
 async function callBitrix(
   path: string,
@@ -131,7 +129,8 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
-
+    
+    //crear titulo con id en bitrix
     const titleToUpdate = `${deal.fields.TITLE} - ID ${dealId}`
     await callBitrix("crm.deal.update.json", accessToken, restBase, "POST", {
       id: dealId,
