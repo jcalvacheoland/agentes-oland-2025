@@ -9,14 +9,11 @@ type DashboardLayoutProps = {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
-  const handleLogout = () => {
-    localStorage.removeItem("bitrixUser");
-    window.location.href = "/"; // o una ruta de login
-  };
+  
   return (
     <>
     <div >
-       <HeaderUser onLogout={handleLogout} />
+       <HeaderUser  />
       <main >{children}</main>
     </div>
      

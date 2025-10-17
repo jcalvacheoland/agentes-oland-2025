@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
+
 import { usePathname } from "next/navigation";
 import { UsuarioIcon } from "@/components/icons/Usuario";
 import { useBitrixUser } from "@/hooks/useBitrixUser";
@@ -26,16 +28,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Menu, Settings, LogOut, ExternalLink, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type HeaderUserProps = {
-  onLogout: () => void;
-};
+
 
 const navLinks = [
   { href: "/inicio", label: "Inicio", match: "/inicio" },
   { href: "/dashboard", label: "Mis cotizaciones", match: "/dashboard" },
 ];
 
-export const HeaderUser = ({ onLogout }: HeaderUserProps) => {
+export const HeaderUser = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   const { user, loading, error } = useBitrixUser();
@@ -72,10 +72,11 @@ export const HeaderUser = ({ onLogout }: HeaderUserProps) => {
     );
   }
 
-  const handleLogout = () => {
-    setIsSidebarOpen(false);
-    onLogout();
-  };
+  const handleLogout = async () => {
+  setIsSidebarOpen(false);
+  await signOut({ callbackUrl: "/login" }); // 🔹 redirige al login automáticamente
+};
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
@@ -156,7 +157,7 @@ export const HeaderUser = ({ onLogout }: HeaderUserProps) => {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={onLogout}
+                     onClick={handleLogout}
                     className="flex items-center gap-2 text-red-600 focus:text-red-600"
                   >
                     <LogOut className="h-4 w-4" />
@@ -238,6 +239,7 @@ export const HeaderUser = ({ onLogout }: HeaderUserProps) => {
                   onClick={handleLogout}
                   variant="destructive"
                   className="w-full"
+                  
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Cerrar Sesión
