@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import type { OAuthConfig } from "next-auth/providers"
-
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import { prisma } from "@/lib/prisma"
 // ============================================================================
 // TIPOS Y DEFINICIONES
 // ============================================================================
@@ -451,6 +452,7 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
 // ============================================================================
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+    adapter: PrismaAdapter(prisma),
   providers: [BitrixProvider()],
   
   // Configuración de sesión
