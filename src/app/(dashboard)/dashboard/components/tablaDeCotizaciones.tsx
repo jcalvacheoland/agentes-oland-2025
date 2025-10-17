@@ -150,7 +150,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
                     </TableCell>
                     <TableCell className="max-w-xs">
                       <div className="truncate" title={item.TITLE}>
-                        {item.TITLE}
+                        <Link href={`/${item.ID}`}>{item.TITLE}</Link>
                       </div>
                     </TableCell>
                     <TableCell>

@@ -1,6 +1,7 @@
 export const CATEGORY_ID = 24
 export const STAGE_ID = "C24:NEW"
 export const BITRIX_USER_AGENT = "oland-agentes/1.0"
+export const BITRIX_WEBHOOK=process.env.BITRIX_WEBHOOK;
 //s123
 export const HOST_CATALOG = process.env.HOST_CATALOG;
 export const CLIENT_SECRET = process.env.CLIENT_SECRET;
