@@ -8,9 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, Car, User, Search } from "lucide-react";
+import { Car, User, Search, Loader2 } from "lucide-react";
 import { obtenerPersonaPorCedula, obtenerVehiculoPorPlaca } from '@/lib/services/api';
+import { SelectUsoVehiculo } from "./inputs/selectInput";
+import { SelectEstadoCivil } from "./inputs/selectInputEstadoCivil";
+import {SelectGenero} from "./inputs/selectInputGenero";
+import { SelectCiudad } from "./inputs/selectInputCiudad";
 
 /* ==================== SCHEMAS ==================== */
 const clienteSchema = z.object({
@@ -23,8 +26,8 @@ const clienteSchema = z.object({
   edad: z.string().optional(),
   genero: z.string().optional(),
   estadoCivil: z.string().optional(),
-  email: z.string().email("Email inválido").optional(),
-  celular: z.string().min(10, "El celular debe tener al menos 10 dígitos").optional(),
+  email: z.union([z.string().email("Email inv�lido"), z.literal("")]).optional(),
+  celular: z.union([z.string().min(10, "El celular debe tener al menos 10 d�gitos"), z.literal("")]).optional(),
   ciudad: z.string().optional(),
   provincia: z.string().optional(),
   region: z.string().optional(),
@@ -302,7 +305,6 @@ const persistirEnLocalStorage = (values: FormValues) => {
 /* ==================== COMPONENTE PRINCIPAL ==================== */
 export const FormularioClienteVehiculo = () => {
   const router = useRouter();
-  const [submitted, setSubmitted] = useState(false);
   const [loadingCedula, setLoadingCedula] = useState(false);
   const [errorCedula, setErrorCedula] = useState<string | null>(null);
   const [loadingPlaca, setLoadingPlaca] = useState(false);
@@ -311,7 +313,7 @@ export const FormularioClienteVehiculo = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
     setValue,
     watch,
@@ -332,8 +334,19 @@ export const FormularioClienteVehiculo = () => {
     },
   });
 
+  useEffect(() => {
+    register("cliente.genero");
+    register("cliente.estadoCivil");
+    register("cliente.ciudad");
+    register("vehiculo.tipoUso");
+  }, [register]);
+
   const cedulaValue = watch("cliente.cedula");
   const placaValue = watch("vehiculo.placa");
+  const tipoUsoValue = watch("vehiculo.tipoUso");
+  const generoValue = watch("cliente.genero");
+  const estadoCivilValue = watch("cliente.estadoCivil");
+  const ciudadValue = watch("cliente.ciudad");
 
   /* ==================== API CALLS ==================== */
   const buscarPersonaPorCedula = async (cedula: string) => {
@@ -431,9 +444,6 @@ export const FormularioClienteVehiculo = () => {
 
     console.log("Datos capturados del formulario:", { data, payload });
 
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
-
     persistirEnLocalStorage(data);
 
     try {
@@ -457,6 +467,21 @@ export const FormularioClienteVehiculo = () => {
         ok: response.ok,
         body: apiResult,
       });
+
+      if (response.ok && apiResult && typeof apiResult === "object") {
+        const dealIdValue = Number((apiResult as { dealId?: unknown }).dealId ?? NaN);
+
+        if (!Number.isNaN(dealIdValue) && dealIdValue > 0) {
+          setValue("vehiculo.idDealBitrix", dealIdValue, { shouldValidate: false });
+          persistirEnLocalStorage({
+            ...data,
+            vehiculo: {
+              ...data.vehiculo,
+              idDealBitrix: dealIdValue,
+            },
+          });
+        }
+      }
     } catch (error) {
       console.error("Error al enviar datos a /api/bitrix/putDealBitrix:", error);
     }
@@ -468,21 +493,12 @@ export const FormularioClienteVehiculo = () => {
 
   /* ==================== RENDER ==================== */
   return (
-    <div className="min-h-screen bg-gray-50 px-3 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
+    <div className="min-h-screen  px-3 py-6 sm:px-6  lg:px-10 ">
       <div className="mx-auto w-full max-w-7xl">
        
+      
 
-        {/* Alert de éxito */}
-        {submitted && (
-          <Alert className="mx-auto mb-6 w-full max-w-2xl border-green-300 bg-green-50 sm:mb-8">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <AlertDescription className="font-medium text-green-800">
-              ¡Formulario enviado exitosamente! Revisa la consola para ver los datos.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form  onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
             {/* ========== CARD VEHÍCULO ========== */}
             <Card className="shadow-md">
@@ -508,7 +524,7 @@ export const FormularioClienteVehiculo = () => {
                     <Button
                       type="button"
                       onClick={() => buscarVehiculoPorPlaca(getValues("vehiculo.placa")?.trim().toUpperCase() || "")}
-                      className="h-11 w-full px-4 bg-rose-400 hover:bg-rose-500 sm:w-auto"
+                      className="h-11 w-full px-4 bg-rojo-oland-100 hover:bg-red-500 sm:w-auto"
                       disabled={loadingPlaca}
                     >
                       {loadingPlaca ? "..." : <Search className="h-4 w-4" />}
@@ -530,6 +546,7 @@ export const FormularioClienteVehiculo = () => {
                       Marca
                     </Label>
                     <Input
+                      autoComplete="false"
                       id="marca"
                       {...register("vehiculo.marca")}
                       placeholder="GEELY"
@@ -544,6 +561,7 @@ export const FormularioClienteVehiculo = () => {
                       Modelo
                     </Label>
                     <Input
+                     autoComplete="false"
                       id="modelo"
                       {...register("vehiculo.modelo")}
                       placeholder="COOLRAY"
@@ -562,6 +580,7 @@ export const FormularioClienteVehiculo = () => {
                       Año
                     </Label>
                     <Input
+                     autoComplete="false"
                       id="anio"
                       type="number"
                       {...register("vehiculo.anio")}
@@ -577,6 +596,7 @@ export const FormularioClienteVehiculo = () => {
                       Valor del Vehículo
                     </Label>
                     <Input
+                     autoComplete="false"
                       id="avaluo"
                       type="number"
                       {...register("vehiculo.avaluo")}
@@ -590,25 +610,12 @@ export const FormularioClienteVehiculo = () => {
                 </div>
 
                 {/* Tipo de Uso */}
-                <div className="space-y-2">
-                  <Label htmlFor="tipoUso" className="text-sm font-semibold text-gray-700">
-                    Uso del Vehículo
-                  </Label>
-                  <select
-                    id="tipoUso"
-                    {...register("vehiculo.tipoUso")}
-                    className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Seleccionar</option>
-                    <option value="Particular">Particular</option>
-                    <option value="Comercial">Comercial</option>
-                    <option value="Taxi">Taxi</option>
-                    <option value="Uber">Uber</option>
-                  </select>
-                  {errors.vehiculo?.tipoUso && (
-                    <p className="text-sm text-red-600">{errors.vehiculo.tipoUso.message}</p>
-                  )}
-                </div>
+                <SelectUsoVehiculo
+                  errors={errors}
+                  setValue={setValue}
+                  value={tipoUsoValue}
+                />
+
 
                 {/* Campos ocultos */}
                 <input type="hidden" {...register("vehiculo.esNuevo")} />
@@ -643,7 +650,7 @@ export const FormularioClienteVehiculo = () => {
                     <Button
                       type="button"
                       onClick={() => buscarPersonaPorCedula(getValues("cliente.cedula")?.trim() || "")}
-                      className="h-11 w-full px-4 bg-slate-400 hover:bg-slate-500 sm:w-auto"
+                      className="h-11 w-full px-4 bg-azul-oland-100 hover:bg-slate-500 sm:w-auto"
                       disabled={loadingCedula}
                     >
                       {loadingCedula ? "..." : <Search className="h-4 w-4" />}
@@ -736,50 +743,29 @@ export const FormularioClienteVehiculo = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="genero" className="text-sm font-semibold text-gray-700">
-                      Género
-                    </Label>
-                    <select
-                      id="genero"
-                      {...register("cliente.genero")}
-                      className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Seleccionar</option>
-                      <option value="Masculino">Masculino</option>
-                      <option value="Femenino">Femenino</option>
-                      <option value="Otro">Otro</option>
-                    </select>
+                    <SelectGenero
+                      errors={errors}
+                      setValue={setValue}
+                      value={generoValue}
+                    />
                   </div>
                 </div>
 
                 {/* Estado Civil y Ciudad */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="estadoCivil" className="text-sm font-semibold text-gray-700">
-                      Estado Civil
-                    </Label>
-                    <select
-                      id="estadoCivil"
-                      {...register("cliente.estadoCivil")}
-                      className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Seleccionar</option>
-                      <option value="Soltero">Soltero</option>
-                      <option value="Casado">Casado</option>
-                      <option value="Divorciado">Divorciado</option>
-                      <option value="Viudo">Viudo</option>
-                      <option value="Union de hecho">Unión de hecho</option>
-                    </select>
+                    <SelectEstadoCivil
+                      errors={errors}
+                      setValue={setValue}
+                      value={estadoCivilValue}
+                    />
+
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ciudad" className="text-sm font-semibold text-gray-700">
-                      Ciudad
-                    </Label>
-                    <Input
-                      id="ciudad"
-                      {...register("cliente.ciudad")}
-                      placeholder="QUITO"
-                      className="h-11"
+                    <SelectCiudad
+                      errors={errors}
+                      setValue={setValue}
+                      value={ciudadValue}
                     />
                   </div>
                 </div>
@@ -801,15 +787,25 @@ export const FormularioClienteVehiculo = () => {
               type="button"
               variant="outline"
               onClick={() => reset()}
-              className="h-12 w-full px-8 text-base sm:w-auto"
+              className="h-12 w-full rounded-full px-8 text-base sm:w-auto"
+              disabled={isSubmitting}
             >
               Limpiar
             </Button>
             <Button
               type="submit"
-              className="h-12 w-full px-8 text-base bg-blue-600 hover:bg-blue-700 sm:w-auto"
+              variant={"oland"}
+              className="h-12 w-full px-8 text-base sm:w-auto"
+              disabled={isSubmitting}
             >
-              Cotizar Seguro
+              {isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Estamos cotizando tu vehiculo...
+                </span>
+              ) : (
+                "Cotizar Seguro"
+              )}
             </Button>
           </div>
         </form>
@@ -817,3 +813,6 @@ export const FormularioClienteVehiculo = () => {
     </div>
   );
 };
+
+
+
