@@ -72,9 +72,8 @@ model Authenticator {
 }
 
 model cotizaciones {
-  id             String   @id
+  id             String   @id @default(cuid())
   userId         String
-  bitrixId       String   @unique
   plate          String
   submodelEqui   Int
   brand          String
@@ -98,9 +97,11 @@ model cotizaciones {
   cityCodeMapfre Int?
   status         String   @default("draft")
   createdAt      DateTime @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime @updatedAt
+  bitrixDealId   String?  @unique
+  chubb_mm       String?
   User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([bitrixId])
+  @@index([bitrixDealId])
   @@index([userId])
 }

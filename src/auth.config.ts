@@ -236,7 +236,7 @@ async function refreshBitrixAccessToken(refreshToken: string): Promise<BitrixTok
   const oauthHost = process.env.BITRIX_OAUTH_HOST ?? "https://oauth.bitrix.info"
   const tokenUrl = `${normalizeHost(oauthHost)}/oauth/token/`
 
-  console.log('ðŸ”„ Renovando token de Bitrix24...')
+  console.log('Renovando token de Bitrix24...')
 
   try {
     // Hacer la peticiÃ³n POST para renovar el token
@@ -467,7 +467,8 @@ const authConfig = {providers: [BitrixProvider()],
      * 2. En cada peticiÃ³n subsecuente, verificamos si el token estÃ¡ por expirar
      * 3. Si estÃ¡ por expirar, lo renovamos automÃ¡ticamente
      */
-    async jwt({ token, account, trigger }) {
+    async jwt({ token, account, user, trigger }) {
+      
       // PRIMER LOGIN: Guardar tokens iniciales de Bitrix
       if (account) {
         console.log('ðŸ” Nuevo login - Guardando tokens de Bitrix24')
@@ -532,6 +533,10 @@ const authConfig = {providers: [BitrixProvider()],
      */
     async session({ session, token }) {
       const bitrix = token.bitrix as BitrixSessionPayload | undefined
+      
+      if (token.sub) {
+        session.user.id = token.sub
+      }
       
       if (bitrix) {
         // Agregar datos de Bitrix a la sesiÃ³n
