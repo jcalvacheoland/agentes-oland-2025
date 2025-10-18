@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Car, User, Search, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2, Car, User, Search, Loader2 } from "lucide-react";
 import { obtenerPersonaPorCedula, obtenerVehiculoPorPlaca } from '@/lib/services/api';
 import { SelectUsoVehiculo } from "./inputs/selectInput";
 import { SelectEstadoCivil } from "./inputs/selectInputEstadoCivil";
@@ -305,6 +306,7 @@ const persistirEnLocalStorage = (values: FormValues) => {
 /* ==================== COMPONENTE PRINCIPAL ==================== */
 export const FormularioClienteVehiculo = () => {
   const router = useRouter();
+  const [submitted, setSubmitted] = useState(false);
   const [loadingCedula, setLoadingCedula] = useState(false);
   const [errorCedula, setErrorCedula] = useState<string | null>(null);
   const [loadingPlaca, setLoadingPlaca] = useState(false);
@@ -443,6 +445,9 @@ export const FormularioClienteVehiculo = () => {
     };
 
     console.log("Datos capturados del formulario:", { data, payload });
+
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 4000);
 
     persistirEnLocalStorage(data);
 
@@ -801,7 +806,7 @@ export const FormularioClienteVehiculo = () => {
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Estamos cotizando tu vehiculo...
+                  Estamos cotizando tu vehículo...
                 </span>
               ) : (
                 "Cotizar Seguro"
@@ -813,6 +818,4 @@ export const FormularioClienteVehiculo = () => {
     </div>
   );
 };
-
-
 
