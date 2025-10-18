@@ -147,6 +147,7 @@ export default function ComparadorPage() {
       age: cliente?.edad,
       cityCodeMapfre: Number(cliente?.codMapfre ?? cliente?.cityCodeMapfre),
       useOfVehicle: vehiculo?.tipoUso,
+      chubb_mm: cliente?.chubb_mm || "AD",
     };
     console.log("Plan mapeado desde localStorage:", planRequest); 
     // guardamos el plan en el state

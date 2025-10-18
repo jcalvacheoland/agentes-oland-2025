@@ -47,6 +47,7 @@ const vehiculoSchema = z.object({
   esNuevo: z.coerce.number().optional(),
   submodelEqui: z.string().optional(),
   idDealBitrix: z.coerce.number().optional(),
+  idCotizacion: z.string().optional(),
 });
 
 const formSchema = z.object({
@@ -109,6 +110,14 @@ const formatearPlaca = (value?: string | null): string => {
     return letras;
   }
   return `${letras}-${digitos}`;
+};
+
+const generarIdCotizacion = (): string => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  const randomSegment = Math.random().toString(36).slice(2, 10) || "xxxx";
+  return `cotizacion-${Date.now()}-${randomSegment}`;
 };
 
 /* ==================== MAPPERS API → FORM ==================== */
@@ -220,6 +229,7 @@ const mapearVehiculoAFormulario = (vehiculo: any, setValue: any, currentValues: 
     submodelEqui: vehiculo.submodelEqui ?? vehiculo.submodel ?? "",
     tipo: vehiculo.tipo ?? vehiculo.type ?? "",
     idDealBitrix: vehiculo.idDealBitrix ?? null,
+    idCotizacion: vehiculo.idCotizacion ?? null,
   };
 
   // Mapear campos visibles (solo si están vacíos)
@@ -261,6 +271,9 @@ const mapearVehiculoAFormulario = (vehiculo: any, setValue: any, currentValues: 
   if (datosNormalizados.idDealBitrix && !isNaN(Number(datosNormalizados.idDealBitrix))) {
     setValue("vehiculo.idDealBitrix", Number(datosNormalizados.idDealBitrix), { shouldValidate: false });
   }
+  if (datosNormalizados.idCotizacion) {
+    setValue("vehiculo.idCotizacion", String(datosNormalizados.idCotizacion), { shouldValidate: false });
+  }
 };
 
 /* ==================== HOOKS PERSONALIZADOS ==================== */
@@ -290,13 +303,48 @@ const persistirEnLocalStorage = (values: FormValues) => {
   if (typeof window === "undefined") return;
 
   try {
+    let existingId: string | null = null;
+
+    try {
+      const storedVehiculo = localStorage.getItem("vehiculo");
+      if (storedVehiculo) {
+        const parsedVehiculo = JSON.parse(storedVehiculo) as { idCotizacion?: unknown };
+        if (
+          parsedVehiculo &&
+          typeof parsedVehiculo.idCotizacion === "string" &&
+          parsedVehiculo.idCotizacion.trim() !== ""
+        ) {
+          existingId = parsedVehiculo.idCotizacion;
+        }
+      }
+    } catch (readError) {
+      console.warn("No se pudo leer vehiculo existente de localStorage", readError);
+    }
+
     const vehiculoFormateado = {
       ...values.vehiculo,
       placa: formatearPlaca(values.vehiculo?.placa as unknown as string),
     };
 
+    const {
+      idDealBitrix: _,
+      idCotizacion: formIdCotizacion,
+      ...vehiculoSinBitrix
+    } = vehiculoFormateado ?? {};
+
+    const idCotizacion =
+      existingId ??
+      (typeof formIdCotizacion === "string" && formIdCotizacion.trim() !== ""
+        ? formIdCotizacion
+        : generarIdCotizacion());
+
+    const vehiculoParaGuardar = {
+      ...vehiculoSinBitrix,
+      idCotizacion,
+    };
+
     localStorage.setItem("clienteVehiculo", JSON.stringify(values.cliente));
-    localStorage.setItem("vehiculo", JSON.stringify(vehiculoFormateado));
+    localStorage.setItem("vehiculo", JSON.stringify(vehiculoParaGuardar));
   } catch (error) {
     console.error("No se pudo guardar los datos en localStorage", error);
   }
@@ -341,6 +389,7 @@ export const FormularioClienteVehiculo = () => {
     register("cliente.estadoCivil");
     register("cliente.ciudad");
     register("vehiculo.tipoUso");
+    register("vehiculo.idCotizacion");
   }, [register]);
 
   const cedulaValue = watch("cliente.cedula");
@@ -628,6 +677,7 @@ export const FormularioClienteVehiculo = () => {
                 <input type="hidden" {...register("vehiculo.submodelEqui")} />
                 <input type="hidden" {...register("vehiculo.tipo")} />
                 <input type="hidden" {...register("vehiculo.idDealBitrix")} />
+                <input type="hidden" {...register("vehiculo.idCotizacion")} />
               </CardContent>
             </Card>
 

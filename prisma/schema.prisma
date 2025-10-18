@@ -18,6 +18,7 @@ model User {
   accounts      Account[]
   Authenticator Authenticator[]
   sessions      Session[]
+  cotizaciones  cotizaciones[]
 }
 
 model Account {
@@ -68,4 +69,38 @@ model Authenticator {
   user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
+}
+
+model cotizaciones {
+  id             String   @id
+  userId         String
+  bitrixId       String   @unique
+  plate          String
+  submodelEqui   Int
+  brand          String
+  model          String
+  year           Int
+  vehicleValue   Float
+  type           String
+  subtype        String?
+  extras         Int      @default(0)
+  newVehicle     Int      @default(0)
+  useOfVehicle   String?
+  city           String?
+  identification String?
+  name           String?
+  firstLastName  String?
+  secondLastName String?
+  gender         String?
+  civilStatus    String?
+  birthdate      String?
+  age            String?
+  cityCodeMapfre Int?
+  status         String   @default("draft")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([bitrixId])
+  @@index([userId])
 }
