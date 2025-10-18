@@ -13,7 +13,7 @@ export default async function DealPage(props: { params: Promise<{ slug: string }
   const deal = response.deal
 
   return (
-    <div className="p-6 space-y-2">
+<div className="p-6 space-y-2">
   <h1 className="text-xl font-bold">{deal.TITLE}</h1>
 
   <p><strong>Valor del negocio:</strong> {deal.OPPORTUNITY} USD</p>
