@@ -47,9 +47,10 @@ export default auth((req) => {
   return NextResponse.next()
 })
 
+
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|assets).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|assets|img).*)",
     "/api/:path*",
   ],
 }

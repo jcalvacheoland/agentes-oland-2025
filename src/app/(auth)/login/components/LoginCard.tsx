@@ -8,7 +8,7 @@ export const LoginCard = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url(/img/login-bg.jpg)",
+          backgroundImage: "url(/img/login-bg.png)",
         }}
       >
         {/* Subtle overlay for better contrast */}
