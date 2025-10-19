@@ -18,7 +18,7 @@ model User {
   accounts      Account[]
   Authenticator Authenticator[]
   sessions      Session[]
-  cotizaciones  cotizaciones[]
+  cotizaciones  Cotizacion[]  
 }
 
 model Account {
@@ -71,7 +71,7 @@ model Authenticator {
   @@id([userId, credentialID])
 }
 
-model cotizaciones {
+model Cotizacion {
   id             String   @id @default(cuid())
   userId         String
   plate          String
@@ -100,8 +100,9 @@ model cotizaciones {
   updatedAt      DateTime @updatedAt
   bitrixDealId   String?  @unique
   chubb_mm       String?
-  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@map("cotizaciones")
   @@index([bitrixDealId])
   @@index([userId])
 }
