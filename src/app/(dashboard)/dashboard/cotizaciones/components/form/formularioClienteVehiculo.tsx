@@ -479,7 +479,7 @@ export const FormularioClienteVehiculo = () => {
 /*   console.log("Datos capturados del formulario:", { data, payload }); */
 
   setSubmitted(true);
-  setTimeout(() => setSubmitted(false), 4000);
+  setTimeout(() => setSubmitted(false), 3000);
 
   persistirEnLocalStorage(data);
 
@@ -568,7 +568,15 @@ export const FormularioClienteVehiculo = () => {
 
   /* ==================== RENDER ==================== */
   return (
-    <div className="min-h-screen  px-3 py-6 sm:px-6  lg:px-10 ">
+    <div className="relative min-h-screen px-3 py-6 sm:px-6 lg:px-10">
+      {(submitted || isSubmitting) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-azul-oland-100"></div>
+            <p className="mt-4 text-gray-800 font-semibold">Estamos cotizando tu vehículo...</p>
+          </div>
+        </div>
+      )}
       <div className="mx-auto w-full max-w-7xl">
        
       
