@@ -19,9 +19,9 @@ export async function createCotizacion(
     // Obtener el usuario autenticado
     const session = await auth();
     //logs para ver sesion
-    /* console.log("🔍 Sesión completa en server action:", JSON.stringify(session, null, 2));
+    console.log("🔍 Sesión completa en server action:", JSON.stringify(session, null, 2));
     console.log("🔍 User ID:", session?.user?.id);
-    console.log("🔍 User email:", session?.user?.email); */
+    console.log("🔍 User email:", session?.user?.email);
 
     if (!session?.user?.id) {
       return {

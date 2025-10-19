@@ -1,5 +1,7 @@
 ﻿import type { NextAuthConfig } from "next-auth"
 import type { OAuthConfig } from "next-auth/providers"
+import { prisma } from "@/lib/prisma"
+
 // ============================================================================
 // TIPOS Y DEFINICIONES
 // ============================================================================
@@ -88,78 +90,49 @@ interface BitrixSessionPayload {
 const BITRIX_USER_AGENT = "oland-agentes/1.0"
 
 // ============================================================================
-// FUNCIONES AUXILIARES PARA NORMALIZACIÃ“N DE URLs
+// FUNCIONES AUXILIARES PARA NORMALIZACIÓN DE URLs
 // ============================================================================
 
-/**
- * Elimina las barras finales de una URL
- * Ejemplo: "https://example.com/" -> "https://example.com"
- */
 function normalizeHost(value: string) {
   return value.replace(/\/+$/, "")
 }
 
-/**
- * Elimina el protocolo (http/https) y las barras finales de un dominio
- * Ejemplo: "https://company.bitrix24.com/" -> "company.bitrix24.com"
- */
 function normalizeDomain(value: string) {
   return value.replace(/^https?:\/\//, "").replace(/\/+$/, "")
 }
 
-/**
- * Asegura que una URL termine con barra diagonal
- * Ejemplo: "https://example.com" -> "https://example.com/"
- */
 function ensureTrailingSlash(value: string) {
   return value.endsWith("/") ? value : `${value}/`
 }
 
 // ============================================================================
-// FUNCIÃ“N PARA RESOLVER EL EMAIL DEL USUARIO
+// FUNCIÓN PARA RESOLVER EL EMAIL DEL USUARIO
 // ============================================================================
 
-/**
- * Extrae el email del perfil de Bitrix24
- * Bitrix puede devolver el email en diferentes formatos:
- * 1. Como string directo
- * 2. Como array de objetos con prioridad (WORK email tiene prioridad)
- * 3. En campos alternativos (WORK_EMAIL, PERSONAL_EMAIL, etc.)
- */
 function resolveEmail(profile: BitrixProfile) {
-  // Caso 1: EMAIL es un string directo
   if (typeof profile.EMAIL === "string") {
     return profile.EMAIL
   }
 
-  // Caso 2: EMAIL es un array de objetos
   if (Array.isArray(profile.EMAIL)) {
-    // Priorizar email de trabajo (WORK)
     const prioritized = profile.EMAIL.find((item) => item?.VALUE_TYPE === "WORK" && item.VALUE)
     if (prioritized?.VALUE) {
       return prioritized.VALUE
     }
 
-    // Si no hay email de trabajo, tomar el primero disponible
     const firstEmail = profile.EMAIL.find((item) => item?.VALUE)
     if (firstEmail?.VALUE) {
       return firstEmail.VALUE
     }
   }
 
-  // Caso 3: Buscar en campos alternativos
   return profile.WORK_EMAIL ?? profile.PERSONAL_EMAIL ?? profile.EMAIL_UNCONFIRMED ?? undefined
 }
 
 // ============================================================================
-// FUNCIÃ“N PARA NORMALIZAR LA RESPUESTA DE TOKENS
+// FUNCIÓN PARA NORMALIZAR LA RESPUESTA DE TOKENS
 // ============================================================================
 
-/**
- * Bitrix24 a veces no envÃ­a el campo "token_type" en la respuesta
- * Esta funciÃ³n asegura que siempre exista y sea "Bearer"
- * Esto es necesario porque NextAuth lo espera
- */
 async function parseAndNormalizeTokenResponse(response: Response) {
   const cloned = response.clone()
   const data = (await cloned.json().catch(() => null)) as BitrixTokenSet | null
@@ -168,7 +141,6 @@ async function parseAndNormalizeTokenResponse(response: Response) {
     throw new Error("Bitrix provider: unable to parse token response as JSON.")
   }
 
-  // Asegurar que token_type exista (Bitrix a veces lo omite)
   if (!data.token_type) {
     data.token_type = "Bearer"
   }
@@ -184,62 +156,45 @@ async function parseAndNormalizeTokenResponse(response: Response) {
 }
 
 // ============================================================================
-// FUNCIÃ“N PARA PROCESAR Y ORGANIZAR LOS TOKENS DE BITRIX
+// FUNCIÓN PARA PROCESAR Y ORGANIZAR LOS TOKENS DE BITRIX
 // ============================================================================
 
-/**
- * Convierte los tokens de Bitrix al formato que usaremos en la sesiÃ³n
- * Calcula el timestamp de expiraciÃ³n:
- * - Si Bitrix envÃ­a "expires": usa ese valor
- * - Si Bitrix envÃ­a "expires_in": lo suma al tiempo actual
- * - Si no envÃ­a nada: queda como undefined
- */
 function resolveBitrixSessionPayload(tokenSet: BitrixTokenSet): BitrixSessionPayload {
-  const now = Math.floor(Date.now() / 1000) // Tiempo actual en segundos
+  const now = Math.floor(Date.now() / 1000)
   
-  // Calcular cuÃ¡ndo expira el token
   const expiresAt = tokenSet.expires
-    ? Number(tokenSet.expires) // Timestamp absoluto
+    ? Number(tokenSet.expires)
     : tokenSet.expires_in
-      ? now + Number(tokenSet.expires_in) // Segundos desde ahora (tÃ­picamente 3600 = 1 hora)
+      ? now + Number(tokenSet.expires_in)
       : undefined
 
   return {
     accessToken: tokenSet.access_token,
-    refreshToken: tokenSet.refresh_token, // IMPORTANTE: Guardamos el refresh token
+    refreshToken: tokenSet.refresh_token,
     tokenType: tokenSet.token_type ?? "Bearer",
     scope: tokenSet.scope,
-    expiresAt, // Timestamp de cuÃ¡ndo expira
+    expiresAt,
     domain: tokenSet.domain,
     serverDomain: tokenSet.server_domain,
     serverEndpoint: tokenSet.server_endpoint,
     clientEndpoint: tokenSet.client_endpoint,
-    restUrl: tokenSet.rest_url, // URL base para hacer llamadas a la API
+    restUrl: tokenSet.rest_url,
     memberId: tokenSet.member_id,
     userId: tokenSet.user_id,
   }
 }
 
 // ============================================================================
-// FUNCIÃ“N PARA RENOVAR EL ACCESS TOKEN USANDO REFRESH TOKEN
+// FUNCIÓN PARA RENOVAR EL ACCESS TOKEN USANDO REFRESH TOKEN
 // ============================================================================
 
-/**
- * Cuando el accessToken expira (despuÃ©s de ~1 hora), esta funciÃ³n
- * usa el refreshToken para obtener un nuevo accessToken de Bitrix24
- * 
- * Esto permite mantener la sesiÃ³n activa sin que el usuario tenga que
- * volver a hacer login
- */
 async function refreshBitrixAccessToken(refreshToken: string): Promise<BitrixTokenSet> {
-  // Construir la URL del endpoint de token de Bitrix
   const oauthHost = process.env.BITRIX_OAUTH_HOST ?? "https://oauth.bitrix.info"
   const tokenUrl = `${normalizeHost(oauthHost)}/oauth/token/`
 
   console.log('Renovando token de Bitrix24...')
 
   try {
-    // Hacer la peticiÃ³n POST para renovar el token
     const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
@@ -247,14 +202,13 @@ async function refreshBitrixAccessToken(refreshToken: string): Promise<BitrixTok
         'User-Agent': BITRIX_USER_AGENT,
       },
       body: new URLSearchParams({
-        grant_type: 'refresh_token', // Tipo de grant OAuth2
+        grant_type: 'refresh_token',
         client_id: process.env.BITRIX_CLIENT_ID!,
         client_secret: process.env.BITRIX_CLIENT_SECRET!,
         refresh_token: refreshToken,
       }),
     })
 
-    // Si la respuesta no es exitosa, lanzar error
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(
@@ -264,11 +218,11 @@ async function refreshBitrixAccessToken(refreshToken: string): Promise<BitrixTok
 
     const tokens = await response.json() as BitrixTokenSet
     
-    console.log('âœ… Token de Bitrix24 renovado exitosamente')
+    console.log('✅ Token de Bitrix24 renovado exitosamente')
     
     return tokens
   } catch (error) {
-    console.error('âŒ Error al renovar token de Bitrix24:', error)
+    console.error('❌ Error al renovar token de Bitrix24:', error)
     throw error
   }
 }
@@ -292,7 +246,6 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
     ...providerOverrides
   } = options
 
-  // Validaciones: Asegurar que existan las credenciales necesarias
   if (!clientId) {
     throw new Error("Bitrix provider: missing clientId. Set BITRIX_CLIENT_ID.")
   }
@@ -305,7 +258,6 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
     throw new Error("Bitrix provider: missing domain. Set BITRIX_DOMAIN or pass domain option.")
   }
 
-  // Construir las URLs necesarias para OAuth
   const portalHost = normalizeDomain(domain)
   const oauthBase = normalizeHost(oauthHost)
   const defaultAuthorizationEndpoint = ensureTrailingSlash(`https://${portalHost}/oauth/authorize`)
@@ -328,7 +280,6 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
   const redirectUri = overrideRedirectUri ?? process.env.BITRIX_REDIRECT_URI
   const defaultUserinfoEndpoint = `${apiBase}/user.current.json`
 
-  // ParÃ¡metros que se enviarÃ¡n en la URL de autorizaciÃ³n
   const authorizationParams: Record<string, string> = {}
   if (scope) authorizationParams.scope = scope
   if (redirectUri) authorizationParams.redirect_uri = redirectUri
@@ -341,22 +292,18 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
     clientId,
     clientSecret,
     
-    // ConfiguraciÃ³n de autorizaciÃ³n (donde el usuario inicia sesiÃ³n)
     authorization: {
       url: authorizationUrl,
       params: authorizationParams,
     },
     
-    // ConfiguraciÃ³n de obtenciÃ³n de tokens
     token: {
       url: tokenUrl,
       async conform(response: any) {
-        // Normalizar la respuesta de tokens antes de procesarla
         return parseAndNormalizeTokenResponse(response)
       },
     },
     
-    // ConfiguraciÃ³n para obtener informaciÃ³n del usuario
     userinfo: {
       url: defaultUserinfoEndpoint,
       async request({ tokens }: BitrixUserinfoContext) {
@@ -367,8 +314,6 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
           throw new Error("Bitrix provider: access token not found in token response.")
         }
 
-        // Intentar resolver la URL base de la API REST de Bitrix
-        // Bitrix puede devolver esta informaciÃ³n en diferentes campos
         const restBaseCandidates: Array<string | undefined> = [
           tokenSet.client_endpoint,
           tokenSet.rest_url,
@@ -385,17 +330,14 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
           throw new Error("Bitrix provider: unable to resolve REST endpoint for userinfo.")
         }
 
-        // Construir la URL para obtener informaciÃ³n del usuario actual
         const userInfoUrl = `${ensureTrailingSlash(restBase)}user.current.json?auth=${accessToken}`
 
-        // Hacer la peticiÃ³n a Bitrix24
         const response = await fetch(userInfoUrl, {
           headers: { "User-Agent": BITRIX_USER_AGENT },
         })
         
         const payload = (await response.json()) as BitrixUserResponse
 
-        // Verificar si hubo errores
         if (!response.ok || payload.error) {
           const message = payload.error_description ?? payload.error ?? `HTTP ${response.status}`
           throw new Error(`Bitrix provider: userinfo request failed (${message}).`)
@@ -405,16 +347,13 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
       },
     },
     
-    // Transformar el perfil de Bitrix al formato estÃ¡ndar de NextAuth
     profile(profile) {
-      // Resolver el identificador Ãºnico del usuario
       const identifier = profile.ID ?? profile.id ?? profile.LOGIN ?? resolveEmail(profile)
       
       if (!identifier) {
         throw new Error("Bitrix provider: user profile is missing an identifier.")
       }
 
-      // Construir el nombre completo del usuario
       const firstName = profile.NAME ?? profile.FIRST_NAME ?? ""
       const lastName = profile.LAST_NAME ?? profile.SECOND_NAME ?? ""
       const fullName = [firstName, lastName]
@@ -424,7 +363,6 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
       
       const email = resolveEmail(profile)
 
-      // Retornar en el formato estÃ¡ndar de NextAuth
       return {
         id: String(identifier),
         name: fullName || profile.LOGIN || undefined,
@@ -433,7 +371,6 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
       }
     },
     
-    // Habilitar PKCE y state para mayor seguridad OAuth2
     checks: ["pkce", "state"],
     
     style: {
@@ -446,32 +383,81 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
 }
 
 // ============================================================================
-// CONFIGURACIÃ“N DE NEXTAUTH CON REFRESH TOKEN
+// CONFIGURACIÓN DE NEXTAUTH CON REFRESH TOKEN Y SINCRONIZACIÓN DE USUARIOS
 // ============================================================================
 
-const authConfig = {providers: [BitrixProvider()],
+const authConfig = {
+  providers: [BitrixProvider()],
   
-  // ConfiguraciÃ³n de sesiÃ³n
   session: {
-    strategy: "jwt", // Usar JWT (sin base de datos)
-    maxAge: 30 * 24 * 60 * 60, // 30 dÃ­as en segundos
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
   },
   
   callbacks: {
     /**
-     * Callback JWT - Se ejecuta cada vez que se crea o actualiza el token JWT
-     * 
-     * Este es el corazÃ³n del sistema de refresh token:
-     * 1. Cuando el usuario hace login por primera vez (account existe),
-     *    guardamos todos los tokens de Bitrix
-     * 2. En cada peticiÃ³n subsecuente, verificamos si el token estÃ¡ por expirar
-     * 3. Si estÃ¡ por expirar, lo renovamos automÃ¡ticamente
+     * Callback SignIn - NUEVO
+     * Se ejecuta cuando un usuario hace login con Bitrix
+     * Crea o actualiza el usuario en la base de datos PostgreSQL
+     */
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "bitrix") {
+        try {
+          // Buscar si el usuario ya existe por email
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! }
+          })
+
+          if (existingUser) {
+            // Si existe, actualizar su información
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: {
+                name: user.name,
+                image: user.image,
+              }
+            })
+            
+            // IMPORTANTE: Usar el ID de la base de datos
+            user.id = existingUser.id
+            console.log('✅ Usuario existente actualizado:', existingUser.id)
+          } else {
+            // Si no existe, crear el usuario nuevo
+            const newUser = await prisma.user.create({
+              data: {
+                email: user.email!,
+                name: user.name,
+                image: user.image,
+              }
+            })
+            
+            // IMPORTANTE: Usar el ID del nuevo usuario
+            user.id = newUser.id
+            console.log('✅ Usuario nuevo creado:', newUser.id)
+          }
+        } catch (error) {
+          console.error('❌ Error al sincronizar usuario con BD:', error)
+          return false // Bloquear el login si falla
+        }
+      }
+      
+      return true
+    },
+
+    /**
+     * Callback JWT - MODIFICADO
+     * Ahora guarda el ID real de la base de datos
      */
     async jwt({ token, account, user, trigger }) {
+      // Si hay usuario (primer login), guardar su ID real de la BD
+      if (user) {
+        token.sub = user.id
+        console.log('💾 Guardando ID de usuario en token:', user.id)
+      }
       
       // PRIMER LOGIN: Guardar tokens iniciales de Bitrix
       if (account) {
-        console.log('ðŸ” Nuevo login - Guardando tokens de Bitrix24')
+        console.log('🔐 Nuevo login - Guardando tokens de Bitrix24')
         
         const bitrix = resolveBitrixSessionPayload(account as BitrixTokenSet)
         token.bitrix = bitrix
@@ -480,56 +466,44 @@ const authConfig = {providers: [BitrixProvider()],
         return token
       }
 
-      // RENOVACIÃ“N AUTOMÃTICA: Verificar si necesitamos renovar el token
+      // RENOVACIÓN AUTOMÁTICA: Verificar si necesitamos renovar el token
       const bitrixData = token.bitrix as BitrixSessionPayload | undefined
       
-      // Si no hay datos de Bitrix o no hay tiempo de expiraciÃ³n, retornar tal cual
       if (!bitrixData?.expiresAt) {
         return token
       }
 
-      const now = Math.floor(Date.now() / 1000) // Tiempo actual en segundos
-      const timeUntilExpiry = bitrixData.expiresAt - now // Segundos hasta que expire
-      
-      // Renovar si faltan menos de 5 minutos (300 segundos) para que expire
-      // Esto da un margen de seguridad para evitar que expire durante una peticiÃ³n
+      const now = Math.floor(Date.now() / 1000)
+      const timeUntilExpiry = bitrixData.expiresAt - now
       const shouldRefresh = timeUntilExpiry < 300
       
       if (shouldRefresh && bitrixData.refreshToken) {
-        console.log(`â° Token expira en ${timeUntilExpiry} segundos - Renovando...`)
+        console.log(`⏰ Token expira en ${timeUntilExpiry} segundos - Renovando...`)
         
         try {
-          // Llamar a Bitrix24 para obtener un nuevo access token
           const newTokens = await refreshBitrixAccessToken(bitrixData.refreshToken)
-          
-          // Actualizar los datos de la sesiÃ³n con los nuevos tokens
           const updatedBitrix = resolveBitrixSessionPayload(newTokens)
           token.bitrix = updatedBitrix
           token.accessToken = updatedBitrix.accessToken
           
-          console.log('âœ… Token renovado exitosamente')
+          console.log('✅ Token renovado exitosamente')
         } catch (error) {
-          console.error('âŒ Error al renovar token:', error)
-          
-          // Si falla la renovaciÃ³n, marcar el token con error
-          // Esto forzarÃ¡ al usuario a hacer login nuevamente
+          console.error('❌ Error al renovar token:', error)
           return {
             ...token,
             error: "RefreshAccessTokenError"
           }
         }
       } else if (shouldRefresh) {
-        console.warn('âš ï¸ Token por expirar pero no hay refresh token disponible')
+        console.warn('⚠️ Token por expirar pero no hay refresh token disponible')
       }
 
       return token
     },
 
     /**
-     * Callback Session - Se ejecuta cada vez que se accede a la sesiÃ³n
-     * 
-     * Transfiere los datos del JWT a la sesiÃ³n que se expone al cliente
-     * Incluye los tokens de Bitrix y marca si hubo error al renovar
+     * Callback Session - Sin cambios
+     * Transfiere los datos del JWT a la sesión
      */
     async session({ session, token }) {
       const bitrix = token.bitrix as BitrixSessionPayload | undefined
@@ -539,7 +513,6 @@ const authConfig = {providers: [BitrixProvider()],
       }
       
       if (bitrix) {
-        // Agregar datos de Bitrix a la sesiÃ³n
         (session as any).bitrix = bitrix
         
         if (bitrix.accessToken) {
@@ -547,8 +520,6 @@ const authConfig = {providers: [BitrixProvider()],
         }
       }
       
-      // Si hubo error al renovar, agregarlo a la sesiÃ³n
-      // Tu frontend puede verificar esto y mostrar un mensaje
       if (token.error) {
         (session as any).error = token.error
       }
