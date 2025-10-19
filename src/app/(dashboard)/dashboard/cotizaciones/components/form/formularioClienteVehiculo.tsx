@@ -8,13 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, Car, User, Search, Loader2 } from "lucide-react";
 import { obtenerPersonaPorCedula, obtenerVehiculoPorPlaca } from '@/lib/services/api';
 import { SelectUsoVehiculo } from "./inputs/selectInput";
 import { SelectEstadoCivil } from "./inputs/selectInputEstadoCivil";
 import {SelectGenero} from "./inputs/selectInputGenero";
 import { SelectCiudad } from "./inputs/selectInputCiudad";
+import { createCotizacion } from "@/actions/cotizaciones.actions"; 
 
 /* ==================== SCHEMAS ==================== */
 const clienteSchema = z.object({
@@ -467,83 +467,123 @@ export const FormularioClienteVehiculo = () => {
   };
 
   const onSubmit = async (data: FormValues) => {
-    const fullName = [
-      data.cliente.nombres,
-      data.cliente.apellidos ||
-        [data.cliente.primerApellido, data.cliente.segundoApellido].filter(Boolean).join(" "),
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
+  const fullName = [
+    data.cliente.nombres,
+    data.cliente.apellidos ||
+      [data.cliente.primerApellido, data.cliente.segundoApellido]
+        .filter(Boolean)
+        .join(" "),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
-    const payload = {
-      identification: data.cliente.cedula ?? "",
-      name: fullName || data.cliente.nombres || "",
-      email: data.cliente.email ?? "",
-      phone: data.cliente.celular ?? "",
-      city: data.cliente.ciudad ?? "",
-      age: data.cliente.edad ?? "",
-      gender: data.cliente.genero ?? "",
-      civilStatus: data.cliente.estadoCivil ?? "",
-      brand: data.vehiculo.marca ?? "",
-      model: data.vehiculo.modelo ?? "",
-      year: data.vehiculo.anio ?? "",
-      plate: data.vehiculo.placa ?? "",
-      vehicleValue: data.vehiculo.avaluo ?? "",
-      useOfVehicle: data.vehiculo.tipoUso ?? "",
-    };
+  const payload = {
+    identification: data.cliente.cedula ?? "",
+    name: fullName || data.cliente.nombres || "",
+    email: data.cliente.email ?? "",
+    phone: data.cliente.celular ?? "",
+    city: data.cliente.ciudad ?? "",
+    age: data.cliente.edad ?? "",
+    gender: data.cliente.genero ?? "",
+    civilStatus: data.cliente.estadoCivil ?? "",
+    brand: data.vehiculo.marca ?? "",
+    model: data.vehiculo.modelo ?? "",
+    year: data.vehiculo.anio ?? "",
+    plate: data.vehiculo.placa ?? "",
+    vehicleValue: data.vehiculo.avaluo ?? "",
+    useOfVehicle: data.vehiculo.tipoUso ?? "",
+  };
 
-    console.log("Datos capturados del formulario:", { data, payload });
+/*   console.log("Datos capturados del formulario:", { data, payload }); */
 
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
+  setSubmitted(true);
+  setTimeout(() => setSubmitted(false), 4000);
 
-    persistirEnLocalStorage(data);
+  persistirEnLocalStorage(data);
 
+  try {
+    // 🟨 1️⃣ Primero: crear el DEAL en Bitrix y obtener su ID
+    const response = await fetch("/api/bitrix/putDealBitrix", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    let apiResult: any = null;
     try {
-      const response = await fetch("/api/bitrix/putDealBitrix", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      let apiResult: unknown = null;
-      try {
-        apiResult = await response.json();
-      } catch (error) {
-        console.error("No se pudo parsear la respuesta de /api/bitrix/putDealBitrix:", error);
-      }
-
-      console.log("Respuesta de la API /api/bitrix/putDealBitrix:", {
-        status: response.status,
-        ok: response.ok,
-        body: apiResult,
-      });
-
-      if (response.ok && apiResult && typeof apiResult === "object") {
-        const dealIdValue = Number((apiResult as { dealId?: unknown }).dealId ?? NaN);
-
-        if (!Number.isNaN(dealIdValue) && dealIdValue > 0) {
-          setValue("vehiculo.idDealBitrix", dealIdValue, { shouldValidate: false });
-          persistirEnLocalStorage({
-            ...data,
-            vehiculo: {
-              ...data.vehiculo,
-              idDealBitrix: dealIdValue,
-            },
-          });
-        }
-      }
+      apiResult = await response.json();
     } catch (error) {
-      console.error("Error al enviar datos a /api/bitrix/putDealBitrix:", error);
+      console.error("No se pudo parsear la respuesta de /api/bitrix/putDealBitrix:", error);
     }
 
-    const queryString = typeof window !== "undefined" ? window.location.search : "";
-    const destino = `/dashboard/comparador${queryString}`;
+    console.log("Respuesta de la API /api/bitrix/putDealBitrix:", {
+      status: response.status,
+      ok: response.ok,
+      body: apiResult,
+    });
+
+    let bitrixDealId: number | null = null;
+
+    if (response.ok && apiResult && typeof apiResult === "object") {
+      const dealIdValue = Number(apiResult.dealId ?? NaN);
+      if (!Number.isNaN(dealIdValue) && dealIdValue > 0) {
+        bitrixDealId = dealIdValue;
+        console.log("✅ Deal creado en Bitrix con ID:", bitrixDealId);
+      }
+    }
+
+    // 🟩 2️⃣ Luego: guardar en tu base de datos, incluyendo el bitrixDealId
+    const result = await createCotizacion({
+      plate: data.vehiculo.placa ?? "",
+      submodelEqui: Number(data.vehiculo.submodelEqui) || 0,
+      brand: data.vehiculo.marca ?? "",
+      model: data.vehiculo.modelo ?? "",
+      year: Number(data.vehiculo.anio) || 0,
+      vehicleValue: Number(data.vehiculo.avaluo) || 0,
+      type: data.vehiculo.tipo ?? "",
+      subtype: "",
+      extras: 0,
+      newVehicle: Number(data.vehiculo.esNuevo) || 0,
+      city: data.cliente.ciudad ?? "",
+      identification: data.cliente.cedula ?? "",
+      name: fullName || data.cliente.nombres || "",
+      firstLastName: data.cliente.primerApellido ?? "",
+      secondLastName: data.cliente.segundoApellido ?? "",
+      gender: data.cliente.genero ?? "",
+      civilStatus: data.cliente.estadoCivil ?? "",
+      birthdate: data.cliente.fechaNacimiento ?? "",
+      age: Number(data.cliente.edad) || 0,
+      cityCodeMapfre: Number(data.cliente.codMapfre) || 1701,
+      useOfVehicle: data.vehiculo.tipoUso ?? "",
+      chubb_mm: "AD",
+      bitrixDealId: bitrixDealId ? String(bitrixDealId) : "",
+    });
+
+    if (!result.success) {
+      console.error("❌ Error guardando cotización:", result.error);
+      alert("Error guardando la cotización en la BD");
+      return;
+    }
+
+    const idCotizacion = result.data?.id;
+    console.log("✅ Cotización guardada en BD con id:", idCotizacion);
+
+    // 🟩 3️⃣ Guardar SOLO el idCotizacion en localStorage
+    if (typeof window !== "undefined" && idCotizacion) {
+      localStorage.setItem("idCotizacion", String(idCotizacion));
+    }
+
+    // 🟩 4️⃣ Redirigir al comparador con idCotizacion
+    const destino = `/dashboard/comparador`;
     router.push(destino);
-  };
+
+  } catch (error) {
+    console.error("Error general al guardar y redirigir:", error);
+    alert("Ocurrió un error al guardar la cotización.");
+  }
+};
+
 
   /* ==================== RENDER ==================== */
   return (

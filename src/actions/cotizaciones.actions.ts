@@ -34,7 +34,7 @@ export async function createCotizacion(
     const cotizacion = await prisma.cotizaciones.create({
       data: {
         userId: session.user.id,
-        bitrixDealId: bitrixDealId || null,
+        bitrixDealId: data.bitrixDealId || null,
         plate: data.plate,
         submodelEqui: data.submodelEqui,
         brand: data.brand,

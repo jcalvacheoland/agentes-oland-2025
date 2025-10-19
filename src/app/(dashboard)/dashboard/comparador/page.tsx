@@ -3,32 +3,25 @@ import React, { useEffect, useRef, useState } from "react";
 import { IPlanRequest, IPlanResponse } from "@/interfaces/interfaces.type";
 import { obtenerPlanPorAseguradora2 } from "@/lib/services/api";
 import { HeaderCotizador } from "./components/header";
-import Planes from "./components/planes";
-import { createCotizacion } from "@/actions/cotizaciones.actions";
-import { useSession } from "next-auth/react";
+import Planes from "./components/planes"
 
 export default function ComparadorPage() {
-  const { data: session, status } = useSession();
   // <<< aquí creamos el state: plan y la función para actualizarlo setPlan >>>
   const [plan, setPlan] = useState<IPlanRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadingAll, setLoadingAll] = useState(false); // para enviar a varias aseguradoras (automático)
   const [errorAseg, setErrorAseg] = useState<string | null>(null);
-  const [responsesByAseg, setResponsesByAseg] = useState<
-    Record<string, IPlanResponse | null>
-  >({});
+  const [responsesByAseg, setResponsesByAseg] = useState<Record<string, IPlanResponse | null>>({});
 
   const ranOnceRef = useRef(false); // evita doble ejecución en StrictMode
 
   // ajusta la lista de aseguradoras según tu backend
-  const aseguradoras = ["zurich", "chubb", "asur", "sweaden"];
+  const aseguradoras = ["zurich", "chubb",  "asur","sweaden", ]; 
 
   /* ---------------- sessionStorage cache helpers ---------------- */
   const makeCacheKey = (plate: string) => `cotizaciones_${plate}`;
 
-  function readCacheForPlate(
-    plate: string
-  ): Record<string, IPlanResponse | null> | null {
+  function readCacheForPlate(plate: string): Record<string, IPlanResponse | null> | null {
     try {
       const key = makeCacheKey(plate);
       const raw = sessionStorage.getItem(key);
@@ -41,10 +34,7 @@ export default function ComparadorPage() {
     }
   }
 
-  function writeCacheForPlate(
-    plate: string,
-    data: Record<string, IPlanResponse | null>
-  ) {
+  function writeCacheForPlate(plate: string, data: Record<string, IPlanResponse | null>) {
     try {
       const key = makeCacheKey(plate);
       sessionStorage.setItem(key, JSON.stringify(data));
@@ -54,10 +44,7 @@ export default function ComparadorPage() {
   }
 
   /* ---------------- función para enviar a múltiples aseguradoras (acepta plan por parámetro) ---------------- */
-  const sendPlanToMultiple = async (
-    aseguradorasList: string[],
-    planArg?: IPlanRequest
-  ) => {
+  const sendPlanToMultiple = async (aseguradorasList: string[], planArg?: IPlanRequest) => {
     const planToSend = planArg ?? plan;
     if (!planToSend) {
       setErrorAseg("No hay plan para enviar.");
@@ -91,10 +78,7 @@ export default function ComparadorPage() {
       // guardar en sessionStorage si hay placa válida
       if (planToSend.plate && planToSend.plate.trim() !== "") {
         writeCacheForPlate(planToSend.plate, map);
-        console.log(
-          "Guardadas respuestas en sessionStorage para placa:",
-          planToSend.plate
-        );
+        console.log("Guardadas respuestas en sessionStorage para placa:", planToSend.plate);
       }
     } catch (err) {
       console.error("Error global al cotizar múltiples:", err);
@@ -105,121 +89,102 @@ export default function ComparadorPage() {
   };
 
   /* ---------------- useEffect: leer localStorage, mapear y disparar cotización automática (con cache) ---------------- */
- useEffect(() => {
+  useEffect(() => {
+    if (ranOnceRef.current) return;
+    ranOnceRef.current = true;
 
-  if (ranOnceRef.current) return;
-  ranOnceRef.current = true;
+    const vehiculoDataFromLocalStorage = localStorage.getItem("vehiculo");
+    const clienteDataFromLocalStorage = localStorage.getItem("clienteVehiculo");
 
-  const vehiculoDataFromLocalStorage = localStorage.getItem("vehiculo");
-  const clienteDataFromLocalStorage = localStorage.getItem("clienteVehiculo");
+    if (!vehiculoDataFromLocalStorage) {
+      setError("No existe la clave 'vehiculo' en localStorage");
+      setPlan(null);
+      return;
+    }
 
-  if (!vehiculoDataFromLocalStorage) {
-    setError("No existe la clave 'vehiculo' en localStorage");
-    setPlan(null);
-    return;
-  }
+    let vehiculo: any = null;
+    let cliente: any = null;
 
-  let vehiculo: any = null;
-  let cliente: any = null;
-
-  try {
-    vehiculo = JSON.parse(vehiculoDataFromLocalStorage);
-  } catch (err) {
-    setError("vehiculo no es JSON válido");
-    return;
-  }
-
-  if (clienteDataFromLocalStorage) {
     try {
-      cliente = JSON.parse(clienteDataFromLocalStorage);
+      vehiculo = JSON.parse(vehiculoDataFromLocalStorage);
     } catch (err) {
-      cliente = null;
+      setError("vehiculo no es JSON válido");
+      return;
     }
-  }
 
-  const planRequest: IPlanRequest = {
-    plate: vehiculo.placa,
-    submodelEqui: 50012318,
-    brand: vehiculo.marca,
-    model: vehiculo.modelo,
-    year: vehiculo.anio,
-    vehicleValue: Number(vehiculo.avaluo ?? vehiculo.avaluoOriginal),
-    type: vehiculo.tipo,
-    subtype: "",
-    extras: 0,
-    newVehicle: 0,
-    city: cliente?.ciudad,
-    identification: cliente?.cedula,
-    name: cliente?.nombres ?? cliente?.name,
-    firstLastName:
-      cliente?.primerApellido ??
-      (cliente?.apellidos ? (cliente.apellidos as string).split(" ")[0] : ""),
-    secondLastName:
-      cliente?.segundoApellido ??
-      (cliente?.apellidos ? (cliente.apellidos as string).split(" ").slice(1).join(" ") : ""),
-    gender: cliente?.genero,
-    civilStatus: cliente?.estadoCivil,
-    birthdate: cliente?.fechaNacimiento,
-    age: cliente?.edad,
-    cityCodeMapfre: Number(cliente?.codMapfre ?? cliente?.cityCodeMapfre),
-    useOfVehicle: vehiculo?.tipoUso,
-    chubb_mm: cliente?.chubb_mm || "AD",
-  };
-  
-  console.log("Plan mapeado desde localStorage:", planRequest); 
-  setPlan(planRequest);
-  setError(null);
-
-  // Flujo automático: guardar en BD y cotizar al mismo tiempo
-  (async () => {
-    // Revisar cache primero
-    if (planRequest.plate && planRequest.plate.trim() !== "") {
-      const cached = readCacheForPlate(planRequest.plate);
-      if (cached) {
-        setResponsesByAseg(cached);
-        console.log("Usando cache de sessionStorage para placa:", planRequest.plate);
-        
-        // Aún así guardamos en BD aunque tengamos cache
-        
-        return;
+    if (clienteDataFromLocalStorage) {
+      try {
+        cliente = JSON.parse(clienteDataFromLocalStorage);
+      } catch (err) {
+        cliente = null;
       }
     }
 
-    // Si no hay cache, cotizamos Y guardamos en paralelo
-    setLoadingAll(true);
-    setErrorAseg(null);
-    
-    try {
-      // Ejecutar ambas operaciones en paralelo
-      const [cotizacionResult] = await Promise.all([
-        createCotizacion(planRequest),
-        sendPlanToMultiple(aseguradoras, planRequest)
-      ]);
+    // creas el planRequest (igual que en tu ejemplo)
+    const planRequest: IPlanRequest = {
+      plate: vehiculo.placa,
+      submodelEqui: 50012318, // valor fijo por ahora; ajustar según tu lógica
+      brand: vehiculo.marca,
+      model: vehiculo.modelo,
+      year: vehiculo.anio,
+      vehicleValue: Number(vehiculo.avaluo ?? vehiculo.avaluoOriginal),
+      type: vehiculo.tipo,
+      subtype: "",
+      extras:  0,
+      newVehicle:  0,
+      city: cliente?.ciudad,
+      identification: cliente?.cedula,
+      name: cliente?.nombres ?? cliente?.name,
+      firstLastName:
+        cliente?.primerApellido ??
+        (cliente?.apellidos ? (cliente.apellidos as string).split(" ")[0] : ""),
+      secondLastName:
+        cliente?.segundoApellido ??
+        (cliente?.apellidos ? (cliente.apellidos as string).split(" ").slice(1).join(" ") : ""),
+      gender: cliente?.genero,
+      civilStatus: cliente?.estadoCivil,
+      birthdate: cliente?.fechaNacimiento,
+      age: cliente?.edad,
+      cityCodeMapfre: Number(cliente?.codMapfre ?? cliente?.cityCodeMapfre),
+      useOfVehicle: vehiculo?.tipoUso,
+      chubb_mm: "AD",
+    };
+    console.log("Plan mapeado desde localStorage:", planRequest); 
+    // guardamos el plan en el state
+    setPlan(planRequest);
+    setError(null);
 
-      if (cotizacionResult.success) {
-        console.log("✅ Cotización guardada en BD:", cotizacionResult.data?.id);
-      } else {
-        console.error("❌ Error guardando cotización:", cotizacionResult.error);
+    // flujo automático: revisar cache y si no hay, cotizar
+    (async () => {
+      // revisar cache primero
+      if (planRequest.plate && planRequest.plate.trim() !== "") {
+        const cached = readCacheForPlate(planRequest.plate);
+        if (cached) {
+          setResponsesByAseg(cached);
+          console.log("Usando cache de sessionStorage para placa:", planRequest.plate);
+          return;
+        }
       }
-    } catch (error) {
-      console.error("Error en el proceso:", error);
-    } finally {
-      setLoadingAll(false);
-    }
-  })();
-}, []); // solo se ejecuta al montar
+
+      // si no hay cache, cotizamos automáticamente
+      setLoadingAll(true);
+      setErrorAseg(null);
+      try {
+        await sendPlanToMultiple(aseguradoras, planRequest);
+      } finally {
+        setLoadingAll(false);
+      }
+    })();
+  }, []); // solo se ejecuta al montar
 
   // --- AQUÍ: obtener valores para pasar al HeaderCotizador ---
   // Renderizamos placeholders hasta que el efecto cargue la información real en `plan`
   const headerName = plan?.name ?? "-";
   const headerVehicle = plan?.brand ?? "";
   const headerModel = plan?.model ?? "";
-  const headerYear =
-    typeof plan?.year === "number" ? plan.year : Number(plan?.year ?? 0);
+  const headerYear = typeof plan?.year === "number" ? plan.year : Number(plan?.year ?? 0);
   const headerValorAsegurado =
-    typeof plan?.vehicleValue === "number"
-      ? plan.vehicleValue
-      : Number(plan?.vehicleValue ?? 0);
+    typeof plan?.vehicleValue === "number" ? plan.vehicleValue : Number(plan?.vehicleValue ?? 0);
 
   return (
     <div className="p-4">
@@ -235,13 +200,18 @@ export default function ComparadorPage() {
       {loadingAll && (
         <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
           <div className="font-medium">Estamos cotizando tu vehículo...</div>
-          <div className="text-sm text-gray-700 mt-2">
-            Esto puede tardar unos segundos.
-          </div>
+          <div className="text-sm text-gray-700 mt-2">Esto puede tardar unos segundos.</div>
         </div>
       )}
 
-      <Planes responses={responsesByAseg} planRequest={plan}></Planes>
+
+        <Planes
+        responses={responsesByAseg}
+        planRequest={plan}
+        ></Planes>
+
+      
+      
     </div>
   );
 }
