@@ -10,7 +10,7 @@ export const LoginButton = () => {
       className="w-full h-14 text-base font-semibold hover:bg-rojo-oland-100 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-[1.02] rounded-full"
       size="lg"
     >
-      Iniciar sesión con Bitrix24
+      Iniciar sesión
     </Button>
   );
 };

@@ -10,7 +10,7 @@ type AuthLayoutProps = {
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="relative min-h-screen">
-      <BackgroundImg />
+
       <Header />
       <div className="relative z-10">
         {children}
