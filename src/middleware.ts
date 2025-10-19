@@ -1,10 +1,7 @@
-﻿import NextAuth from "next-auth"
+﻿import { auth } from "@/auth"
 import { NextResponse } from "next/server"
-import authConfig from "./auth.config"
 
-const { auth } = NextAuth(authConfig)
-
-const publicRoutes = new Set(["/", "/login", "api" , "/register"])
+const publicRoutes = new Set(["/", "/login", "/register"])
 const authRoutes = new Set(["/login", "/register"])
 const DEFAULT_REDIRECT = "/dashboard"
 const API_AUTH_PREFIX = "/api/auth"
@@ -22,20 +19,14 @@ export default auth((req) => {
   const isLoggedIn = Boolean(req.auth)
 
   if (!isLoggedIn) {
-    if (isPublicRoute) {
-      return NextResponse.next()
-    }
-
-    if (isApiRoute) {
+    if (isPublicRoute) return NextResponse.next()
+    if (isApiRoute)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
 
     const callbackUrl = req.nextUrl.pathname + req.nextUrl.search
     const loginUrl = new URL("/login", req.url)
-
-    if (callbackUrl && callbackUrl !== "/") {
+    if (callbackUrl && callbackUrl !== "/")
       loginUrl.searchParams.set("callbackUrl", callbackUrl)
-    }
 
     return NextResponse.redirect(loginUrl)
   }
@@ -46,7 +37,6 @@ export default auth((req) => {
 
   return NextResponse.next()
 })
-
 
 export const config = {
   matcher: [
