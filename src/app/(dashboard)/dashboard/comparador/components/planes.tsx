@@ -1,10 +1,11 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import type { IPlanRequest } from "@/interfaces/interfaces.type";
 import { Star, Info, ChevronDown } from "lucide-react";
 import ComparisonModal, { type ComparedPlanPayload } from "./comparisonModal";
 import { StaticPlanCard } from "./StaticPlanCard";
 import { AseguradorasLogo } from "@/configuration/constants";
+import { updateCotizacionWithPlanesHistorial } from "@/actions/updateCotizacionWithSelectedPlan";
 
 type RawResp = any;
 type ResponsesMap = Record<string, RawResp | null | { __error: string }>;
@@ -28,6 +29,33 @@ function createSectionState(): Record<SectionKey, boolean> {
   };
 }
 
+type PlanComparadoPersist = Parameters<
+  typeof updateCotizacionWithPlanesHistorial
+>[1][number];
+
+function resolvePrimaTotal(plan: ComparedPlanPayload): number | null {
+  const totalPremium = plan.pricing?.totalPremium;
+  if (typeof totalPremium === "number" && !Number.isNaN(totalPremium)) {
+    return totalPremium;
+  }
+
+  const netPremium = plan.netPremium;
+  if (typeof netPremium === "number" && !Number.isNaN(netPremium)) {
+    return netPremium;
+  }
+
+  const monthly = plan.pricing?.monthly;
+  const period = plan.pricing?.period;
+  if (typeof monthly === "number" && typeof period === "number") {
+    const computed = monthly * (period > 0 ? period : 1);
+    if (!Number.isNaN(computed)) {
+      return computed;
+    }
+  }
+
+  return null;
+}
+
 interface PlanesProps {
   responses: ResponsesMap;
   planRequest?: IPlanRequest | null;
@@ -47,6 +75,20 @@ export default function Planes({
     {}
   );
   const [openModal, setOpenModal] = useState(false);
+  const [, startSaving] = useTransition();
+  const [cotizacionId, setCotizacionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const storedId = window.localStorage.getItem("idCotizacion");
+      if (storedId) {
+        setCotizacionId(storedId);
+      }
+    } catch (error) {
+      console.warn("No se pudo leer idCotizacion desde localStorage:", error);
+    }
+  }, []);
 
 
 
@@ -212,8 +254,69 @@ export default function Planes({
   }
 
   const handleComparisonConfirm = (payload: { compared: ComparedPlanPayload[] }) => {
-    // Propagamos la comparación para que el contenedor decida si la persiste o la envía a otro flujo.
     onSendComparison?.(payload);
+
+    if (!payload?.compared?.length) {
+      return;
+    }
+
+    const plansToPersist: PlanComparadoPersist[] = [];
+
+    payload.compared.forEach((plan) => {
+      const aseguradora =
+        typeof plan.insurerKey === "string" && plan.insurerKey.trim().length > 0
+          ? plan.insurerKey
+          : typeof plan.rawPlan?.aseguradora === "string" &&
+              plan.rawPlan.aseguradora.trim().length > 0
+            ? plan.rawPlan.aseguradora
+            : "";
+
+      const primaTotal = resolvePrimaTotal(plan);
+
+      if (!aseguradora || primaTotal === null) {
+        return;
+      }
+
+      plansToPersist.push({
+        aseguradora,
+        nombrePlan:
+          typeof plan.planName === "string" && plan.planName.trim().length > 0
+            ? plan.planName
+            : "Plan sin nombre",
+        primaTotal,
+      });
+    });
+
+    if (!plansToPersist.length) {
+      return;
+    }
+
+    let targetCotizacionId = cotizacionId;
+
+    if (!targetCotizacionId && typeof window !== "undefined") {
+      try {
+        const storedId = window.localStorage.getItem("idCotizacion");
+        if (storedId) {
+          targetCotizacionId = storedId;
+          setCotizacionId(storedId);
+        }
+      } catch (error) {
+        console.warn("No se pudo leer idCotizacion desde localStorage:", error);
+      }
+    }
+
+    if (!targetCotizacionId) {
+      console.warn(
+        "[comparaciones] No se encontró idCotizacion; se omite el guardado de planes en BD."
+      );
+      return;
+    }
+
+    startSaving(() => {
+      updateCotizacionWithPlanesHistorial(targetCotizacionId, plansToPersist).catch((error) => {
+        console.error("Error guardando los planes comparados en la BD:", error);
+      });
+    });
   };
 
   async function handleConfirmComparison(payload: {

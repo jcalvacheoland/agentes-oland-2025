@@ -25,3 +25,7 @@ export async function getBitrixDeal(dealId: string) {
     return { ok: false, error: String(err) }
   }
 }
+
+export async function updateBitrixDealWithPlanSelected(dealId: string, ) {
+
+}
