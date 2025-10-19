@@ -12,6 +12,17 @@ export interface BitrixUser {
   department: any;
 }
 
+// Función para formatear el nombre
+function formatName(name: string | null): string | null {
+  if (!name) return null;
+  
+  return name
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export function useBitrixUser() {
   const [user, setUser] = useState<BitrixUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +41,10 @@ export function useBitrixUser() {
     const isCacheValid = lastFetched && now - Number(lastFetched) < ONE_DAY;
 
     if (cachedUser && isCacheValid) {
-      setUser(JSON.parse(cachedUser));
+      const parsedUser = JSON.parse(cachedUser);
+      // Formatear el nombre al recuperar del cache
+      parsedUser.name = formatName(parsedUser.name);
+      setUser(parsedUser);
       setLoading(false);
       return;
     }
@@ -41,6 +55,9 @@ export function useBitrixUser() {
         const res = await fetch("/api/bitrix/getUser");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
+
+        // Formatear el nombre antes de guardar
+        data.name = formatName(data.name);
 
         setUser(data);
         localStorage.setItem(CACHE_KEY, JSON.stringify(data));

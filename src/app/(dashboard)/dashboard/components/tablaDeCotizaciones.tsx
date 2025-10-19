@@ -95,7 +95,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Aprobadas</CardTitle>
-            <AprobadoIcon width={24} height={24} />
+            <AprobadoIcon width={24} height={24}  />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{contarAprobadas()}</div>
@@ -107,7 +107,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
             <CardTitle className="text-sm font-medium">
               Cotizacion con comision
             </CardTitle>
-            <ValorAprobadoIcon width={24} height={24} />
+            <ValorAprobadoIcon width={24} height={24}  />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{contarConComision()}</div>
