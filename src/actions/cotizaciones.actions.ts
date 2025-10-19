@@ -31,7 +31,7 @@ export async function createCotizacion(
     }
 
     // Crear la cotización en la base de datos
-    const cotizacion = await prisma.cotizaciones.create({
+    const cotizacion = await prisma.cotizacion.create({
       data: {
         userId: session.user.id,
         bitrixDealId: data.bitrixDealId || null,
@@ -95,7 +95,7 @@ export async function updateCotizacion(
     }
 
     // Verificar que la cotización pertenece al usuario
-    const existing = await prisma.cotizaciones.findUnique({
+    const existing = await prisma.cotizacion.findUnique({
       where: { id },
     });
 
@@ -114,7 +114,7 @@ export async function updateCotizacion(
     }
 
     // Actualizar la cotización
-    const cotizacion = await prisma.cotizaciones.update({
+    const cotizacion = await prisma.cotizacion.update({
       where: { id },
        data: {
         ...(data.bitrixDealId !== undefined && { bitrixDealId: data.bitrixDealId }),
@@ -172,7 +172,7 @@ export async function getUserCotizaciones() {
       };
     }
 
-    const cotizaciones = await prisma.cotizaciones.findMany({
+    const cotizaciones = await prisma.cotizacion.findMany({
       where: {
         userId: session.user.id,
       },
@@ -210,7 +210,7 @@ export async function getCotizacionById(id: string) {
       };
     }
 
-    const cotizacion = await prisma.cotizaciones.findUnique({
+    const cotizacion = await prisma.cotizacion.findUnique({
       where: { id },
     });
 
