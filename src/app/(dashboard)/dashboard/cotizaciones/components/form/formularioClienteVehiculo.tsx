@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Car, User, Search, Loader2 } from "lucide-react";
+import { Car, User, Search, Loader2 } from "lucide-react";
 import { obtenerPersonaPorCedula, obtenerVehiculoPorPlaca } from '@/lib/services/api';
 import { SelectUsoVehiculo } from "./inputs/selectInput";
 import { SelectEstadoCivil } from "./inputs/selectInputEstadoCivil";
@@ -20,17 +21,17 @@ import { calcularEdad, calcularFechaDesdeEdad, normalizarTexto, formatearPlaca }
 /* ==================== SCHEMAS ==================== */
 const clienteSchema = z.object({
   cedula: z.string().min(10, "La cédula debe tener al menos 10 caracteres"),
-  nombres: z.string().min(2, "Ingrese los nombres").optional().or(z.literal("")),
-  apellidos: z.string().optional(),
-  primerApellido: z.string().optional(),
-  segundoApellido: z.string().optional(),
-  fechaNacimiento: z.string().optional(),
-  edad: z.string().optional(),
-  genero: z.string().optional(),
-  estadoCivil: z.string().optional(),
-  email: z.union([z.string().email("Email inv�lido"), z.literal("")]).optional(),
-  celular: z.union([z.string().min(10, "El celular debe tener al menos 10 d�gitos"), z.literal("")]).optional(),
-  ciudad: z.string().optional(),
+  nombres: z.string().min(2, "Ingrese los nombres"),
+  apellidos: z.string().min(2, "Ingrese los apellidos"),
+  primerApellido: z.string(),
+  segundoApellido: z.string(),
+  fechaNacimiento: z.string(),
+  edad: z.string().max(2, "Edad no válida").min(1, "Edad no válida"),
+  genero: z.string().min(2, "El género es obligatorio"),
+  estadoCivil: z.string().min(2, "El estado civil es obligatorio"),
+  email: z.union([z.string().email("Email inválido"), z.literal("")]).optional(),
+  celular: z.union([z.string().min(10, "El celular debe tener al menos 10 dígitos"), z.literal("")]).optional(),
+  ciudad: z.string().min(2, "La ciudad es obligatoria"),
   provincia: z.string().optional(),
   region: z.string().optional(),
   codMapfre: z.coerce.number().optional(),
@@ -39,12 +40,12 @@ const clienteSchema = z.object({
 const vehiculoSchema = z.object({
   marca: z.string().optional(),
   modelo: z.string().optional(),
-  anio: z.coerce.number().min(1900).max(2026).optional(),
+  anio: z.coerce.number().min(1900, "Campo no valido").max(2026).optional(),
   placa: z.string().min(6, "Placa inválida").optional(),
   avaluo: z.coerce.number().min(0).optional(),
   avaluoOriginal: z.coerce.number().optional(),
   tipo: z.string().optional(),
-  tipoUso: z.string().optional(),
+  tipoUso: z.string().min(2, "El tipo de uso es obligatorio"),
   esNuevo: z.coerce.number().optional(),
   submodelEqui: z.string().optional(),
   idDealBitrix: z.coerce.number().optional(),
@@ -59,6 +60,8 @@ const formSchema = z.object({
 type FormSchema = typeof formSchema;
 type FormValues = z.infer<FormSchema>;
 type FormInputs = z.input<FormSchema>;
+type VehiculoAutoFillField = "marca" | "modelo" | "anio" | "avaluo";
+type VehiculoAutoFillMap = Partial<Record<VehiculoAutoFillField, boolean>>;
 
 const generarIdCotizacion = (): string => {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -111,10 +114,10 @@ const mapearPersonaAFormulario = (persona: any, setValue: any, currentValues: an
   };
 
   // Mapear campos visibles (solo si están vacíos)
-  if (!current.nombres && datosNormalizados.nombres) {
+  if (datosNormalizados.nombres) {
     setValue("cliente.nombres", datosNormalizados.nombres, { shouldValidate: true });
   }
-  if (!current.apellidos && datosNormalizados.apellidos) {
+  if (datosNormalizados.apellidos) {
     setValue("cliente.apellidos", datosNormalizados.apellidos, { shouldValidate: false });
   }
   if (!current.celular && datosNormalizados.celular) {
@@ -123,10 +126,10 @@ const mapearPersonaAFormulario = (persona: any, setValue: any, currentValues: an
   if (!current.email && datosNormalizados.email) {
     setValue("cliente.email", datosNormalizados.email, { shouldValidate: true });
   }
-  if (!current.ciudad && datosNormalizados.ciudad) {
+  if (datosNormalizados.ciudad) {
     setValue("cliente.ciudad", datosNormalizados.ciudad, { shouldValidate: false });
   }
-  if (!current.cedula && datosNormalizados.cedula) {
+  if (datosNormalizados.cedula) {
     setValue("cliente.cedula", datosNormalizados.cedula, { shouldValidate: true });
   }
 
@@ -136,10 +139,10 @@ const mapearPersonaAFormulario = (persona: any, setValue: any, currentValues: an
   setValue("cliente.provincia", datosNormalizados.provincia, { shouldValidate: false });
   setValue("cliente.region", datosNormalizados.region, { shouldValidate: false });
   
-  if (!current.estadoCivil && datosNormalizados.estadoCivil) {
+  if (datosNormalizados.estadoCivil) {
     setValue("cliente.estadoCivil", datosNormalizados.estadoCivil, { shouldValidate: false });
   }
-  if (!current.genero && datosNormalizados.genero) {
+  if (datosNormalizados.genero) {
     setValue("cliente.genero", datosNormalizados.genero, { shouldValidate: false });
   }
 
@@ -161,8 +164,12 @@ const mapearPersonaAFormulario = (persona: any, setValue: any, currentValues: an
   }
 };
 
-const mapearVehiculoAFormulario = (vehiculo: any, setValue: any, currentValues: any) => {
-  const current = currentValues.vehiculo || {};
+const mapearVehiculoAFormulario = (
+  vehiculo: any,
+  setValue: any,
+  _currentValues: any
+): VehiculoAutoFillField[] => {
+  const autoFilledFields: VehiculoAutoFillField[] = [];
 
   // Normalizar datos de vehículo
   const datosNormalizados = {
@@ -181,24 +188,28 @@ const mapearVehiculoAFormulario = (vehiculo: any, setValue: any, currentValues: 
   };
 
   // Mapear campos visibles (solo si están vacíos)
-  if (!current.marca && datosNormalizados.marca) {
+  if (datosNormalizados.marca) {
     setValue("vehiculo.marca", datosNormalizados.marca, { shouldValidate: true });
+    autoFilledFields.push("marca");
   }
-  if (!current.modelo && datosNormalizados.modelo) {
+  if (datosNormalizados.modelo) {
     setValue("vehiculo.modelo", datosNormalizados.modelo, { shouldValidate: true });
+    autoFilledFields.push("modelo");
   }
-  if (!current.placa && datosNormalizados.placa) {
+  if (datosNormalizados.placa) {
     setValue("vehiculo.placa", datosNormalizados.placa, { shouldValidate: true });
   }
 
   // Año
-  if (datosNormalizados.anio && !isNaN(Number(datosNormalizados.anio))) {
+  if (!isNaN(Number(datosNormalizados.anio))) {
     setValue("vehiculo.anio", Number(datosNormalizados.anio), { shouldValidate: true });
+    autoFilledFields.push("anio");
   }
 
   // Avalúo
-  if (datosNormalizados.avaluo && !isNaN(Number(datosNormalizados.avaluo))) {
+  if (!isNaN(Number(datosNormalizados.avaluo))) {
     setValue("vehiculo.avaluo", Number(datosNormalizados.avaluo), { shouldValidate: true });
+    autoFilledFields.push("avaluo");
   }
   if (datosNormalizados.avaluoOriginal && !isNaN(Number(datosNormalizados.avaluoOriginal))) {
     setValue("vehiculo.avaluoOriginal", Number(datosNormalizados.avaluoOriginal), { shouldValidate: false });
@@ -222,6 +233,8 @@ const mapearVehiculoAFormulario = (vehiculo: any, setValue: any, currentValues: 
   if (datosNormalizados.idCotizacion) {
     setValue("vehiculo.idCotizacion", String(datosNormalizados.idCotizacion), { shouldValidate: false });
   }
+
+  return autoFilledFields;
 };
 
 /* ==================== HOOKS PERSONALIZADOS ==================== */
@@ -307,6 +320,8 @@ export const FormularioClienteVehiculo = () => {
   const [errorCedula, setErrorCedula] = useState<string | null>(null);
   const [loadingPlaca, setLoadingPlaca] = useState(false);
   const [errorPlaca, setErrorPlaca] = useState<string | null>(null);
+  const [autoFilledVehiculo, setAutoFilledVehiculo] = useState<VehiculoAutoFillMap>({});
+
 
   const {
     register,
@@ -381,7 +396,20 @@ export const FormularioClienteVehiculo = () => {
       if (!vehiculo) {
       throw new Error("No se encontró el vehículo");
     }
-      mapearVehiculoAFormulario(vehiculo, setValue, getValues());
+      const camposAutocompletados = mapearVehiculoAFormulario(
+        vehiculo,
+        setValue,
+        getValues()
+      );
+      if (camposAutocompletados.length) {
+        setAutoFilledVehiculo((prev) => ({
+          ...prev,
+          ...camposAutocompletados.reduce<VehiculoAutoFillMap>((acc, field) => {
+            acc[field] = true;
+            return acc;
+          }, {}),
+        }));
+      }
     } catch (error) {
       console.error("Error al buscar vehículo:", error);
       setErrorPlaca("No se encontró información para la placa ingresada");
@@ -412,6 +440,11 @@ export const FormularioClienteVehiculo = () => {
       const fecha = calcularFechaDesdeEdad(edad);
       setValue("cliente.fechaNacimiento", fecha, { shouldValidate: true });
     }
+  };
+
+  const handleReset = () => {
+    reset();
+    setAutoFilledVehiculo({});
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -559,8 +592,8 @@ export const FormularioClienteVehiculo = () => {
                     <Input
                       id="placa"
                       {...register("vehiculo.placa")}
-                      placeholder="PFH-7469"
-                      className="h-11 w-full uppercase sm:flex-1"
+                      placeholder="PFQ1234"
+                      className="h-11 w-full uppercase sm:flex-1 text-black"
                       onBlur={() => buscarVehiculoPorPlaca(getValues("vehiculo.placa")?.trim().toUpperCase() || "")}
                     />
                     <Button
@@ -591,8 +624,9 @@ export const FormularioClienteVehiculo = () => {
                       autoComplete="false"
                       id="marca"
                       {...register("vehiculo.marca")}
-                      placeholder="GEELY"
-                      className="h-11"
+                      placeholder="AUDI"
+                      className={cn("h-11", autoFilledVehiculo.marca && "autofill-lock")}
+                      readOnly={!!autoFilledVehiculo.marca}
                     />
                     {errors.vehiculo?.marca && (
                       <p className="text-sm text-red-600">{errors.vehiculo.marca.message}</p>
@@ -606,8 +640,9 @@ export const FormularioClienteVehiculo = () => {
                      autoComplete="false"
                       id="modelo"
                       {...register("vehiculo.modelo")}
-                      placeholder="COOLRAY"
-                      className="h-11"
+                      placeholder="A4"
+                      className={cn("h-11", autoFilledVehiculo.marca && "autofill-lock")}
+                      readOnly={!!autoFilledVehiculo.marca}
                     />
                     {errors.vehiculo?.modelo && (
                       <p className="text-sm text-red-600">{errors.vehiculo.modelo.message}</p>
@@ -627,7 +662,8 @@ export const FormularioClienteVehiculo = () => {
                       type="number"
                       {...register("vehiculo.anio")}
                       placeholder="2024"
-                      className="h-11"
+                      className={cn("h-11", autoFilledVehiculo.marca && "autofill-lock")}
+                      readOnly={!!autoFilledVehiculo.marca}
                     />
                     {errors.vehiculo?.anio && (
                       <p className="text-sm text-red-600">{errors.vehiculo.anio.message}</p>
@@ -638,12 +674,15 @@ export const FormularioClienteVehiculo = () => {
                       Valor del Vehículo
                     </Label>
                     <Input
+                      
                      autoComplete="false"
                       id="avaluo"
                       type="number"
                       {...register("vehiculo.avaluo")}
-                      placeholder="17000"
-                      className="h-11"
+                      placeholder="15000"
+                      className={cn("h-11", autoFilledVehiculo.marca && "autofill-lock")}
+                      readOnly={!!autoFilledVehiculo.marca}
+           
                     />
                     {errors.vehiculo?.avaluo && (
                       <p className="text-sm text-red-600">{errors.vehiculo.avaluo.message}</p>
@@ -686,7 +725,7 @@ export const FormularioClienteVehiculo = () => {
                     <Input
                       id="cedula"
                       {...register("cliente.cedula")}
-                      placeholder="1753035664"
+                      placeholder="1701234567"
                       className="h-11 w-full sm:flex-1"
                       onBlur={() => buscarPersonaPorCedula(getValues("cliente.cedula")?.trim() || "")}
                     />
@@ -717,7 +756,7 @@ export const FormularioClienteVehiculo = () => {
                     <Input
                       id="nombres"
                       {...register("cliente.nombres")}
-                      placeholder="JUAN FERNANDO"
+                      placeholder="JOHN CARLOS"
                       className="h-11"
                     />
                     {errors.cliente?.nombres && (
@@ -731,7 +770,7 @@ export const FormularioClienteVehiculo = () => {
                     <Input
                       id="apellidos"
                       {...register("cliente.apellidos")}
-                      placeholder="CALVACHE HERNANDEZ"
+                      placeholder="DOE PEREZ"
                       className="h-11"
                     />
                   </div>
@@ -740,12 +779,12 @@ export const FormularioClienteVehiculo = () => {
                 {/* Celular */}
                 <div className="space-y-2">
                   <Label htmlFor="celular" className="text-sm font-semibold text-gray-700">
-                    Teléfono
+                    Celular (Opcional)
                   </Label>
                   <Input
                     id="celular"
                     {...register("cliente.celular")}
-                    placeholder="0987748808"
+                    placeholder="0991234567"
                     className="h-11"
                   />
                   {errors.cliente?.celular && (
@@ -756,14 +795,14 @@ export const FormularioClienteVehiculo = () => {
                 {/* Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
-                    Email
+                    Email (Opcional)
                   </Label>
                   <Input
                     id="email"
                     type="email"
                     {...register("cliente.email")}
                     placeholder="correo@ejemplo.com"
-                    className="h-11"
+                    className="h-11 "
                   />
                   {errors.cliente?.email && (
                     <p className="text-sm text-red-600">{errors.cliente.email.message}</p>
@@ -781,7 +820,7 @@ export const FormularioClienteVehiculo = () => {
                       type="number"
                       {...register("cliente.edad")}
                       onChange={handleEdadChange}
-                      placeholder="25"
+                      
                       className="h-11"
                     />
                   </div>
@@ -829,7 +868,7 @@ export const FormularioClienteVehiculo = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => reset()}
+              onClick={handleReset}
               className="h-12 w-full rounded-full px-8 text-base sm:w-auto"
               disabled={isSubmitting}
             >
@@ -847,7 +886,7 @@ export const FormularioClienteVehiculo = () => {
                   Estamos cotizando tu vehículo...
                 </span>
               ) : (
-                "Cotizar Seguro"
+                "Cotizar Vehículo"
               )}
             </Button>
           </div>
