@@ -180,13 +180,6 @@ export default function ComparadorPage() {
         console.log("Usando cache de sessionStorage para placa:", planRequest.plate);
         
         // Aún así guardamos en BD aunque tengamos cache
-        createCotizacion(planRequest).then((result) => {
-          if (result.success) {
-            console.log("✅ Cotización guardada en BD:", result.data?.id);
-          } else {
-            console.error("❌ Error guardando cotización:", result.error);
-          }
-        });
         
         return;
       }
