@@ -63,7 +63,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
         <div className="flex w-full justify-center sm:w-auto sm:justify-end">
           <Link href="/dashboard/cotizaciones">
             <Button className="w-full bg-rojo-oland-100 hover:bg-azul-oland-100 sm:w-auto">
-              Crear nueva cotizacion
+              Crear nueva cotización
             </Button>
           </Link>
         </div>
@@ -105,7 +105,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Cotizacion con comision
+              Cotización con comisión
             </CardTitle>
             <ValorAprobadoIcon width={24} height={24}  />
           </CardHeader>
@@ -123,13 +123,13 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <Table className="min-w-[560px]">
+          <Table className="min-w-[560px] ">
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Titulo</TableHead>
-                <TableHead>Valor cotizado</TableHead>
-                <TableHead>Etapa</TableHead>
+                <TableHead className="text-center">ID</TableHead>
+                <TableHead className="text-left">Titulo</TableHead>
+                <TableHead className="text-center">Valor cotizado</TableHead>
+                <TableHead className="text-center">Etapa</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -145,7 +145,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
               ) : pageItems.length ? (
                 pageItems.map((item, idx) => (
                   <TableRow key={item.ID}>
-                    <TableCell className="font-medium">
+                    <TableCell className="text-center font-medium">
                       {items.length - (startIndex + idx)}
                     </TableCell>
                     <TableCell className="max-w-xs">
@@ -153,16 +153,23 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
                         <Link href={`/${item.ID}`}>{item.TITLE}</Link>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {item.OPPORTUNITY ? (
-                        <Badge variant="secondary">{item.OPPORTUNITY}</Badge>
+                        <Badge
+                          variant="secondary"
+                          className="mx-auto w-fit"
+                        >
+                          {item.OPPORTUNITY}
+                        </Badge>
                       ) : (
-                        <span className="text-muted-foreground">--</span>
+                        <span className="text-muted-foreground ">--</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {item.STAGE_ID ? (
-                        <Badge variant="outline">{item.STAGE_ID}</Badge>
+                        <Badge variant="outline" className="mx-auto w-fit">
+                          {item.STAGE_ID}
+                        </Badge>
                       ) : (
                         <span className="text-muted-foreground">--</span>
                       )}
