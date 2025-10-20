@@ -27,18 +27,14 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
 
   const aseguradoraNombres: Record<string, string> = {
     asur: 'Aseguradora del Sur',
-    zurich: 'Zurich Seguros',
-    mapfre: 'Mapfre Ecuador',
-    equinoccial: 'Equinoccial Seguros',
-    sweaden: 'Sweaden Seguros',
-    latina: 'Latina Seguros',
-    panamericana: 'Panamericana Seguros',
+    zurich: 'Zurich',
+    mapfre: 'Mapfre',
+    equinoccial: 'Equinoccial',
+    sweaden: 'Sweaden',
   };
 
   const planNombres: Record<string, string> = {
   "s123 chubb": "CHUBB",
-  "s123 zurich pro": "Zurich PRO",
-  "s124 equinoccial full": "Equinoccial FULL",
   // agrega más según tus códigos internos
 };
 

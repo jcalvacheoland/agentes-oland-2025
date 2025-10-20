@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
         "User-Agent": BITRIX_USER_AGENT,
       },
       body: JSON.stringify({
-        select: ["ID", "TITLE", "ASSIGNED_BY_ID", "DATE_CREATE", "STAGE_ID", "OPPORTUNITY"],
+        select: ["ID", "TITLE", "ASSIGNED_BY_ID", "DATE_CREATE", "STAGE_ID", "OPPORTUNITY","UF_CRM_1757947153789"],
         filter: { ASSIGNED_BY_ID: userId },
         order: { ID: "DESC" },
       }),

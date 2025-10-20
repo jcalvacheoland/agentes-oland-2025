@@ -27,6 +27,41 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
+const stageLabels: Record<string, string> = {
+  "C24:NEW": "Nuevo",
+  "C24:PREPARATION": "Preparacion",
+  "C24:UC_ZCRTSB": "Inspeccion",
+  "C24:PREPAYMENT_INVOIC": "Inspeccion Favorable",
+  "C24:UC_87UXF3": "Formulario Vinculacion",
+  "C24:EXECUTING": "Orden de Emision",
+  "C24:UC_CJKKJS": "Emitida",
+  "C24:UC_GFUHD0": "Despacho de Emision",
+  "C24:UC_9TDBGH": "Cobranza",
+  "C24:UC_D2MRZM": "Pagado",
+  "C24:UC_XMLGTG": "Comision",
+  "C24:WON": "Cerrada",
+};
+
+const formatUsdValue = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const [rawAmount] = String(value).split("|");
+  const numericAmount = Number(rawAmount);
+
+  if (Number.isFinite(numericAmount)) {
+    const formatted = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(numericAmount);
+
+    return `$${formatted}`;
+  }
+
+  return rawAmount ? `$${rawAmount}` : null;
+};
+
 export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
   const { items, err, loading } = useDeals(userId);
 
@@ -143,39 +178,40 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
                   </TableCell>
                 </TableRow>
               ) : pageItems.length ? (
-                pageItems.map((item, idx) => (
-                  <TableRow key={item.ID}>
-                    <TableCell className="text-center font-medium">
-                      {items.length - (startIndex + idx)}
-                    </TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="truncate" title={item.TITLE}>
-                        <Link href={`/${item.ID}`}>{item.TITLE}</Link>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {item.OPPORTUNITY ? (
-                        <Badge
-                          variant="secondary"
-                          className="mx-auto w-fit"
-                        >
-                          {item.OPPORTUNITY}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground ">--</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {item.STAGE_ID ? (
-                        <Badge variant="outline" className="mx-auto w-fit">
-                          {item.STAGE_ID}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">--</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
+                pageItems.map((item, idx) => {
+                  const formattedVehicleValue = formatUsdValue(item.UF_CRM_1757947153789);
+
+                  return (
+                    <TableRow key={item.ID}>
+                      <TableCell className="text-center font-medium">
+                        {items.length - (startIndex + idx)}
+                      </TableCell>
+                      <TableCell className="max-w-xs">
+                        <div className="truncate" title={item.TITLE}>
+                          <Link href={`/${item.ID}`}>{item.TITLE}</Link>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {formattedVehicleValue ? (
+                          <Badge variant="secondary" className="mx-auto w-fit">
+                            {formattedVehicleValue}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground ">--</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {item.STAGE_ID ? (
+                          <Badge variant="outline" className="mx-auto w-fit">
+                            {stageLabels[item.STAGE_ID] ?? item.STAGE_ID}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">--</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell
