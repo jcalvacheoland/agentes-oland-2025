@@ -289,3 +289,4 @@ export async function getCotizacionByBitrixId(dealId: string) {
     return { ok: false, error: (error as Error).message }
   }
 }
+

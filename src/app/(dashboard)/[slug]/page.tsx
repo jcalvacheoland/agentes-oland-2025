@@ -3,6 +3,7 @@ import { getCotizacionByBitrixId } from "@/actions/cotizaciones.actions";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, CreditCard, MapPin, Heart, Users, File } from "lucide-react";
+import { PlanSelector } from "@/components/PlanSelector";
 
 const typography = {
   page: "max-w-7xl mx-auto p-6 space-y-6 font-[var(--font-outfit)] text-slate-800 leading-relaxed",
@@ -119,32 +120,7 @@ export default async function DealPage(props: DealPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {cotizacion.planesComparados?.length ? (
-              cotizacion.planesComparados.map((plan) => (
-                <div key={plan.id} className="p-3 border rounded-lg space-y-1.5">
-                  <p className={typography.detail}>
-                    <span className="font-medium text-slate-900">Aseguradora:</span> {plan.aseguradora}
-                  </p>
-                  <p className={typography.detail}>
-                    <span className="font-medium text-slate-900">Plan:</span> {plan.nombrePlan}
-                  </p>
-                  <p className={typography.detail}>
-                    <span className="font-medium text-slate-900">Prima total:</span> ${plan.primaTotal}
-                  </p>
-                  <p className={typography.detail}>
-                    <span className="font-medium text-slate-900">Prima Neta:</span> {plan.primaNeta}
-                  </p>
-                  <p className={typography.detail}>
-                    <span className="font-medium text-slate-900">Tasa:</span> {plan.Tasa}
-                  </p>
-                  <p className={typography.detail}>
-                    <span className="font-medium text-slate-900">Version:</span> {plan.version}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className={typography.muted}>No hay planes comparados en esta cotizacion.</p>
-            )}
+            <PlanSelector dealId={deal.ID} plans={cotizacion.planesComparados ?? []} />
           </CardContent>
         </Card>
       </section>
