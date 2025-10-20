@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { IPlanRequest } from "@/interfaces/interfaces.type";
-import { Star, Info, ChevronDown, LucideCheckCircle } from "lucide-react";
+import { Info, ChevronDown, LucideCheckCircle } from "lucide-react";
 import ComparisonModal, { type ComparedPlanPayload } from "./comparisonModal";
 import { StaticPlanCard } from "./StaticPlanCard";
 import { AseguradorasLogo } from "@/configuration/constants";

@@ -6,6 +6,8 @@ interface PlanComparadoInput {
   aseguradora: string
   nombrePlan: string
   primaTotal: number
+  primaNeta?: number | null
+  Tasa?: number | null
   deducible?: string
   cobertura?: string
   beneficios?: string
@@ -44,6 +46,8 @@ export async function updateCotizacionWithPlanesHistorial(
         aseguradora: plan.aseguradora,
         nombrePlan: plan.nombrePlan,
         primaTotal: plan.primaTotal,
+        primaNeta: plan.primaNeta ?? null,
+        Tasa: plan.Tasa ?? null,
         deducible: plan.deducible || null,
         cobertura: plan.cobertura || null,
         beneficios: plan.beneficios || null,

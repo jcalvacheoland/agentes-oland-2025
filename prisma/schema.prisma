@@ -118,6 +118,8 @@ model PlanesComparados {
   aseguradora     String
   nombrePlan      String
   primaTotal      Float
+  primaNeta       Float?
+  Tasa            Float?
   deducible       String?
   cobertura       String?
   beneficios      String?

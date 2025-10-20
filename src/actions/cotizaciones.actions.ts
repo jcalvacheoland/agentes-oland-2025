@@ -240,3 +240,52 @@ export async function getCotizacionById(id: string) {
     };
   }
 }
+
+export async function getCotizacionByBitrixId(dealId: string) {
+  try {
+    // Inicializa cookies (importante si estás usando autenticación por sesión)
+    await cookies()
+
+    // Obtener el usuario autenticado (opcional si no lo necesitas)
+    const session = await auth()
+    if (!session?.user) {
+      throw new Error("Usuario no autenticado")
+    }
+
+    // Buscar la cotización por Bitrix Deal ID
+          // 1️⃣ Obtener las dos versiones más recientes
+      const ultimasVersiones = await prisma.planesComparados.findMany({
+        where: { cotizacion: { bitrixDealId: dealId } },
+        distinct: ["version"],
+        orderBy: { version: "desc" },
+        take: 1,
+        select: { version: true },
+      })
+
+      const versiones = ultimasVersiones.map((v) => v.version)
+
+      // 2️⃣ Traer todos los planes que tengan esas versiones
+      const cotizacion = await prisma.cotizacion.findFirst({
+        where: { bitrixDealId: dealId },
+        include: {
+          planesComparados: {
+            where: {
+              version: { in: versiones },
+            },
+            orderBy: { version: "desc" },
+          },
+        },
+      })
+
+
+
+    if (!cotizacion) {
+      throw new Error("No se encontró la cotización con ese Bitrix ID")
+    }
+
+    return { ok: true, cotizacion }
+  } catch (error) {
+    console.error("Error en getCotizacionByBitrixId:", error)
+    return { ok: false, error: (error as Error).message }
+  }
+}

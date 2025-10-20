@@ -668,7 +668,6 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
         </div>
        {/* Descargar PDF */}
         <div className="flex flex-row items-center px-4">
-          <h1 className="ml-4 font-bold">Descargar PDF</h1>
           <div className="place-content-center space-x-3 mx-auto p-4">
             <PDFDownloadLink
               document={pdfDocument}
