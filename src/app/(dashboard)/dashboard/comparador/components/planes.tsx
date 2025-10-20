@@ -582,11 +582,11 @@ export default function Planes({
                         {deductibleOpen && hasDeductible && (
                           <div
                             id={`${entryKey}-deductible`}
-                            className="mt-2 space-y-1 rounded-md border border-orange-100 bg-orange-50/70 p-3 text-sm text-foreground"
+                            className="mt-2 space-y-1 rounded-md border p-3 text-sm text-foreground"
                           >
                             {deductibleItems.map((item, i) => (
                               <div key={i} className="flex items-start gap-2">
-                                <span className="mt-0.5 h-2 w-2 rounded-full bg-orange-400" />
+                                <span className="mt-0.5 h-2 w-2 rounded-full p-1 bg-azul-oland-100" />
                                 <span className="font-medium">{item}</span>
                               </div>
                             ))}
@@ -626,11 +626,11 @@ export default function Planes({
                         {benefitsOpen && hasBenefits && (
                           <div
                             id={`${entryKey}-benefits`}
-                            className="mt-2 space-y-1 rounded-md border border-orange-100 bg-orange-50/70 p-3 text-sm text-foreground"
+                            className="mt-2 space-y-1 rounded-md border p-3 text-sm text-foreground"
                           >
                             {benefitsItems.map((item, i) => (
                               <div key={i} className="flex items-start gap-2">
-                                <span className="mt-0.5 h-2 w-2 rounded-full bg-orange-400" />
+                                <span className="mt-0.5 h-2 w-2 rounded-full p-1 bg-azul-oland-100" />
                                 <span className="font-medium">{item}</span>
                               </div>
                             ))}
@@ -682,7 +682,7 @@ export default function Planes({
         {selected.length >= 2 && (
           <button
             onClick={() => setOpenModal(true)}
-            className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition"
+            className="fixed bottom-6 right-6 bg-azul-oland-100 hover:bg-rojo-oland-100 text-white font-bold py-3 px-6 rounded-full shadow-lg transition"
           >
             Comparar ({selected.length})
           </button>
