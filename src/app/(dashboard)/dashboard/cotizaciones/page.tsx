@@ -17,19 +17,11 @@ export default function Dashboard() {
                     Regresar
                   </Button>
                 </Link>
-
-                <h1 className="mb-3 text-2xl text-center font-bold text-gray-900 sm:text-3xl lg:text-4xl">
-                  Cotiza Seguros de Auto para tus Clientes
-                </h1>
             </div>
             
-            <p className="mb-1 text-base text-gray-600 leading-relaxed sm:text-lg">
-              Herramienta profesional para comparar seguros vehiculares de todas
-              las aseguradoras ecuatorianas.{" "}
-              <span className="text-rojo-oland-100 font-semibold">
-                Cierra más ventas con cotizaciones precisas.
-              </span>
-            </p>
+            <h1 className="mb-1 font-outfit font-medium md:text-4xl text-azul-oland-100 text-center mt'6 leading-relaxed sm:text-lg">
+              Herramienta para comparar vehículos en minutos.{" "}
+            </h1>
           </div>
         </div>
         <FormularioClienteVehiculo></FormularioClienteVehiculo>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { IPlanRequest } from "@/interfaces/interfaces.type";
 import { Info, ChevronDown, LucideCheckCircle } from "lucide-react";
 import ComparisonModal, { type ComparedPlanPayload } from "./comparisonModal";
@@ -129,6 +130,7 @@ export default function Planes({
   onSendComparison,
   onRetry,
 }: PlanesProps) {
+  const router = useRouter();
   const [selected, setSelected] = useState<PlanEntry[]>([]);
   const maxSelect = 3;
   const [expandedSections, setExpandedSections] = useState<ExpandedSectionsMap>(
@@ -137,6 +139,7 @@ export default function Planes({
   const [openModal, setOpenModal] = useState(false);
   const [, startSaving] = useTransition();
   const [cotizacionId, setCotizacionId] = useState<string | null>(null);
+  const [bitrixDealId, setBitrixDealId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -147,6 +150,16 @@ export default function Planes({
       }
     } catch (error) {
       console.warn("No se pudo leer idCotizacion desde localStorage:", error);
+    }
+
+    try {
+      const storedDealId = window.localStorage.getItem("bitrixDealId");
+      const normalizedDealId = storedDealId?.trim();
+      if (normalizedDealId) {
+        setBitrixDealId(normalizedDealId);
+      }
+    } catch (error) {
+      console.warn("No se pudo leer bitrixDealId desde localStorage:", error);
     }
   }, []);
 
@@ -386,6 +399,30 @@ export default function Planes({
         console.error("Error guardando los planes comparados en la BD:", error);
       });
     });
+
+    let targetDealId = bitrixDealId;
+
+    if (!targetDealId && typeof window !== "undefined") {
+      try {
+        const storedDealId = window.localStorage.getItem("bitrixDealId");
+        const normalized = storedDealId?.trim();
+        if (normalized) {
+          targetDealId = normalized;
+          setBitrixDealId(normalized);
+        }
+      } catch (error) {
+        console.warn("No se pudo volver a leer bitrixDealId desde localStorage:", error);
+      }
+    }
+
+    if (targetDealId) {
+      setOpenModal(false);
+      setTimeout(() => {
+        router.push(`/dashboard/${targetDealId}`);
+      }, 400);
+    } else {
+      console.warn("[comparaciones] No se encontró bitrixDealId para redireccionar al detalle del deal.");
+    }
   };
 
   async function handleConfirmComparison(payload: {
@@ -510,13 +547,13 @@ export default function Planes({
             onClick={() => toggleSelect(e)}
             className={`relative p-6 rounded-xl cursor-pointer transition-all border-2  hover:border-azul-oland-100
               ${isSelected ? 
-                "border-green-600 bg-card shadow-md " : 
+                "border-azul-oland-100 bg-card shadow-md " : 
                 "border-gris-oland-100 bg-card hover:border-blue-oland-100 hover:shadow-lg "}`}
           >
             <div className="absolute top-1 right-2">
               <Circle
                 className={`w-5 h-5 transition-colors ${
-                  isSelected ? "text-green-600 fill-green-600 border-b-black" : "text-gray-300"
+                  isSelected ? "text-azul-oland-100 fill-azul-oland-100 border-b-black" : "text-gray-300"
                 }`}
               />
             </div>
@@ -526,7 +563,6 @@ export default function Planes({
                   <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
                     <div className="w-24 h-24">
                         <img
-                        className=""
                       src={AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes(e.insurerKey.toLowerCase()))?.img || ""}
                       >
                       </img>

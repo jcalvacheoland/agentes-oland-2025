@@ -29,16 +29,16 @@ export function SelectGenero({
       <Select
         value={selectedValue}
         onValueChange={(newValue) =>
-          setValue("cliente.genero", newValue, { shouldDirty: true })
+          setValue("cliente.genero", newValue, { shouldDirty: true, shouldValidate: true })
         }
       >
         <SelectTrigger id="genero" className="h-11 w-full">
           <SelectValue placeholder="Seleccionar" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Masculino">Masculino</SelectItem>
-          <SelectItem value="Femenino">Femenino</SelectItem>
-          <SelectItem value="Otro">Otro</SelectItem>
+          <SelectItem value="masculino">Masculino</SelectItem>
+          <SelectItem value="femenino">Femenino</SelectItem>
+          <SelectItem value="otro">Otro</SelectItem>
         </SelectContent>
       </Select>
 

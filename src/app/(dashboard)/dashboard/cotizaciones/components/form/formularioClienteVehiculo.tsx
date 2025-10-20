@@ -63,6 +63,16 @@ type FormInputs = z.input<FormSchema>;
 type VehiculoAutoFillField = "marca" | "modelo" | "anio" | "avaluo";
 type VehiculoAutoFillMap = Partial<Record<VehiculoAutoFillField, boolean>>;
 
+const normalizeEnumValue = (value: unknown) => {
+  if (typeof value !== "string") return "";
+  const normalized = normalizarTexto(value);
+  if (!normalized) return "";
+  return normalized
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+};
+
 const generarIdCotizacion = (): string => {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
@@ -139,11 +149,13 @@ const mapearPersonaAFormulario = (persona: any, setValue: any, currentValues: an
   setValue("cliente.provincia", datosNormalizados.provincia, { shouldValidate: false });
   setValue("cliente.region", datosNormalizados.region, { shouldValidate: false });
   
-  if (datosNormalizados.estadoCivil) {
-    setValue("cliente.estadoCivil", datosNormalizados.estadoCivil, { shouldValidate: false });
+  const estadoCivilForm = normalizeEnumValue(datosNormalizados.estadoCivil);
+  if (estadoCivilForm) {
+    setValue("cliente.estadoCivil", estadoCivilForm, { shouldValidate: false });
   }
-  if (datosNormalizados.genero) {
-    setValue("cliente.genero", datosNormalizados.genero, { shouldValidate: false });
+  const generoForm = normalizeEnumValue(datosNormalizados.genero);
+  if (generoForm) {
+    setValue("cliente.genero", generoForm, { shouldValidate: false });
   }
 
   // Manejar fecha de nacimiento y edad
@@ -218,8 +230,9 @@ const mapearVehiculoAFormulario = (
   // Campos ocultos/adicionales
   setValue("vehiculo.esNuevo", datosNormalizados.esNuevo, { shouldValidate: false });
   
-  if (datosNormalizados.tipoUso) {
-    setValue("vehiculo.tipoUso", datosNormalizados.tipoUso, { shouldValidate: false });
+  const tipoUsoForm = normalizeEnumValue(datosNormalizados.tipoUso);
+  if (tipoUsoForm) {
+    setValue("vehiculo.tipoUso", tipoUsoForm, { shouldValidate: false });
   }
   if (datosNormalizados.submodelEqui) {
     setValue("vehiculo.submodelEqui", datosNormalizados.submodelEqui, { shouldValidate: false });
@@ -339,6 +352,9 @@ export const FormularioClienteVehiculo = () => {
         celular: "",
         fechaNacimiento: "2000-01-01",
         edad: "",
+        genero: "",
+        estadoCivil: "",
+        ciudad: "",
       },
       vehiculo: {
         tipoUso: "",
@@ -448,6 +464,14 @@ export const FormularioClienteVehiculo = () => {
   };
 
   const onSubmit = async (data: FormValues) => {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("bitrixDealId");
+    } catch (error) {
+      console.warn("No se pudo limpiar bitrixDealId de localStorage", error);
+    }
+  }
+
   const fullName = [
     data.cliente.nombres,
     data.cliente.apellidos ||
@@ -511,6 +535,13 @@ export const FormularioClienteVehiculo = () => {
       if (!Number.isNaN(dealIdValue) && dealIdValue > 0) {
         bitrixDealId = dealIdValue;
         console.log("✅ Deal creado en Bitrix con ID:", bitrixDealId);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem("bitrixDealId", String(dealIdValue));
+          } catch (storageError) {
+            console.warn("No se pudo guardar bitrixDealId en localStorage", storageError);
+          }
+        }
       }
     }
 
@@ -682,15 +713,13 @@ export const FormularioClienteVehiculo = () => {
                       Valor del Vehículo
                     </Label>
                     <Input
-                      
-                     autoComplete="false"
+                      autoComplete="false"
                       id="avaluo"
                       type="number"
                       {...register("vehiculo.avaluo")}
                       placeholder="15000"
                       className={cn("h-11", autoFilledVehiculo.marca && "autofill-lock")}
                       readOnly={!!autoFilledVehiculo.marca}
-           
                     />
                     {errors.vehiculo?.avaluo && (
                       <p className="text-sm text-red-600">{errors.vehiculo.avaluo.message}</p>
@@ -903,4 +932,3 @@ export const FormularioClienteVehiculo = () => {
     </div>
   );
 };
-

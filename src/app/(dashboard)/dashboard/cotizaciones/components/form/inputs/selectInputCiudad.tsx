@@ -30,7 +30,7 @@ export function SelectCiudad({
       <Select
         value={selectedValue}
         onValueChange={(newValue) =>
-          setValue("cliente.ciudad", newValue, { shouldDirty: true })
+          setValue("cliente.ciudad", newValue, { shouldDirty: true, shouldValidate: true })
         }
       >
         <SelectTrigger id="ciudad" className="h-11 w-full">

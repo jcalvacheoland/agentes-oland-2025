@@ -204,9 +204,11 @@ export function CardCarrusel({
                     <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
                       {card.description}
                     </p>
-                  <Button variant={"oland"}>Cotizar ahora</Button>
+                  
                   </div>
+                  
                 </CardContent>
+                
               </Card>
             </div>
           ))}

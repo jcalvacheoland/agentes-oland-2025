@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 
@@ -30,9 +30,17 @@ import { cn } from "@/lib/utils";
 
 
 
-const navLinks = [
-  { href: "/inicio", label: "Inicio", match: "/inicio" },
-  { href: "/dashboard", label: "Mis cotizaciones", match: "/dashboard" },
+type NavLink = {
+  href: string;
+  label: string;
+  match: string;
+  exact?: boolean;
+};
+
+const navLinks: NavLink[] = [
+  { href: "/inicio", label: "Inicio", match: "/inicio", exact: true },
+  { href: "/dashboard", label: "Mis cotizaciones", match: "/dashboard", exact: true },
+  { href: "/dashboard/cotizaciones", label: "Nueva cotización", match: "/dashboard/cotizaciones", exact: true },
 ];
 
 export const HeaderUser = () => {
@@ -97,8 +105,10 @@ export const HeaderUser = () => {
 
         {/* Navegación Desktop */}
         <nav className="hidden border p-1 border-azul-oland-100 rounded-full items-center gap-1 lg:flex">
-          {navLinks.map(({ href, label, match }) => {
-            const isActive = pathname?.startsWith(match);
+          {navLinks.map(({ href, label, match, exact }) => {
+            const isActive = exact
+                  ? pathname === match
+                  : pathname === match || pathname?.startsWith(`${match}/`);
             return (
               <Link
                 key={href}
@@ -150,7 +160,7 @@ export const HeaderUser = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/ajustes" className="flex items-center gap-2 cursor-pointer">
+                    <Link href="/ajustes" className="flex items-center gap-2 cursor-pointer">
                       <Settings className="h-4 w-4" />
                       Ajustes
                     </Link>
@@ -195,8 +205,10 @@ export const HeaderUser = () => {
               </SheetHeader>
               
               <nav className="mt-8 flex p-4 flex-col gap-2">
-                {navLinks.map(({ href, label, match }) => {
-                  const isActive = pathname?.startsWith(match);
+                {navLinks.map(({ href, label, match, exact }) => {
+                  const isActive = exact
+                  ? pathname === match
+                  : pathname === match || pathname?.startsWith(`${match}/`);
                   return (
                     <Link
                       key={href}

@@ -29,17 +29,18 @@ export function SelectUsoVehiculo({
       <Select
         value={selectedValue}
         onValueChange={(newValue) =>
-          setValue("vehiculo.tipoUso", newValue, { shouldDirty: true })
+          setValue("vehiculo.tipoUso", newValue, { shouldDirty: true, shouldValidate: true })
         }
       >
         <SelectTrigger id="tipoUso" className="h-11 w-full">
           <SelectValue placeholder="Seleccionar" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Particular">Particular</SelectItem>
-          <SelectItem value="Comercial">Comercial</SelectItem>
-          <SelectItem value="Taxi">Taxi</SelectItem>
-          <SelectItem value="Uber">Uber</SelectItem>
+          <SelectItem value="particular">Particular</SelectItem>
+          <SelectItem value="comercial">Comercial</SelectItem>
+          <SelectItem value="taxi">Taxi</SelectItem>
+          <SelectItem value="uber">Uber</SelectItem>
+          <SelectItem value="otro">Otro</SelectItem>
         </SelectContent>
       </Select>
 

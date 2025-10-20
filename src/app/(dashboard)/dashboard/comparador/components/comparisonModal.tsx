@@ -499,7 +499,7 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
                             </img>
                           </div>
                         </div>
-                        <div className="font-bold text-blue-600 text-base">
+                        <div className="font-bold text-azul-oland-100 text-base">
                           {formatInsurerName(s.insurerKey)}
                         </div>
                       </div>

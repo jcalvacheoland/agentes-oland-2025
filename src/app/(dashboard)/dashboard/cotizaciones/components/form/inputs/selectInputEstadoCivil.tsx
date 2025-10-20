@@ -29,18 +29,18 @@ export function SelectEstadoCivil({
       <Select
         value={selectedValue}
         onValueChange={(newValue) =>
-          setValue("cliente.estadoCivil", newValue, { shouldDirty: true })
+          setValue("cliente.estadoCivil", newValue, { shouldDirty: true, shouldValidate: true })
         }
       >
         <SelectTrigger id="estadoCivil" className="h-11 w-full">
           <SelectValue placeholder="Seleccionar" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Soltero">Soltero</SelectItem>
-          <SelectItem value="Casado">Casado</SelectItem>
-          <SelectItem value="Divorciado">Divorciado</SelectItem>
-          <SelectItem value="Viudo">Viudo</SelectItem>
-          <SelectItem value="Union de hecho">Unión de hecho</SelectItem>
+          <SelectItem value="soltero">Soltero</SelectItem>
+          <SelectItem value="casado">Casado</SelectItem>
+          <SelectItem value="divorciado">Divorciado</SelectItem>
+          <SelectItem value="viudo">Viudo</SelectItem>
+          <SelectItem value="union de hecho">Unión de hecho</SelectItem>
         </SelectContent>
       </Select>
 

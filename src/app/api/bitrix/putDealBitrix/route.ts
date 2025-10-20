@@ -1,80 +1,82 @@
-"use server"
-import { NextRequest, NextResponse } from "next/server"
-import { getBitrixAuthContext } from "@/lib/bitrix/session"
-import { BITRIX_USER_AGENT, CATEGORY_ID, STAGE_ID } from "@/configuration/constants"
-
+"use server";
+import { NextRequest, NextResponse } from "next/server";
+import { getBitrixAuthContext } from "@/lib/bitrix/session";
+import {
+  BITRIX_USER_AGENT,
+  CATEGORY_ID,
+  STAGE_ID,
+} from "@/configuration/constants";
 
 async function callBitrix(
   path: string,
   accessToken: string,
   restBase: string,
   method: "GET" | "POST" = "GET",
-  body?: unknown,
+  body?: unknown
 ) {
-  const url = `${restBase}${path}?auth=${accessToken}`
+  const url = `${restBase}${path}?auth=${accessToken}`;
   const options: RequestInit = {
     method,
     headers: {
       "Content-Type": "application/json",
       "User-Agent": BITRIX_USER_AGENT,
     },
-  }
+  };
 
   if (body) {
-    options.body = JSON.stringify(body)
+    options.body = JSON.stringify(body);
   }
 
-  const res = await fetch(url, options)
-  const payload = await res.json()
+  const res = await fetch(url, options);
+  const payload = await res.json();
 
   if (!res.ok || payload?.error) {
     const message =
-      payload?.error_description || payload?.error || `Bitrix request failed (${res.status})`
-    throw new Error(message)
+      payload?.error_description ||
+      payload?.error ||
+      `Bitrix request failed (${res.status})`;
+    throw new Error(message);
   }
 
-  return payload
+  return payload;
 }
 
-const buildDealPayload = (rawBody: any) => {
-  const cliente = rawBody?.cliente ?? {}
-  const vehiculo = rawBody?.vehiculo ?? {}
+const buildDealPayload = (rawBody: any) => {  
+  const cliente = rawBody?.cliente ?? {};
+  const vehiculo = rawBody?.vehiculo ?? {};
 
   const resolveNameFromForm = () => {
-    const nombres = (cliente.nombres ?? "").toString().trim()
-    const apellidosForm = (cliente.apellidos ?? "").toString().trim()
-    const primerApellido = (cliente.primerApellido ?? "").toString().trim()
-    const segundoApellido = (cliente.segundoApellido ?? "").toString().trim()
+    const nombres = (cliente.nombres ?? "").toString().trim();
+    const apellidosForm = (cliente.apellidos ?? "").toString().trim();
+    const primerApellido = (cliente.primerApellido ?? "").toString().trim();
+    const segundoApellido = (cliente.segundoApellido ?? "").toString().trim();
 
     const apellidos =
       apellidosForm ||
-      [primerApellido, segundoApellido]
-        .filter(Boolean)
-        .join(" ")
-        .trim()
+      [primerApellido, segundoApellido].filter(Boolean).join(" ").trim();
 
-    return [nombres, apellidos].filter(Boolean).join(" ").trim()
-  }
+    return [nombres, apellidos].filter(Boolean).join(" ").trim();
+  };
 
   const name =
     (rawBody?.name ?? "").toString().trim() ||
     resolveNameFromForm() ||
     cliente.nombreCompleto ||
-    ""
+    "";
 
-  const identification = rawBody?.identification ?? cliente.cedula ?? ""
-  const email = rawBody?.email ?? cliente.email ?? ""
-  const phone = rawBody?.phone ?? cliente.celular ?? ""
-  const city = rawBody?.city ?? cliente.ciudad ?? ""
-  const age = rawBody?.age ?? cliente.edad ?? ""
-  const gender = rawBody?.gender ?? cliente.genero ?? ""
-  const civilStatus = rawBody?.civilStatus ?? cliente.estadoCivil ?? ""
-  const brand = rawBody?.brand ?? vehiculo.marca ?? ""
-  const model = rawBody?.model ?? vehiculo.modelo ?? ""
-  const year = rawBody?.year ?? vehiculo.anio ?? ""
-  const plate = rawBody?.plate ?? vehiculo.placa ?? ""
-  const value = rawBody?.vehicleValue ?? vehiculo.avaluo
-  const useOfVehicle = rawBody?.useOfVehicle ?? vehiculo.tipoUso ?? ""
+  const identification = rawBody?.identification ?? cliente.cedula ?? "";
+  const email = rawBody?.email ?? cliente.email ?? "";
+  const phone = rawBody?.phone ?? cliente.celular ?? "";
+  const city = rawBody?.city ?? cliente.ciudad ?? "";
+  const age = rawBody?.age ?? cliente.edad ?? "";
+  const gender = rawBody?.gender ?? cliente.genero ?? "";
+  const civilStatus = rawBody?.civilStatus ?? cliente.estadoCivil ?? "";
+  const brand = rawBody?.brand ?? vehiculo.marca ?? "";
+  const model = rawBody?.model ?? vehiculo.modelo ?? "";
+  const year = rawBody?.year ?? vehiculo.anio ?? "";
+  const plate = rawBody?.plate ?? vehiculo.placa ?? "";
+  const value = rawBody?.vehicleValue ?? vehiculo.avaluo;
+  const useOfVehicle = rawBody?.useOfVehicle ?? vehiculo.tipoUso ?? "";
 
   const titleParts = [
     "Cotizacion",
@@ -82,7 +84,7 @@ const buildDealPayload = (rawBody: any) => {
     brand || null,
     model || null,
     value || null,
-  ].filter(Boolean)
+  ].filter(Boolean);
 
   return {
     fields: {
@@ -99,64 +101,76 @@ const buildDealPayload = (rawBody: any) => {
       UF_CRM_1708442569166: model,
       UF_CRM_1708442612728: year,
       UF_CRM_1708442675536: plate,
-      UF_CRM_PLAN_NETPREMIUM : value ? `${Number(value).toFixed(2)}|USD` : "0.00|USD",
+      UF_CRM_PLAN_NETPREMIUM: value
+        ? `${Number(value).toFixed(2)}|USD`
+        : "0.00|USD",
       UF_CRM_1708442550726: brand,
       UF_CRM_1675696721: email,
-      UF_CRM_1758140561898: city,   
+      UF_CRM_1758140561898: city,
       UF_CRM_1747676789932: age,
       UF_CRM_1758140844163: gender,
       UF_CRM_1758120573688: useOfVehicle,
       UF_CRM_1757969782406: civilStatus,
     },
     value,
-  }
-}
+  };
+};
 
 export async function POST(request: NextRequest) {
   try {
-    const rawBody = await request.json().catch(() => ({}))
-    const { accessToken, restBase } = await getBitrixAuthContext()
+    const rawBody = await request.json().catch(() => ({}));
+    const { accessToken, restBase } = await getBitrixAuthContext();
 
-    const deal = buildDealPayload(rawBody)
-    const addResult = await callBitrix("crm.deal.add.json", accessToken, restBase, "POST", { fields: deal.fields })
+    const deal = buildDealPayload(rawBody);
+    const addResult = await callBitrix(
+      "crm.deal.add.json",
+      accessToken,
+      restBase,
+      "POST",
+      { fields: deal.fields }
+    );
 
-    const dealId = addResult.result
+    const dealId = addResult.result;
 
     if (!dealId) {
       return NextResponse.json(
         {
           success: false,
-          error: addResult?.error_description || addResult?.error || "Error al crear el deal",
+          error:
+            addResult?.error_description ||
+            addResult?.error ||
+            "Error al crear el deal",
         },
-        { status: 400 },
-      )
+        { status: 400 }
+      );
     }
-    
+
     // Actualizar titulo y campo Valor Asegurado
-    const titleToUpdate = `${deal.fields.TITLE} - ID ${dealId}`
+    const titleToUpdate = `${deal.fields.TITLE} - ID ${dealId}`;
     await callBitrix("crm.deal.update.json", accessToken, restBase, "POST", {
       id: dealId,
       fields: {
         TITLE: titleToUpdate,
         UF_CRM_1757947153789: deal.value ? `${deal.value}|USD` : "0|USD",
       },
-    })
+    });
 
     return NextResponse.json({
       success: true,
       dealId,
       message: "Deal creado y actualizado correctamente",
-    })
+    });
   } catch (error: any) {
-    console.error("Error POST /api/bitrix/putDealBitrix:", error)
-    const message = typeof error?.message === "string" ? error.message : "Error interno"
-    const status = message === "Unauthorized" ? 401 : 500
+    console.error("Error POST /api/bitrix/putDealBitrix:", error);
+    const message =
+      typeof error?.message === "string" ? error.message : "Error interno";
+    const status = message === "Unauthorized" ? 401 : 500;
     return NextResponse.json(
       {
         success: false,
         error: message,
       },
-      { status },
-    ) 
+      { status }
+    );
   }
 }

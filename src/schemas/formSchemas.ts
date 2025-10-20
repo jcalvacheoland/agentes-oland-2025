@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+const lowerCaseEnum = <T extends [string, ...string[]]>(values: T, message?: string) =>
+  z.preprocess(
+    (value) => {
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (trimmed.length === 0) return undefined;
+        const normalized = trimmed.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return normalized.toLowerCase();
+      }
+      return value;
+    },
+    message ? z.enum(values, { errorMap: () => ({ message }) }) : z.enum(values)
+  );
+
 export const personSchema = z.object({
   name: z.string().trim().min(2, { message: "El nombre es obligatorio" }),
   email: z.string().trim().toLowerCase().email({ message: "El email no es válido" }),
@@ -9,16 +23,14 @@ export const personSchema = z.object({
 
   // opcionales SIN preprocess (deja undefined si no tienes valor)
   age: z.coerce.number().min(18, { message: "Debes ser mayor de edad" }).optional(),
-  gender: z.enum(["masculino", "femenino", "otro"]).optional(),
-  civilStatus: z.enum(["soltero", "casado", "divorciado", "viudo"]).optional(),
+  gender: lowerCaseEnum(["masculino", "femenino", "otro"]).optional(),
+  civilStatus: lowerCaseEnum(["soltero", "casado", "divorciado", "viudo", "union de hecho"]).optional(),
   firstLastName: z.string().trim().optional(),
   secondLastName: z.string().trim().optional(),
   birthdate: z.string().trim().optional(),
 
   // requerido
-  useOfVehicle: z.enum(["particular", "comercial", "taxi", "otro"], {
-    message: "Seleccione un tipo de uso del vehículo",
-  }),
+  useOfVehicle: lowerCaseEnum(["particular", "comercial", "taxi", "uber", "otro"], "Seleccione un tipo de uso del vehículo"),
 });
 
 export const vehicleSchema = z.object({
