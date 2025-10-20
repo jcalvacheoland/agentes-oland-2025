@@ -225,7 +225,7 @@ export const HeaderUser = () => {
                 </a>
                 <div className="my-4 border-t" />
                 <Link
-                  href="/dashboard/ajustes"
+                  href="/ajustes"
                   onClick={() => setIsSidebarOpen(false)}
                   className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
                 >

@@ -4,7 +4,7 @@ import React from "react";
 import { Page, Text, View, Document, StyleSheet, Image, Svg, Path } from "@react-pdf/renderer";
 import type { ComparedPlanPayload } from "./comparisonModal";
 
-type ClientLocalStorage = {
+export type PdfClientInfo = {
   cedula?: string;
   nombres?: string;
   apellidos?: string;
@@ -15,7 +15,7 @@ type ClientLocalStorage = {
   email?: string;
 };
 
-type VehicleLocalStorage = {
+export type PdfVehicleInfo = {
   marca?: string;
   modelo?: string;
   anio?: number | string;
@@ -279,6 +279,8 @@ const styles = StyleSheet.create({
 
 interface PdfBuildProps {
   data: ComparedPlanPayload[];
+  client?: PdfClientInfo | null;
+  vehicle?: PdfVehicleInfo | null;
 }
 
 const readLocalStorageJson = <T,>(key: string): T | null => {
@@ -422,14 +424,14 @@ const formatDate = (date: Date): string => {
   return `${day}/${month}/${year}`;
 };
 
-export const PdfBuild = ({ data }: PdfBuildProps) => {
+export const PdfBuild = ({ data, client, vehicle }: PdfBuildProps) => {
   const clientLocal = React.useMemo(
-    () => readLocalStorageJson<ClientLocalStorage>("clienteVehiculo"),
-    []
+    () => client ?? readLocalStorageJson<PdfClientInfo>("clienteVehiculo"),
+    [client]
   );
   const vehicleLocal = React.useMemo(
-    () => readLocalStorageJson<VehicleLocalStorage>("vehiculo"),
-    []
+    () => vehicle ?? readLocalStorageJson<PdfVehicleInfo>("vehiculo"),
+    [vehicle]
   );
 
   const fullName = React.useMemo(() => {

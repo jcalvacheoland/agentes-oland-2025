@@ -13,6 +13,8 @@ model User {
   email         String          @unique
   emailVerified DateTime?
   image         String?
+  imagenPDF     String?         // nueva columna para guardar la URL o ruta del PDF
+  ejecutivo     String?         // nueva columna para guardar el nombre del ejecutivo
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   accounts      Account[]

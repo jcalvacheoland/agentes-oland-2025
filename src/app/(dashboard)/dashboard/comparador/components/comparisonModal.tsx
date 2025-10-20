@@ -1,9 +1,10 @@
 "use client"
+import React from "react";
 import { X, Check } from "lucide-react"
 import { PDFDownloadLink } from "@react-pdf/renderer"
 import { Button } from "@/components/ui/button";
 import { AseguradorasLogo } from "@/configuration/constants";
-import { PdfBuild } from "./PdfBuild";
+import { PdfBuild, PdfClientInfo, PdfVehicleInfo } from "./PdfBuild";
 type PlanEntry = {
   insurerKey: string
   planIndex: number
@@ -53,6 +54,29 @@ interface ComparisonModalProps {
 }
 
 export default function ComparisonModal({ selected, onClose, onConfirm }: ComparisonModalProps) {
+  const [clientInfo, setClientInfo] = React.useState<PdfClientInfo | null>(null);
+  const [vehicleInfo, setVehicleInfo] = React.useState<PdfVehicleInfo | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const rawClient = window.localStorage.getItem("clienteVehiculo");
+      setClientInfo(rawClient ? (JSON.parse(rawClient) as PdfClientInfo) : null);
+    } catch (error) {
+      console.warn("No se pudo leer 'clienteVehiculo' del localStorage", error);
+      setClientInfo(null);
+    }
+
+    try {
+      const rawVehicle = window.localStorage.getItem("vehiculo");
+      setVehicleInfo(rawVehicle ? (JSON.parse(rawVehicle) as PdfVehicleInfo) : null);
+    } catch (error) {
+      console.warn("No se pudo leer 'vehiculo' del localStorage", error);
+      setVehicleInfo(null);
+    }
+  }, []);
+
   function formatCurrency(amount: number | null | undefined): string {
     if (!amount) return "-"
     return `$${Number(amount).toFixed(2)}`
@@ -385,7 +409,9 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
     }
   })
 
-  const pdfDocument = <PdfBuild data={comparedPayload} />
+  const pdfDocument = (
+    <PdfBuild data={comparedPayload} client={clientInfo} vehicle={vehicleInfo} />
+  )
 
   const handleConfirm = () => {
     if (!onConfirm) return
