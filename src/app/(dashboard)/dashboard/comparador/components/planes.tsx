@@ -399,30 +399,63 @@ export default function Planes({
         console.error("Error guardando los planes comparados en la BD:", error);
       });
     });
+    const navigateToDeal = async () => {
+      let targetDealId = bitrixDealId;
 
-    let targetDealId = bitrixDealId;
-
-    if (!targetDealId && typeof window !== "undefined") {
-      try {
-        const storedDealId = window.localStorage.getItem("bitrixDealId");
-        const normalized = storedDealId?.trim();
-        if (normalized) {
-          targetDealId = normalized;
-          setBitrixDealId(normalized);
+      if (!targetDealId && typeof window !== "undefined") {
+        try {
+          const storedDealId = window.localStorage.getItem("bitrixDealId");
+          const normalized = storedDealId?.trim();
+          if (normalized) {
+            targetDealId = normalized;
+            setBitrixDealId(normalized);
+          }
+        } catch (error) {
+          console.warn("No se pudo volver a leer bitrixDealId desde localStorage:", error);
         }
-      } catch (error) {
-        console.warn("No se pudo volver a leer bitrixDealId desde localStorage:", error);
       }
-    }
 
-    if (targetDealId) {
-      setOpenModal(false);
-      setTimeout(() => {
-        router.push(`/dashboard/${targetDealId}`);
-      }, 400);
-    } else {
-      console.warn("[comparaciones] No se encontró bitrixDealId para redireccionar al detalle del deal.");
-    }
+      if (!targetDealId && targetCotizacionId) {
+        try {
+          const response = await fetch(`/api/cotizaciones/${targetCotizacionId}/bitrix`, {
+            method: "GET",
+            credentials: "include",
+          });
+          if (response.ok) {
+            const data: { bitrixDealId?: string | null } = await response.json();
+            const fetchedDealId = data.bitrixDealId?.trim();
+            if (fetchedDealId) {
+              targetDealId = fetchedDealId;
+              setBitrixDealId(fetchedDealId);
+              if (typeof window !== "undefined") {
+                try {
+                  window.localStorage.setItem("bitrixDealId", fetchedDealId);
+                } catch (storageError) {
+                  console.warn("No se pudo guardar bitrixDealId en localStorage:", storageError);
+                }
+              }
+            }
+          } else {
+            console.warn(
+              `[comparaciones] No se pudo obtener bitrixDealId desde el backend (${response.status}).`
+            );
+          }
+        } catch (error) {
+          console.warn("Error obteniendo bitrixDealId desde el backend:", error);
+        }
+      }
+
+      if (targetDealId) {
+        setOpenModal(false);
+        setTimeout(() => {
+          router.push(`/${targetDealId}`);
+        }, 400);
+      } else {
+        console.warn("[comparaciones] No se encontró bitrixDealId para redireccionar al detalle del deal.");
+      }
+    };
+
+    void navigateToDeal();
   };
 
   async function handleConfirmComparison(payload: {

@@ -157,7 +157,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
 
         <Card className="bg-azul-oland-100 text-white">  
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Comisión pagada</CardTitle>
+            <CardTitle className="text-sm font-medium">Póliza pagada</CardTitle>
             <AprobadoIcon width={24} height={24}  />
           </CardHeader>
           <CardContent>
@@ -168,7 +168,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
         <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Cotización con comisión
+              Cotización Ganada
             </CardTitle>
             <ValorAprobadoIcon width={24} height={24}  />
           </CardHeader>

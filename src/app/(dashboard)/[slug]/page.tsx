@@ -9,7 +9,8 @@ const typography = {
   page: "max-w-7xl mx-auto p-6 space-y-6 font-[var(--font-outfit)] text-slate-800 leading-relaxed",
   header: "space-y-2",
   title: "text-2xl font-semibold text-slate-900 tracking-tight",
-  sectionTitle: "flex items-center gap-2 text-2xl font-semibold text-slate-900 tracking-tight",
+  sectionTitle:
+    "flex items-center gap-2 text-2xl font-semibold text-slate-900 tracking-tight",
   label: "text-xs font-semibold uppercase tracking-wide text-slate-500",
   value: "text-base font-medium text-slate-900",
   detail: "text-sm text-slate-700",
@@ -39,7 +40,8 @@ export default async function DealPage(props: DealPageProps) {
   if (!cotizacionResponse.ok || !cotizacionResponse.cotizacion) {
     return (
       <div className={`${typography.page} py-12`}>
-        Error: {cotizacionResponse.error || "No se encontro la cotizacion asociada"}
+        Error:{" "}
+        {cotizacionResponse.error || "No se encontro la cotizacion asociada"}
       </div>
     );
   }
@@ -48,7 +50,11 @@ export default async function DealPage(props: DealPageProps) {
 
   const clienteItems = [
     { icon: User, label: "Nombre", value: deal.UF_CRM_1675696681 },
-    { icon: CreditCard, label: "Cedula / Identificacion", value: deal.UF_CRM_1699991426 },
+    {
+      icon: CreditCard,
+      label: "Cedula / Identificacion",
+      value: deal.UF_CRM_1699991426,
+    },
     { icon: MapPin, label: "Ciudad", value: deal.UF_CRM_1758140561898 },
     { icon: Heart, label: "Estado civil", value: deal.UF_CRM_1757969782406 },
     { icon: Users, label: "Genero", value: deal.UF_CRM_1758140844163 },
@@ -62,15 +68,35 @@ export default async function DealPage(props: DealPageProps) {
     { label: "Uso del vehiculo", value: deal.UF_CRM_1747676789932 },
     { label: "Valor del vehiculo", value: deal.UF_CRM_1757947153789 },
   ];
+  const stageNames: Record<string, string> = {
+    "C24:NEW": "Nuevo",
+    "C24:PREPARATION": "Preparación",
+    "C24:UC_ZCRTSB": "Inspección",
+    "C24:PREPAYMENT_INVOIC": "Inspección Favorable",
+    "C24:UC_87UXF3": "Formulario de Vinculación",
+    "C24:EXECUTING": "Orden de Emisión",
+    "C24:UC_CJKKJS": "Emitida",
+    "C24:UC_GFUHD0": "Despacho de Emisión",
+    "C24:UC_9TDBGH": "Cobranza",
+    "C24:UC_D2MRZM": "Pagado",
+    "C24:UC_XMLGTG": "Comisión",
+    "C24:WON": "Cerrada",
+  };
 
   return (
     <div className={typography.page}>
       <div className={typography.header}>
         <h1 className={typography.title}>{deal.TITLE}</h1>
-        <p className={typography.muted}>
-          <span className="font-medium text-slate-900">Etapa:</span> {deal.STAGE_ID}
-        </p>
+
+       
       </div>
+
+       <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-azul-oland-100 text-white shadow-sm">
+          <span className="font-medium">Etapa:</span>
+          <span className="ml-2 text-white w font-semibold">
+            {stageNames[deal.STAGE_ID] || deal.STAGE_ID}  
+          </span>
+        </div>
 
       <section className="grid grid-cols-2 grid-flow-col space-x-4 gap-6">
         <Card className="w-full max-w-2xl row-span-3 h-fit">
@@ -89,7 +115,9 @@ export default async function DealPage(props: DealPageProps) {
                 <Icon className="w-5 h-5 text-slate-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className={`${typography.label} mb-1`}>{label}</p>
-                  <p className={`${typography.value} break-words`}>{value || "No especificado"}</p>
+                  <p className={`${typography.value} break-words`}>
+                    {value || "No especificado"}
+                  </p>
                 </div>
               </div>
             ))}
@@ -98,14 +126,18 @@ export default async function DealPage(props: DealPageProps) {
 
         <Card className="w-full max-w-4xl h-fit">
           <CardHeader>
-            <CardTitle className={typography.sectionTitle}>Datos del vehiculo</CardTitle>
+            <CardTitle className={typography.sectionTitle}>
+              Datos del vehiculo
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {vehiculoItems.map(({ label, value }) => (
                 <div key={label} className="space-y-1">
                   <p className={typography.label}>{label}</p>
-                  <p className={typography.value}>{value || "No especificado"}</p>
+                  <p className={typography.value}>
+                    {value || "No especificado"}
+                  </p>
                 </div>
               ))}
             </div>
@@ -120,7 +152,10 @@ export default async function DealPage(props: DealPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <PlanSelector dealId={deal.ID} plans={cotizacion.planesComparados ?? []} />
+            <PlanSelector
+              dealId={deal.ID}
+              plans={cotizacion.planesComparados ?? []}
+            />
           </CardContent>
         </Card>
       </section>
