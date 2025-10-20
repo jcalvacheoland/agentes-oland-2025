@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import type { IPlanRequest } from "@/interfaces/interfaces.type";
-import { Star, Info, ChevronDown } from "lucide-react";
+import { Star, Info, ChevronDown, LucideCheckCircle } from "lucide-react";
 import ComparisonModal, { type ComparedPlanPayload } from "./comparisonModal";
 import { StaticPlanCard } from "./StaticPlanCard";
 import { AseguradorasLogo } from "@/configuration/constants";
 import { updateCotizacionWithPlanesHistorial } from "@/actions/updateCotizacionWithSelectedPlan";
+import { Circle } from "lucide-react";
 
 type RawResp = any;
 type ResponsesMap = Record<string, RawResp | null | { __error: string }>;
@@ -399,11 +400,11 @@ export default function Planes({
         </div>
       </div>
 
-      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+      <div className="mb-6 p-4  rounded-lg border border-blue-200 ">
+        <p className="text-sm font-medium text-black dark:text-blue-100">
           ¿Quieres comparar tus opciones? Selecciona hasta 3 productos
         </p>
-        <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+        <p className="text-xs text-azul-oland-100  mt-1">
           Seleccionados: {selected.length} / {maxSelect}
         </p>
       </div>
@@ -436,36 +437,28 @@ export default function Planes({
           const hasBenefits = benefitsItems.length > 0;
 
           return (
-            <div
-              key={entryKey}
-              onClick={() => toggleSelect(e)}
-              className={`relative p-6 border-2 border-gray-400 rounded-xl cursor-pointer transition-all hover:shadow-lg ${
-                isSelected
-                  ? "border-green-600 bg-blue-50 dark:bg-blue-950/20 shadow-md"
-                  : "border-border bg-card hover:border-blue-300"
-              }`}
-            >
-              {isSelected && (
-                <div className="absolute top-4 right-4 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              )}
+           <div
+            key={entryKey}
+            onClick={() => toggleSelect(e)}
+            className={`relative p-6 rounded-xl cursor-pointer transition-all border-2  hover:border-azul-oland-100
+              ${isSelected ? 
+                "border-green-600 bg-card shadow-md " : 
+                "border-gris-oland-100 bg-card hover:border-blue-oland-100 hover:shadow-lg "}`}
+          >
+            <div className="absolute top-1 right-2">
+              <Circle
+                className={`w-5 h-5 transition-colors ${
+                  isSelected ? "text-green-600 fill-green-600 border-b-black" : "text-gray-300"
+                }`}
+              />
+            </div>
               {/* seccion aseguradora, logo, estrellas */}
               <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-start">
                 <div className="flex flex-col items-center gap-2 order-1 lg:order-none lg:min-w-[120px]">
                   <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
                     <div className="w-24 h-24">
                         <img
+                        className=""
                       src={AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes(e.insurerKey.toLowerCase()))?.img || ""}
                       >
                       </img>
@@ -473,26 +466,23 @@ export default function Planes({
                     
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-foreground">AAA</div>
-                    <div className="flex gap-0.5 mt-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
-                    </div>
+                    {/* <div className="text-lg font-bold text-foreground">AAA</div>   */}                
                   </div>
                 </div>
-
+                  {/* nombre del plan */}
                 <div className="order-3 w-full lg:order-none lg:flex-1">
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-foreground mb-1">
-                    {e.insurerKey.toUpperCase()} -{" "}
-                    {e.plan?.planName && e.plan.planName !== "S123 CHUBB"
-                      ? e.plan.planName
-                      : "CHUBB"}                  
+                  <h3 className="text-xl font-bold text-foreground mb-1">
+                      {e.insurerKey === "asur"
+                        ? "ASEGURADORA DEL SUR"
+                        : e.insurerKey.toUpperCase()}{" "}
+                      -{" "}
+                      {e.plan?.planName && e.plan.planName !== "S123 CHUBB"
+                        ? e.plan.planName
+                        : "CHUBB"}
                   </h3>
+
+
 
                   </div>
 
@@ -525,9 +515,9 @@ export default function Planes({
                           className={`w-full inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
                             hasCoverageExtras
                               ? coverageOpen
-                                ? "border-orange-300 bg-orange-50 text-orange-700"
-                                : "border-transparent text-orange-600 hover:border-orange-200 hover:bg-orange-50/70 hover:text-orange-700"
-                              : "cursor-not-allowed border-dashed border-neutral-200 text-muted-foreground"
+                                ? "border-azul-oland-100  text-azul-oland-100"
+                                : "border-transparent text-azul-oland-100 hover:border-azul-oland-100 hover:text-azul-oland-100"
+                                : "cursor-not-allowed border-dashed "
                           }`}
                           aria-expanded={coverageOpen}
                           aria-controls={`${entryKey}-coverage`}
@@ -546,11 +536,11 @@ export default function Planes({
                         {coverageOpen && hasCoverageExtras && (
                           <div
                             id={`${entryKey}-coverage`}
-                            className="mt-2 space-y-1 rounded-md border border-orange-100 bg-orange-50/70 p-3 text-sm text-foreground"
+                            className="mt-2 space-y-1 rounded-md border p-3 text-sm text-foreground"
                           >
                             {coverageExtras.map((item: any, i: number) => (
                               <div key={i} className="flex items-start gap-2">
-                                <span className="mt-0.5 h-2 w-2 rounded-full bg-orange-400" />
+                                <span className="mt-0.5 h-2 w-2 rounded-full bg-azul-oland-100" />
                                 <span className="font-medium">
                                   {item?.name ?? item?.title ?? String(item)}
                                 </span>
@@ -571,9 +561,9 @@ export default function Planes({
                           className={`w-full inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
                             hasDeductible
                               ? deductibleOpen
-                                ? "border-orange-300 bg-orange-50 text-orange-700"
-                                : "border-transparent text-orange-600 hover:border-orange-200 hover:bg-orange-50/70 hover:text-orange-700"
-                              : "cursor-not-allowed border-dashed border-neutral-200 text-muted-foreground"
+                                ? "border-azul-oland-100  text-azul-oland-100"
+                                : "border-transparent text-azul-oland-100 hover:border-azul-oland-100 hover:text-azul-oland-100"
+                                : "cursor-not-allowed border-dashed "
                           }`}
                           aria-expanded={deductibleOpen}
                           aria-controls={`${entryKey}-deductible`}
@@ -615,9 +605,9 @@ export default function Planes({
                           className={`w-full inline-flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
                             hasBenefits
                               ? benefitsOpen
-                                ? "border-orange-300 bg-orange-50 text-orange-700"
-                                : "border-transparent text-orange-600 hover:border-orange-200 hover:bg-orange-50/70 hover:text-orange-700"
-                              : "cursor-not-allowed border-dashed border-neutral-200 text-muted-foreground"
+                                ? "border-azul-oland-100  text-azul-oland-100"
+                                : "border-transparent text-azul-oland-100 hover:border-azul-oland-100 hover:text-azul-oland-100"
+                                : "cursor-not-allowed border-dashed "
                           }`}
                           aria-expanded={benefitsOpen}
                           aria-controls={`${entryKey}-benefits`}

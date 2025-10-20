@@ -38,10 +38,10 @@ export const ECUADOR_CITIES = [
 export const AseguradorasLogo = [
   { name: "Zurich", img: "/img/logoAseguradora/zurich.png" },
   {name: "sweaden", img: "/img/logoAseguradora/sweaden.png" },
-  { name: "Chubb", img: "/img/logoAseguradora/chubb.jpg" },
-  { name: "Mapfre", img: "/img/logoAseguradora/mapfre.png" },
-  { name: "Generali", img: "/img/logoAseguradora/Generali.webp" },
-  { name: "AIG", img: "/img/logoAseguradora/aig.jpeg" },
-  { name: "Vaz Seguros", img: "/img/logoAseguradora/vaz.jpg" },
-  { name: "asur", img: "/img/logoAseguradora/asur.webp" },
+  { name: "Chubb", img: "/img/logoAseguradora/chubb.png" },
+  { name: "Mapfre", img: "/img/logoAseguradora/mapfrev2.png" },
+  { name: "Generali", img: "/img/logoAseguradora/Generali.png" },
+  { name: "AIG", img: "/img/logoAseguradora/aig.png" },
+  { name: "Vaz Seguros", img: "/img/logoAseguradora/vaz.png" },
+  { name: "asur", img: "/img/logoAseguradora/asur.png" },
 ]

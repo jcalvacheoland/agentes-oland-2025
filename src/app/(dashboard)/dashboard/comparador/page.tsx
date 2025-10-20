@@ -198,9 +198,9 @@ export default function ComparadorPage() {
       />
 
       {loadingAll && (
-        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
+        <div className="mt-6 p-4 max-w-6xl mx-auto  border border-azul-oland-100 rounded-xs">
           <div className="font-medium">Estamos cotizando tu vehículo...</div>
-          <div className="text-sm text-gray-700 mt-2">Esto puede tardar unos segundos.</div>
+          <div className="text-sm text-black mt-2">Esto puede tardar unos segundos.</div>
         </div>
       )}
 
