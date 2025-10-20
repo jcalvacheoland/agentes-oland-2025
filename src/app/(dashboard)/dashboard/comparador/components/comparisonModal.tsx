@@ -39,6 +39,7 @@ export type ComparedPlanPayload = {
     legalAssistance: string | boolean
     exequialAssistance: string | boolean
     substituteAuto: string | boolean
+    andeanPact: string | boolean
   }
   rawPlan: any
 }
@@ -73,6 +74,191 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
     return null
   }
 
+  function extractPrincipalCoverageValue(
+    principals: any,
+    labels: string[]
+  ): string | null {
+    const raw = principals?.["PRINCIPALES COBERTURAS"]
+    if (typeof raw !== "string") {
+      return null
+    }
+
+    const segments = raw
+      .replace(/\r/g, "")
+      .split(/\/\*\/|\n/)
+      .map((segment) => segment.replace(/\s+/g, " ").trim())
+      .filter((segment) => segment.length > 0)
+
+    const toComparable = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+
+    const normalizedLabels = labels
+      .map((label) => label.replace(/:\s*$/, ""))
+      .map(toComparable)
+
+    for (const segment of segments) {
+      const [segmentLabel, ...rest] = segment.split(":")
+      if (!rest.length) continue
+      const value = cleanupDisplayText(rest.join(":").trim())
+      if (!value) continue
+
+      const comparableSegmentLabel = toComparable(segmentLabel)
+      if (normalizedLabels.includes(comparableSegmentLabel)) {
+        return value
+      }
+    }
+
+    return null
+  }
+
+  function cleanupDisplayText(text: string): string {
+    const cleaned = text
+      .replace(/\s*\/+\s*/g, ", ")
+      .replace(/\s+/g, " ")
+      .replace(/,\s*,+/g, ", ")
+      .replace(/,\s*$/g, "")
+      .trim()
+
+    return cleaned.length > 0 ? cleaned : text.trim()
+  }
+
+  function formatInsurerName(insurerKey: string): string {
+    if (typeof insurerKey !== "string" || !insurerKey.trim()) {
+      return "-"
+    }
+    return insurerKey.toLowerCase() === "asur"
+      ? "ASEGURADORA DEL SUR"
+      : insurerKey.toUpperCase()
+  }
+
+  function formatPlanName(plan: any): string {
+    const name = typeof plan?.planName === "string" ? plan.planName.trim() : ""
+    if (name && name !== "S123 CHUBB") {
+      return name
+    }
+    return "CHUBB"
+  }
+
+  function normalizeBenefitText(value: string): string {
+    return value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+  }
+
+  type BenefitEntry = {
+    original: string
+    normalized: string
+  }
+
+  function collectBenefitEntries(plan: any): BenefitEntry[] {
+    const entries: BenefitEntry[] = []
+
+    const pushValue = (input: unknown) => {
+      if (typeof input !== "string") return
+      const trimmed = input.trim()
+      if (!trimmed) return
+      entries.push({
+        original: trimmed,
+        normalized: normalizeBenefitText(trimmed.replace(/\s+/g, " ")),
+      })
+    }
+
+    const pushAndSplit = (input: unknown) => {
+      if (typeof input !== "string") return
+      input
+        .split(/\/\*\/|\n/)
+        .map((fragment) => fragment.replace(/\s+/g, " ").trim())
+        .forEach(pushValue)
+    }
+
+    if (Array.isArray(plan?.secondaries)) {
+      plan.secondaries.forEach((item: any) => {
+        pushValue(item?.detail)
+        pushValue(item?.name)
+      })
+    }
+
+    if (Array.isArray(plan?.notes)) {
+      plan.notes.forEach((note: any) => {
+        pushValue(note?.text)
+        pushValue(note?.title)
+      })
+    }
+
+    if (plan?.principals) {
+      Object.values(plan.principals).forEach(pushAndSplit)
+    }
+
+    return entries
+  }
+
+  function hasBenefitFromContent(plan: any, keywords: string[]): boolean {
+    if (!Array.isArray(keywords) || !keywords.length) {
+      return false
+    }
+
+    const normalizedKeywords = keywords.map((keyword) => normalizeBenefitText(keyword))
+    const entries = collectBenefitEntries(plan)
+
+    return entries.some((entry) =>
+      normalizedKeywords.some((keyword) => entry.normalized.includes(keyword))
+    )
+  }
+
+  const BENEFIT_KEYWORDS: Record<string, string[]> = {
+    patrimonialCoverage: ["amparo patrimonial", "proteccion patrimonial"],
+    airbag: ["airbag"],
+    towService: ["servicio de grua", "grua", "auxilio vial", "remolque"],
+    vehicleAssistance: [
+      "asistencia vehicular",
+      "asistencia zurich",
+      "asistencia vial",
+      "asistencia en carretera",
+    ],
+    legalAssistance: ["asistencia legal"],
+    exequialAssistance: ["asistencia exequial", "servicio exequial", "servicio de sepelio", "sepelio"],
+    substituteAuto: ["auto sustituto", "vehiculo sustituto", "auto de reemplazo", "vehiculo de reemplazo"],
+    andeanPact: ["pacto andino"],
+  }
+
+  function resolveBenefitFromCoverage(plan: any, key: string): boolean | undefined {
+    if (!Array.isArray(plan?.coverageBenefits)) return undefined
+
+    const indexMap: Record<string, number | number[]> = {
+      airbag: 8,
+      towService: 9,
+      vehicleAssistance: 10,
+      legalAssistance: 11,
+      exequialAssistance: 12,
+      substituteAuto: [13, 14],
+    }
+
+    const indexes = indexMap[key]
+    if (indexes === undefined) return undefined
+
+    const values = (Array.isArray(indexes) ? indexes : [indexes])
+      .map((idx) => plan.coverageBenefits[idx])
+      .filter((value) => value !== undefined)
+
+    if (!values.length) return undefined
+
+    const toBoolean = (value: unknown): boolean => {
+      if (typeof value === "number") return value === 1
+      if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase()
+        const withoutAccents = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        return withoutAccents === "1" || withoutAccents === "si"
+      }
+      return Boolean(value)
+    }
+
+    return values.some((value) => toBoolean(value))
+  }
+
   function getCoverageValue(plan: any, key: string): string | boolean {
     if (!plan) return "-"
 
@@ -81,18 +267,34 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
       const principals = plan.principals
 
       switch (key) {
-        case "civilLiability":
-          return principals["PRINCIPALES COBERTURAS"]?.includes("Responsabilidad Civil")
-            ? principals["PRINCIPALES COBERTURAS"].split("\n")[0].replace("Responsabilidad Civil: ", "")
-            : "-"
-        case "accidentalDeath":
-          return principals["PRINCIPALES COBERTURAS"]?.includes("Muerte Accidental")
-            ? principals["PRINCIPALES COBERTURAS"].split("\n")[1]?.replace("/*/Muerte Accidental: ", "") || "-"
-            : "-"
-        case "medicalExpenses":
-          return principals["PRINCIPALES COBERTURAS"]?.includes("Gastos Médicos")
-            ? principals["PRINCIPALES COBERTURAS"].split("\n")[2]?.replace("/*/Gastos Médicos: ", "") || "-"
-            : "-"
+        case "civilLiability": {
+          const value =
+            typeof principals["PRINCIPALES COBERTURAS"] === "string"
+              ? extractPrincipalCoverageValue(principals, ["Responsabilidad Civil:"])
+              : null
+          return value ?? "-"
+        }
+        case "accidentalDeath": {
+          const value =
+            typeof principals["PRINCIPALES COBERTURAS"] === "string"
+              ? extractPrincipalCoverageValue(principals, ["Muerte Accidental:"])
+              : null
+          return value ?? "-"
+        }
+        case "medicalExpenses": {
+          const value =
+            typeof principals["PRINCIPALES COBERTURAS"] === "string"
+              ? extractPrincipalCoverageValue(
+                  principals,
+                  [
+                    "Gastos Medicos:",
+                    "Gastos Medicos por Accidente:",
+                    "Gastos Medicos por ocupante:",
+                  ]
+                )
+              : null
+          return value ?? "-"
+        }
       }
     }
 
@@ -101,38 +303,28 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
       switch (key) {
         case "partialLoss":
           const partialLoss = deductibles.find((d: any) => d.title === "Perdida parcial")
-          return partialLoss?.text || "10% del valor del siniestro, 1% del valor asegurado, mínimo..."
+          return cleanupDisplayText(partialLoss?.text || "10% del valor del siniestro, 1% del valor asegurado, mínimo...")
         case "totalLossDamage":
           const totalDamage = deductibles.find((d: any) => d.title === "Perdida total por daño")
-          return totalDamage?.text || "15% valor asegurado"
+          return cleanupDisplayText(totalDamage?.text || "15% valor asegurado")
         case "totalLossTheftWithDevice":
           const theftWith = deductibles.find((d: any) => d.title === "Perdida total por robo (con dispositivo)")
-          return theftWith?.text || "30% valor asegurado"
+          return cleanupDisplayText(theftWith?.text || "30% valor asegurado")
         case "totalLossTheftWithoutDevice":
           const theftWithout = deductibles.find((d: any) => d.title === "Perdida total por robo (sin dispositivo)")
-          return theftWithout?.text || "15% valor asegurado"
+          return cleanupDisplayText(theftWithout?.text || "15% valor asegurado")
       }
     }
 
-    // Check coverageBenefits array for boolean values
-    if (plan.coverageBenefits && Array.isArray(plan.coverageBenefits)) {
-      const benefits = plan.coverageBenefits
-      switch (key) {
-        case "patrimonialCoverage":
-          return benefits[3] === "1"
-        case "airbag":
-          return benefits[8] === "1"
-        case "towService":
-          return benefits[9] === "1"
-        case "vehicleAssistance":
-          return benefits[10] === "1"
-        case "legalAssistance":
-          return benefits[11] === "1"
-        case "sexualAssistance":
-          return benefits[12] === "1"
-        case "substituteAuto":
-          return benefits[13] === "1" || benefits[14] === "1"
+    if (BENEFIT_KEYWORDS[key]) {
+      if (hasBenefitFromContent(plan, BENEFIT_KEYWORDS[key])) {
+        return true
       }
+      const fallback = resolveBenefitFromCoverage(plan, key)
+      if (typeof fallback === "boolean") {
+        return fallback
+      }
+      return false
     }
 
     return "-"
@@ -160,7 +352,7 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
 
     return {
       insurerKey: s.insurerKey,
-      planName: s.plan?.planName || `Plan ${idx + 1}`,
+      planName: formatPlanName(s.plan),
       logoUrl,
       pricing: {
         totalPremium,
@@ -185,8 +377,9 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
         towService: getCoverageValue(s.plan, "towService"),
         vehicleAssistance: getCoverageValue(s.plan, "vehicleAssistance"),
         legalAssistance: getCoverageValue(s.plan, "legalAssistance"),
-        exequialAssistance: getCoverageValue(s.plan, "sexualAssistance"),
+        exequialAssistance: getCoverageValue(s.plan, "exequialAssistance"),
         substituteAuto: getCoverageValue(s.plan, "substituteAuto"),
+        andeanPact: getCoverageValue(s.plan, "andeanPact"),
       },
       rawPlan: s.plan,
     }
@@ -232,7 +425,9 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
                             </img>
                           </div>
                         </div>
-                        <div className="font-bold text-blue-600 text-base">{s.insurerKey.toUpperCase()}</div>
+                        <div className="font-bold text-blue-600 text-base">
+                          {formatInsurerName(s.insurerKey)}
+                        </div>
                       </div>
                     </th>
                   ))}
@@ -243,7 +438,7 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
                   <td className="py-3 px-3 text-gray-700 font-medium">Producto</td>
                   {selected.map((s, idx) => (
                     <td key={idx} className="py-3 px-4 text-center text-gray-600 text-xs">
-                      {s.plan?.planName || `Plan ${s.planIndex + 1}`}
+                      {formatPlanName(s.plan)}
                     </td>
                   ))}
                 </tr>
@@ -353,131 +548,91 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
                   <td className="py-3 px-3 text-gray-700 font-medium">Pacto Andino</td>
                   {selected.map((s, idx) => (
                     <td key={idx} className="py-3 px-4 text-center">
-                      <Check className="w-5 h-5 text-cyan-500 mx-auto" />
+                      {getCoverageValue(s.plan, "andeanPact") ? (
+                        <Check className="w-5 h-5 text-cyan-500 mx-auto" />
+                      ) : (
+                        <X className="w-5 h-5 text-red-500 mx-auto" />
+                      )}
                     </td>
                   ))}
                 </tr>
 
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <td className="py-3 px-3 text-gray-700 font-medium">Airbag</td>
-                  {selected.map((s, idx) => {
-                    const value = getCoverageValue(s.plan, "airbag")
-                    return (
-                      <td key={idx} className="py-3 px-4 text-center">
-                        {typeof value === "boolean" ? (
-                          value ? (
-                            <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                          ) : (
-                            <span className="text-gray-600 text-xs">
-                              Cobertura hasta 200 km de la frontera de Perú y Colombia
-                            </span>
-                          )
-                        ) : (
-                          <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                        )}
-                      </td>
-                    )
-                  })}
+                  {selected.map((s, idx) => (
+                    <td key={idx} className="py-3 px-4 text-center">
+                      {getCoverageValue(s.plan, "airbag") ? (
+                        <Check className="w-5 h-5 text-cyan-500 mx-auto" />
+                      ) : (
+                        <X className="w-5 h-5 text-red-500 mx-auto" />
+                      )}
+                    </td>
+                  ))}
                 </tr>
 
                 <tr className="border-b border-gray-100">
                   <td className="py-3 px-3 text-gray-700 font-medium">Servicio de grúa</td>
-                  {selected.map((s, idx) => {
-                    const value = getCoverageValue(s.plan, "towService")
-                    return (
-                      <td key={idx} className="py-3 px-4 text-center">
-                        {typeof value === "boolean" ? (
-                          value ? (
-                            <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                          ) : (
-                            <span className="text-gray-600 text-xs">100% a consecuencia de siniestro</span>
-                          )
-                        ) : (
-                          <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                        )}
-                      </td>
-                    )
-                  })}
+                  {selected.map((s, idx) => (
+                    <td key={idx} className="py-3 px-4 text-center">
+                      {getCoverageValue(s.plan, "towService") ? (
+                        <Check className="w-5 h-5 text-cyan-500 mx-auto" />
+                      ) : (
+                        <X className="w-5 h-5 text-red-500 mx-auto" />
+                      )}
+                    </td>
+                  ))}
                 </tr>
 
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <td className="py-3 px-3 text-gray-700 font-medium">Asistencia vehicular</td>
-                  {selected.map((s, idx) => {
-                    const value = getCoverageValue(s.plan, "vehicleAssistance")
-                    return (
-                      <td key={idx} className="py-3 px-4 text-center">
-                        {typeof value === "boolean" ? (
-                          value ? (
-                            <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                          ) : (
-                            <X className="w-5 h-5 text-red-500 mx-auto" />
-                          )
-                        ) : (
-                          <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                        )}
-                      </td>
-                    )
-                  })}
+                  {selected.map((s, idx) => (
+                    <td key={idx} className="py-3 px-4 text-center">
+                      {getCoverageValue(s.plan, "vehicleAssistance") ? (
+                        <Check className="w-5 h-5 text-cyan-500 mx-auto" />
+                      ) : (
+                        <X className="w-5 h-5 text-red-500 mx-auto" />
+                      )}
+                    </td>
+                  ))}
                 </tr>
 
                 <tr className="border-b border-gray-100">
                   <td className="py-3 px-3 text-gray-700 font-medium">Asistencia legal</td>
-                  {selected.map((s, idx) => {
-                    const value = getCoverageValue(s.plan, "legalAssistance")
-                    return (
-                      <td key={idx} className="py-3 px-4 text-center">
-                        {typeof value === "boolean" ? (
-                          value ? (
-                            <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                          ) : (
-                            <X className="w-5 h-5 text-red-500 mx-auto" />
-                          )
-                        ) : (
-                          <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                        )}
-                      </td>
-                    )
-                  })}
+                  {selected.map((s, idx) => (
+                    <td key={idx} className="py-3 px-4 text-center">
+                      {getCoverageValue(s.plan, "legalAssistance") ? (
+                        <Check className="w-5 h-5 text-cyan-500 mx-auto" />
+                      ) : (
+                        <X className="w-5 h-5 text-red-500 mx-auto" />
+                      )}
+                    </td>
+                  ))}
                 </tr>
 
                 <tr className="border-b border-gray-100 bg-gray-50">
                   <td className="py-3 px-3 text-gray-700 font-medium">Asistencia exequial</td>
-                  {selected.map((s, idx) => {
-                    const value = getCoverageValue(s.plan, "sexualAssistance")
-                    return (
-                      <td key={idx} className="py-3 px-4 text-center">
-                        {typeof value === "boolean" ? (
-                          value ? (
-                            <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                          ) : (
-                            <X className="w-5 h-5 text-red-500 mx-auto" />
-                          )
-                        ) : (
-                          <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                        )}
-                      </td>
-                    )
-                  })}
+                  {selected.map((s, idx) => (
+                    <td key={idx} className="py-3 px-4 text-center">
+                      {getCoverageValue(s.plan, "exequialAssistance") ? (
+                        <Check className="w-5 h-5 text-cyan-500 mx-auto" />
+                      ) : (
+                        <X className="w-5 h-5 text-red-500 mx-auto" />
+                      )}
+                    </td>
+                  ))}
                 </tr>
 
                 <tr className="border-b border-gray-100">
                   <td className="py-3 px-3 text-gray-700 font-medium">Auto sustituto</td>
-                  {selected.map((s, idx) => {
-                    const value = getCoverageValue(s.plan, "substituteAuto")
-                    return (
-                      <td key={idx} className="py-3 px-4 text-center">
-                        {typeof value === "boolean" ? (
-                          value ? (
-                            <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                          ) : (
-                            <X className="w-5 h-5 text-red-500 mx-auto" />
-                          )
-                        ) : (
-                          <Check className="w-5 h-5 text-cyan-500 mx-auto" />
-                        )}
-                      </td>
-                    )
-                  })}
+                  {selected.map((s, idx) => (
+                    <td key={idx} className="py-3 px-4 text-center">
+                      {getCoverageValue(s.plan, "substituteAuto") ? (
+                        <Check className="w-5 h-5 text-cyan-500 mx-auto" />
+                      ) : (
+                        <X className="w-5 h-5 text-red-500 mx-auto" />
+                      )}
+                    </td>
+                  ))}
                 </tr>
 
                 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import { Page, Text, View, Document, StyleSheet, Image } from "@react-pdf/renderer";
+import { Page, Text, View, Document, StyleSheet, Image, Svg, Path } from "@react-pdf/renderer";
 import type { ComparedPlanPayload } from "./comparisonModal";
 
 type ClientLocalStorage = {
@@ -27,13 +27,15 @@ type VehicleLocalStorage = {
 
 type SectionRowConfig = {
   label: string;
-  getValue: (plan: ComparedPlanPayload) => string;
+  getValue: (plan: ComparedPlanPayload) => React.ReactNode;
 };
+
+const SECTION_LABEL_WIDTH = 92;
+const ROW_LABEL_WIDTH = 168;
 
 const styles = StyleSheet.create({
   page: {
-    padding: 36,
-    backgroundColor: "#f2f4f8",
+    backgroundColor: "#ffffff",
     fontFamily: "Helvetica",
   },
   container: {
@@ -47,7 +49,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     borderBottomWidth: 1,
-    borderColor: "#d8dce5",
+    borderColor: "#ffffff",
     paddingBottom: 14,
     marginBottom: 18,
   },
@@ -56,13 +58,13 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 10,
-    color: "#d94f4f",
+    color: "#A60425",
     textTransform: "uppercase",
     marginBottom: 4,
   },
   headerTitle: {
     fontSize: 18,
-    color: "#1c2a53",
+    color: "#0b2240",
     fontWeight: 700,
     lineHeight: 1.4,
   },
@@ -82,7 +84,7 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flex: 1,
-    backgroundColor: "#f3f6fb",
+    backgroundColor: "#ffffff",
     padding: 16,
     borderRadius: 10,
     borderWidth: 1,
@@ -93,7 +95,7 @@ const styles = StyleSheet.create({
   },
   infoCardTitle: {
     fontSize: 11,
-    color: "#0b3d91",
+    color: "#0b2240",
     fontWeight: 700,
     marginBottom: 8,
     textTransform: "uppercase",
@@ -111,7 +113,7 @@ const styles = StyleSheet.create({
   infoValue: {
     flex: 1,
     fontSize: 10,
-    color: "#1f2433",
+    color: "#ffffff",
     fontWeight: 500,
   },
   table: {
@@ -120,36 +122,51 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
   },
-  tableRow: {
+  tableHeaderRow: {
     flexDirection: "row",
+    backgroundColor: "#f3f4f8",
     borderBottomWidth: 1,
     borderColor: "#d8dce5",
   },
-  tableHeaderRow: {
-    backgroundColor: "#e9eef7",
-  },
-  categoryCell: {
-    width: 150,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    borderRightWidth: 1,
-    borderColor: "#d8dce5",
+  tableHeaderIntroCell: {
+    width: SECTION_LABEL_WIDTH + ROW_LABEL_WIDTH,
+    backgroundColor: "#0b2240",
     justifyContent: "center",
-  },
-  planCell: {
-    flex: 1,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-  },
-  headerPlanCell: {
     alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+  },
+  tableHeaderIntroText: {
+    color: "#ffffff",
+    fontSize: 5,
+    fontWeight: 700,
+    textAlign: "center",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  planHeaderCell: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+  },
+  planHeaderDivider: {
+    borderLeftWidth: 1,
+    borderColor: "#d8dce5",
+  },
+  planLogo: {
+    width: 42,
+    height: 42,
+    objectFit: "contain",
+    marginBottom: 6,
   },
   planCarrier: {
     fontSize: 10,
     fontWeight: 700,
-    color: "#0b3d91",
+    color: "#0b2240",
     textTransform: "uppercase",
+    textAlign: "center",
   },
   planName: {
     fontSize: 9,
@@ -157,53 +174,97 @@ const styles = StyleSheet.create({
     marginTop: 3,
     textAlign: "center",
   },
-  sectionRow: {
+  sectionContainer: {
     flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#d8dce5",
+  },
+  sectionContainerBorderTop: {
+    borderTopWidth: 1,
+    borderColor: "#d8dce5",
   },
   sectionLabelCell: {
-    width: 150,
-    backgroundColor: "#0b3d91",
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    justifyContent: "center",
+    width: SECTION_LABEL_WIDTH,
+    backgroundColor: "#0b2240",
     borderRightWidth: 1,
     borderColor: "#d8dce5",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+  sectionLabelInner: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   sectionLabelText: {
     color: "#ffffff",
     fontSize: 9,
     fontWeight: 700,
+    letterSpacing: 1,
     textTransform: "uppercase",
+    transform: "rotate(-90deg)",
   },
-  sectionSpacerCell: {
-    backgroundColor: "#f5f7fb",
+  sectionContent: {
+    flex: 1,
+  },
+  dataRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#d8dce5",
+    minHeight: 36,
+  },
+  lastDataRow: {
+    borderBottomWidth: 0,
+  },
+  rowLabelCell: {
+    width: ROW_LABEL_WIDTH,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: "#f5f6fa",
+    borderRightWidth: 1,
+    borderColor: "#d8dce5",
+    justifyContent: "center",
+  },
+  planCell: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  planCellDivider: {
+    borderLeftWidth: 1,
+    borderColor: "#d8dce5",
+  },
+  booleanIconWrapper: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  booleanIconSuccess: {
+    backgroundColor: "#2ecc71",
+  },
+  booleanIconError: {
+    backgroundColor: "#e74c3c",
+  },
+  pageBreakSpacer: {
+    height: 18,
   },
   rowLabel: {
     fontSize: 9,
-    color: "#2d3243",
-    fontWeight: 600,
+    color: "#4b5163",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    lineHeight: 1.3,
+    textAlign: "left",
   },
   rowValue: {
     fontSize: 9,
     color: "#333740",
     lineHeight: 1.4,
-  },
-  summaryRow: {
-    backgroundColor: "#f1f3f8",
-  },
-  summaryLabelCell: {
-    width: 150,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-    borderRightWidth: 1,
-    borderColor: "#d8dce5",
-    justifyContent: "center",
-  },
-  summaryLabelText: {
-    fontSize: 9,
-    color: "#0b3d91",
-    fontWeight: 700,
-    textTransform: "uppercase",
+    textAlign: "center",
   },
   footer: {
     marginTop: 20,
@@ -212,7 +273,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   footerHighlight: {
-    color: "#d94f4f",
+    color: "#A60425",
   },
 });
 
@@ -266,6 +327,92 @@ const formatCurrency = (value: number | string | null | undefined): string => {
   const amount = Number(value);
   if (Number.isNaN(amount)) return "-";
   return `$${amount.toFixed(2)}`;
+};
+
+const normalizeBooleanString = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+const coerceToBoolean = (value: string | boolean | null | undefined): boolean => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = normalizeBooleanString(value);
+    if (!normalized || normalized === "-" || normalized === "0") return false;
+    if (["no", "no disponible", "no aplica", "sin cobertura"].includes(normalized)) {
+      return false;
+    }
+    if (["si", "incluido", "incluida", "disponible", "1", "aplica"].includes(normalized)) {
+      return true;
+    }
+    return Boolean(normalized);
+  }
+  return Boolean(value);
+};
+
+const renderBooleanIcon = (value: string | boolean | null | undefined): React.ReactNode => {
+  const isActive = coerceToBoolean(value);
+  return (
+    <View
+      style={[
+        styles.booleanIconWrapper,
+        isActive ? styles.booleanIconSuccess : styles.booleanIconError,
+      ]}
+    >
+      {isActive ? (
+        <Svg width={10} height={10} viewBox="0 0 24 24">
+          <Path
+            d="M5 13l4 4L19 7"
+            stroke="#ffffff"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      ) : (
+        <Svg width={10} height={10} viewBox="0 0 24 24">
+          <Path
+            d="M6 6l12 12M6 18L18 6"
+            stroke="#ffffff"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      )}
+    </View>
+  );
+};
+
+const normalizePlainText = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const shouldBreakAfterRow = (sectionTitle: string, rowLabel: string): boolean => {
+  return (
+    normalizePlainText(sectionTitle) === "coberturas adicionales" &&
+    normalizePlainText(rowLabel) === "perdida total por robo (sin dispositivo)"
+  );
+};
+
+const formatInsurerName = (insurerKey: string | null | undefined): string => {
+  if (typeof insurerKey !== "string") return "-";
+  const trimmed = insurerKey.trim();
+  if (!trimmed) return "-";
+  return trimmed.toLowerCase() === "asur" ? "ASEGURADORA DEL SUR" : trimmed.toUpperCase();
+};
+
+const resolvePlanName = (plan: ComparedPlanPayload): string => {
+  const normalizedName = normalizeStringValue(plan.planName);
+  if (normalizedName !== "-") {
+    return normalizedName;
+  }
+  return formatInsurerName(plan.insurerKey);
 };
 
 const formatDate = (date: Date): string => {
@@ -349,72 +496,118 @@ export const PdfBuild = ({ data }: PdfBuildProps) => {
       getValue: (plan) => formatBenefitValue(plan.benefits.patrimonialCoverage),
     },
     {
-      label: "Airbag",
-      getValue: (plan) => formatBenefitValue(plan.benefits.airbag),
+      label: "Pacto Andino",
+      getValue: (plan) => renderBooleanIcon(plan.benefits.andeanPact),
     },
     {
-      label: "Servicio de grúa",
-      getValue: (plan) => formatBenefitValue(plan.benefits.towService),
+      label: "Airbag",
+      getValue: (plan) => renderBooleanIcon(plan.benefits.airbag),
+    },
+    {
+      label: "Servicio de grua",
+      getValue: (plan) => renderBooleanIcon(plan.benefits.towService),
     },
     {
       label: "Asistencia vehicular",
-      getValue: (plan) => formatBenefitValue(plan.benefits.vehicleAssistance),
+      getValue: (plan) => renderBooleanIcon(plan.benefits.vehicleAssistance),
     },
     {
       label: "Asistencia legal",
-      getValue: (plan) => formatBenefitValue(plan.benefits.legalAssistance),
+      getValue: (plan) => renderBooleanIcon(plan.benefits.legalAssistance),
     },
     {
       label: "Asistencia exequial",
-      getValue: (plan) => formatBenefitValue(plan.benefits.exequialAssistance),
+      getValue: (plan) => renderBooleanIcon(plan.benefits.exequialAssistance),
     },
     {
       label: "Auto sustituto",
-      getValue: (plan) => formatBenefitValue(plan.benefits.substituteAuto),
+      getValue: (plan) => renderBooleanIcon(plan.benefits.substituteAuto),
     },
   ];
 
-  const renderSection = (title: string, rows: SectionRowConfig[]) => (
-    <React.Fragment key={title}>
-      <View style={styles.sectionRow}>
-        <View style={styles.sectionLabelCell}>
+  const summaryRows: SectionRowConfig[] = [
+    {
+      label: "Prima neta",
+      getValue: (plan) => formatCurrency(plan.netPremium),
+    },
+    {
+      label: "Prima total",
+      getValue: (plan) => formatCurrency(plan.pricing.totalPremium),
+    },
+    {
+      label: "Pago mensual",
+      getValue: (plan) => formatCurrency(plan.pricing.monthly),
+    },
+  ];
+
+  const additionalRows: SectionRowConfig[] = [...deductiblesRows, ...benefitsRows];
+
+  const sections: Array<{ title: string; rows: SectionRowConfig[] }> = [
+    { title: "Coberturas principales", rows: coverageRows },
+    { title: "Coberturas adicionales", rows: additionalRows },
+    { title: "Costos", rows: summaryRows },
+  ];
+
+  const renderSection = (title: string, rows: SectionRowConfig[], isFirst: boolean) => (
+    <View
+      key={title}
+      style={[
+        styles.sectionContainer,
+        ...(!isFirst ? [styles.sectionContainerBorderTop] : []),
+      ]}
+    >
+      <View style={styles.sectionLabelCell}>
+        <View style={styles.sectionLabelInner}>
           <Text style={styles.sectionLabelText}>{title.toUpperCase()}</Text>
         </View>
-        {data.map((_, idx) => (
-          <View key={`${title}-spacer-${idx}`} style={[styles.planCell, styles.sectionSpacerCell]} />
-        ))}
       </View>
-      {rows.map((row) => (
-        <View key={`${title}-${row.label}`} style={styles.tableRow}>
-          <View style={styles.categoryCell}>
-            <Text style={styles.rowLabel}>{row.label}</Text>
-          </View>
-          {data.map((plan, idx) => (
-            <View key={`${title}-${row.label}-${idx}`} style={[styles.planCell, { borderLeftWidth: idx === 0 ? 0 : 1, borderColor: "#d8dce5" }]}>
-              <Text style={styles.rowValue}>{row.getValue(plan)}</Text>
-            </View>
-          ))}
-        </View>
-      ))}
-    </React.Fragment>
-  );
+      <View style={styles.sectionContent}>
+        {rows.map((row, rowIndex) => {
+          const isLastRow = rowIndex === rows.length - 1;
+          return (
+            <React.Fragment key={`${title}-${row.label}`}>
+              <View
+                style={[
+                  styles.dataRow,
+                  ...(isLastRow ? [styles.lastDataRow] : []),
+                ]}
+              >
+                <View style={styles.rowLabelCell}>
+                  <Text style={styles.rowLabel}>{row.label}</Text>
+                </View>
+                {data.map((plan, idx) => {
+                  const cellContent = row.getValue(plan);
+                  const isPrimitive =
+                    typeof cellContent === "string" || typeof cellContent === "number";
 
-  const renderSummaryRow = (label: string, getValue: (plan: ComparedPlanPayload) => string) => (
-    <View key={`summary-${label}`} style={[styles.tableRow, styles.summaryRow]}>
-      <View style={styles.summaryLabelCell}>
-        <Text style={styles.summaryLabelText}>{label.toUpperCase()}</Text>
+                  return (
+                    <View
+                      key={`${title}-${row.label}-${idx}`}
+                      style={[
+                        styles.planCell,
+                        ...(idx !== 0 ? [styles.planCellDivider] : []),
+                      ]}
+                    >
+                      {isPrimitive ? (
+                        <Text style={styles.rowValue}>{String(cellContent)}</Text>
+                      ) : (
+                        cellContent
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+              {shouldBreakAfterRow(title, row.label) ? (
+                <React.Fragment>
+                  <View style={styles.pageBreakSpacer} />
+                  <View break />
+                  <View style={styles.pageBreakSpacer} />
+                </React.Fragment>
+              ) : null}
+            </React.Fragment>
+          );
+        })}
       </View>
-      {data.map((plan, idx) => (
-        <View
-          key={`summary-${label}-${idx}`}
-          style={[
-            styles.planCell,
-            { borderLeftWidth: idx === 0 ? 0 : 1, borderColor: "#d8dce5" },
-          ]}
-        >
-          <Text style={styles.rowValue}>{getValue(plan)}</Text>
-        </View>
-      ))}
     </View>
   );
 
@@ -437,9 +630,9 @@ export const PdfBuild = ({ data }: PdfBuildProps) => {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTextGroup}>
-              <Text style={styles.tagline}>Exclusivo para clientes de Agentes Oland</Text>
               <Text style={styles.headerTitle}>Cotización de su seguro</Text>
-              <Text style={styles.headerSubtitle}>Comparativo de coberturas y costos</Text>
+              <Text style={styles.tagline}>Exclusivo para clientes de Agentes Oland</Text>
+              
             </View>
             <Image src="/img/agentesLogo.jpg" style={styles.topLogo} />
           </View>
@@ -497,35 +690,30 @@ export const PdfBuild = ({ data }: PdfBuildProps) => {
 
           {/* Comparison table */}
           <View style={styles.table}>
-            <View style={[styles.tableRow, styles.tableHeaderRow]}>
-              <View style={styles.categoryCell}>
-                <Text style={styles.rowLabel}>Comparativo coberturas y costos</Text>
+            <View style={styles.tableHeaderRow}>
+              <View style={styles.tableHeaderIntroCell}>
+                <Text style={styles.tableHeaderIntroText}>
+                  Comparativo coberturas y costos
+                </Text>
               </View>
               {data.map((plan, idx) => (
                 <View
-                  key={`header-${plan.insurerKey}-${idx}`}
-                  style={[styles.planCell, styles.headerPlanCell, { borderLeftWidth: idx === 0 ? 0 : 1, borderColor: "#d8dce5" }]}
+                  key={`plan-header-${plan.insurerKey}-${idx}`}
+                  style={[
+                    styles.planHeaderCell,
+                    ...(idx !== 0 ? [styles.planHeaderDivider] : []),
+                  ]}
                 >
-                  <Text style={styles.planCarrier}>{plan.insurerKey.toUpperCase()}</Text>
-                  <Text style={styles.planName}>{plan.planName}</Text>
+                  {plan.logoUrl ? <Image src={plan.logoUrl} style={styles.planLogo} /> : null}
+                  <Text style={styles.planCarrier}>{formatInsurerName(plan.insurerKey)}</Text>
+                  <Text style={styles.planName}>{resolvePlanName(plan)}</Text>
                 </View>
               ))}
             </View>
-
-            {renderSection("Coberturas principales", coverageRows)}
-            {renderSection("Deducibles", deductiblesRows)}
-            {renderSection("Coberturas adicionales", benefitsRows)}
-
-            {renderSummaryRow("Prima neta", (plan) => formatCurrency(plan.netPremium))}
-            {renderSummaryRow("Prima total", (plan) => formatCurrency(plan.pricing.totalPremium))}
-            {renderSummaryRow("Prima mensual", (plan) => {
-              const monthly = formatCurrency(plan.pricing.monthly);
-              const period = plan.pricing.period;
-              if (!period || monthly === "-") return monthly;
-              return `${monthly} x ${period} pagos`;
-            })}
+            {sections.map((section, index) =>
+              renderSection(section.title, section.rows, index === 0)
+            )}
           </View>
-
           {/* Footer */}
           <Text style={styles.footer}>
             AGENTES DE SEGUROS ECUADOR - <Text style={styles.footerHighlight}>OLAND SEGUROS</Text>
@@ -535,3 +723,4 @@ export const PdfBuild = ({ data }: PdfBuildProps) => {
     </Document>
   );
 };
+
