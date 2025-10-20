@@ -34,6 +34,29 @@ type PlanComparadoPersist = Parameters<
   typeof updateCotizacionWithPlanesHistorial
 >[1][number];
 
+function toNumber(value: unknown): number | null {
+  if (typeof value === "number" && !Number.isNaN(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const sanitized = value.replace(/[^0-9,.-]/g, "");
+    if (!sanitized) {
+      return null;
+    }
+    const hasComma = sanitized.includes(",");
+    const hasDot = sanitized.includes(".");
+    const normalized =
+      hasComma && hasDot
+        ? sanitized.replace(/\./g, "").replace(",", ".")
+        : sanitized.replace(",", ".");
+    const parsed = Number(normalized);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
 function resolvePrimaTotal(plan: ComparedPlanPayload): number | null {
   const totalPremium = plan.pricing?.totalPremium;
   if (typeof totalPremium === "number" && !Number.isNaN(totalPremium)) {
@@ -51,6 +74,42 @@ function resolvePrimaTotal(plan: ComparedPlanPayload): number | null {
     const computed = monthly * (period > 0 ? period : 1);
     if (!Number.isNaN(computed)) {
       return computed;
+    }
+  }
+
+  return null;
+}
+
+function resolvePlanRate(plan: ComparedPlanPayload): number | null {
+  const direct = toNumber(plan.rate);
+  if (direct !== null) {
+    return direct;
+  }
+
+  const raw = plan.rawPlan;
+  if (raw && typeof raw === "object") {
+    const candidates = [
+      raw.rate,
+      raw.Rate,
+      raw.ratePercentage,
+      raw.rate_percent,
+      raw.tasa,
+      raw.Tasa,
+      raw.tasaNeta,
+      raw.tasaBruta,
+      raw.planRate,
+      raw.rateValue,
+      raw?.pricing?.rate,
+      raw?.pricing?.Rate,
+      raw?.pricing?.percentage,
+      raw?.pricing?.tasa,
+    ];
+
+    for (const candidate of candidates) {
+      const parsed = toNumber(candidate);
+      if (parsed !== null) {
+        return parsed;
+      }
     }
   }
 
@@ -278,6 +337,13 @@ export default function Planes({
         return;
       }
 
+      const primaNeta =
+        toNumber(plan.netPremium) ??
+        toNumber(plan.rawPlan?.netPremium) ??
+        toNumber(plan.rawPlan?.primaNeta);
+
+      const tasa = resolvePlanRate(plan);
+
       plansToPersist.push({
         aseguradora,
         nombrePlan:
@@ -285,6 +351,8 @@ export default function Planes({
             ? plan.planName
             : "Plan sin nombre",
         primaTotal,
+        primaNeta,
+        Tasa: tasa,
       });
     });
 

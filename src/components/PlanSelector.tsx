@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState, useTransition } from 'react';
+
 import { updateBitrixDealWithPlanSelected } from '@/actions/bitrixActions';
+import { updatePlanSelection } from '@/actions/planesComparados.actions';
 
 type Plan = {
   id: string;
@@ -19,7 +21,9 @@ type PlanSelectorProps = {
 };
 
 export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(() => plans.find((plan) => plan.selected)?.id ?? null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(
+    () => plans.find((plan) => plan.selected)?.id ?? null,
+  );
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackType, setFeedbackType] = useState<'success' | 'error' | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -31,13 +35,13 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
     mapfre: 'Mapfre',
     equinoccial: 'Equinoccial',
     sweaden: 'Sweaden',
+    chubb: 'CHUBB',
   };
 
   const planNombres: Record<string, string> = {
-  "s123 chubb": "CHUBB",
-  // agrega más según tus códigos internos
-};
-
+    "s123 chubb": "CHUBB",
+    // agrega más según tus códigos internos
+  };
 
   useEffect(() => {
     if (!plans.length) {
@@ -53,39 +57,52 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
   }, [plans, selectedPlanId]);
 
   const handleSelect = (plan: Plan) => {
-  if (isPending || plan.id === selectedPlanId) return;
+    if (isPending || plan.id === selectedPlanId) return;
 
-  setFeedback(null);
-  setFeedbackType(null);
-  setPendingPlanId(plan.id);
+    setFeedback(null);
+    setFeedbackType(null);
+    setPendingPlanId(plan.id);
 
-  // 🟦 Nuevo: transformar la abreviatura a nombre completo
-  const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? '';
-  const aseguradoraNombre = aseguradoraNombres[aseguradoraKey] || plan.aseguradora || '';
+    // Transformamos la abreviatura al nombre completo para Bitrix
+    const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? '';
+    const aseguradoraNombre = aseguradoraNombres[aseguradoraKey] || plan.aseguradora || '';
 
-  startTransition(async () => {
-    const result = await updateBitrixDealWithPlanSelected(dealId, {
-      aseguradora: aseguradoraNombre, // 👈 ahora envías el nombre completo
-      plan: plan.nombrePlan ?? '',
-      tasa: plan.Tasa ?? 0,
-      primaNeta: plan.primaNeta ?? 0,
-      primaTotal: plan.primaTotal,
-    });
+    startTransition(async () => {
+      const result = await updateBitrixDealWithPlanSelected(dealId, {
+        aseguradora: aseguradoraNombre,
+        plan: plan.nombrePlan ?? '',
+        tasa: plan.Tasa ?? 0,
+        primaNeta: plan.primaNeta ?? 0,
+        primaTotal: plan.primaTotal,
+      });
 
-    if (!result.ok) {
-      setFeedback(result.error ?? 'No se pudo actualizar el deal.');
-      setFeedbackType('error');
+      if (!result.ok) {
+        setFeedback(result.error ?? 'No se pudo actualizar el deal.');
+        setFeedbackType('error');
+        setPendingPlanId(null);
+        return;
+      }
+
+      const planUpdate = await updatePlanSelection(plan.id, {
+        primaNeta: plan.primaNeta ?? null,
+        Tasa: plan.Tasa ?? null,
+      });
+
+      if (!planUpdate.ok) {
+        setFeedback(
+          planUpdate.error ?? 'El plan se actualizó en Bitrix, pero no se pudo guardar en la base de datos.',
+        );
+        setFeedbackType('error');
+        setPendingPlanId(null);
+        return;
+      }
+
+      setSelectedPlanId(plan.id);
+      setFeedback('Plan seleccionado y actualizado correctamente.');
+      setFeedbackType('success');
       setPendingPlanId(null);
-      return;
-    }
-
-    setSelectedPlanId(plan.id);
-    setFeedback('Plan seleccionado y deal actualizado correctamente.');
-    setFeedbackType('success');
-    setPendingPlanId(null);
-  });
-};
-
+    });
+  };
 
   if (!plans.length) {
     return <p className="text-sm text-slate-500">No hay planes comparados en esta cotización.</p>;
@@ -97,10 +114,10 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
         const isSelected = plan.id === selectedPlanId;
         const isProcessing = isPending && plan.id === pendingPlanId;
 
-        // 👇 Aquí normalizamos el nombre de la aseguradora sin errores TS
+        // Normalizamos el nombre de la aseguradora para mostrarlo
         const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? '';
         const aseguradoraNombre = aseguradoraNombres[aseguradoraKey] || 'Aseguradora no especificada';
-        
+
         const planKey = plan.nombrePlan?.toLowerCase() ?? '';
         const planNombreLimpio = planNombres[planKey] || plan.nombrePlan || 'Sin nombre';
 
@@ -118,9 +135,7 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1.5">
-                <p className="text-sm font-semibold text-slate-900">
-                  {aseguradoraNombre}
-                </p>
+                <p className="text-sm font-semibold text-slate-900">{aseguradoraNombre}</p>
                 <p className="text-sm text-slate-700">Plan: {planNombreLimpio}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
                   <span>Prima total: ${Number(plan.primaTotal ?? 0).toFixed(2)}</span>
@@ -150,3 +165,4 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
     </div>
   );
 }
+

@@ -21,6 +21,7 @@ export type ComparedPlanPayload = {
     monthly: number
   }
   netPremium: number | null
+  rate: number | null
   coverages: {
     civilLiability: string | boolean
     accidentalDeath: string | boolean
@@ -94,6 +95,52 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
     for (const c of candidates) {
       if (typeof c === "number" && !isNaN(c)) return c
       if (typeof c === "string" && c.trim() !== "" && !isNaN(Number(c))) return Number(c)
+    }
+    return null
+  }
+
+  function parseNumericValue(value: unknown): number | null {
+    if (typeof value === "number" && !Number.isNaN(value)) {
+      return value
+    }
+    if (typeof value === "string") {
+      const sanitized = value.replace(/[^0-9,.-]/g, "")
+      if (!sanitized) {
+        return null
+      }
+      const hasComma = sanitized.includes(",")
+      const hasDot = sanitized.includes(".")
+      const normalized = hasComma && hasDot ? sanitized.replace(/\./g, "").replace(",", ".") : sanitized.replace(",", ".")
+      const parsed = Number(normalized)
+      if (!Number.isNaN(parsed)) {
+        return parsed
+      }
+    }
+    return null
+  }
+
+  function getPlanRate(plan: any): number | null {
+    if (!plan) return null
+    const candidates = [
+      plan.rate,
+      plan.Rate,
+      plan.ratePercentage,
+      plan.rate_percent,
+      plan.tasa,
+      plan.Tasa,
+      plan.tasaNeta,
+      plan.tasaBruta,
+      plan.rateValue,
+      plan.pricing?.rate,
+      plan.pricing?.Rate,
+      plan.pricing?.percentage,
+      plan.pricing?.tasa,
+    ]
+    for (const candidate of candidates) {
+      const parsed = parseNumericValue(candidate)
+      if (parsed !== null) {
+        return parsed
+      }
     }
     return null
   }
@@ -384,6 +431,7 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
         monthly,
       },
       netPremium: getNetPremium(s.plan),
+      rate: getPlanRate(s.plan),
       coverages: {
         civilLiability: getCoverageValue(s.plan, "civilLiability"),
         accidentalDeath: getCoverageValue(s.plan, "accidentalDeath"),
