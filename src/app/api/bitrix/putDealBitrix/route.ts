@@ -1,3 +1,4 @@
+"use server"
 import { NextRequest, NextResponse } from "next/server"
 import { getBitrixAuthContext } from "@/lib/bitrix/session"
 import { BITRIX_USER_AGENT, CATEGORY_ID, STAGE_ID } from "@/configuration/constants"
@@ -72,7 +73,7 @@ const buildDealPayload = (rawBody: any) => {
   const model = rawBody?.model ?? vehiculo.modelo ?? ""
   const year = rawBody?.year ?? vehiculo.anio ?? ""
   const plate = rawBody?.plate ?? vehiculo.placa ?? ""
-  const value = rawBody?.vehicleValue ?? vehiculo.avaluo ?? ""
+  const value = rawBody?.vehicleValue ?? vehiculo.avaluo
   const useOfVehicle = rawBody?.useOfVehicle ?? vehiculo.tipoUso ?? ""
 
   const titleParts = [
@@ -98,15 +99,16 @@ const buildDealPayload = (rawBody: any) => {
       UF_CRM_1708442569166: model,
       UF_CRM_1708442612728: year,
       UF_CRM_1708442675536: plate,
-      UF_CRM_1757947153789: value ? `${value}|USD` : "",
+      UF_CRM_PLAN_NETPREMIUM : value ? `${Number(value).toFixed(2)}|USD` : "0.00|USD",
       UF_CRM_1708442550726: brand,
       UF_CRM_1675696721: email,
-      UF_CRM_1758140561898: city,
+      UF_CRM_1758140561898: city,   
       UF_CRM_1747676789932: age,
       UF_CRM_1758140844163: gender,
       UF_CRM_1758120573688: useOfVehicle,
       UF_CRM_1757969782406: civilStatus,
     },
+    value,
   }
 }
 
@@ -116,7 +118,7 @@ export async function POST(request: NextRequest) {
     const { accessToken, restBase } = await getBitrixAuthContext()
 
     const deal = buildDealPayload(rawBody)
-    const addResult = await callBitrix("crm.deal.add.json", accessToken, restBase, "POST", deal)
+    const addResult = await callBitrix("crm.deal.add.json", accessToken, restBase, "POST", { fields: deal.fields })
 
     const dealId = addResult.result
 
@@ -130,19 +132,20 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    //crear titulo con id en bitrix
+    // Actualizar titulo y campo Valor Asegurado
     const titleToUpdate = `${deal.fields.TITLE} - ID ${dealId}`
     await callBitrix("crm.deal.update.json", accessToken, restBase, "POST", {
       id: dealId,
       fields: {
         TITLE: titleToUpdate,
+        UF_CRM_1757947153789: deal.value ? `${deal.value}|USD` : "0|USD",
       },
     })
 
     return NextResponse.json({
       success: true,
       dealId,
-      message: "Deal creado y titulo actualizado con ID",
+      message: "Deal creado y actualizado correctamente",
     })
   } catch (error: any) {
     console.error("Error POST /api/bitrix/putDealBitrix:", error)
@@ -154,6 +157,6 @@ export async function POST(request: NextRequest) {
         error: message,
       },
       { status },
-    )
+    ) 
   }
 }

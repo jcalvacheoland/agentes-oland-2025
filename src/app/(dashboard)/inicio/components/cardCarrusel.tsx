@@ -15,8 +15,18 @@ interface CardCarruselProps {
     color: string
     img?: string
     desde?: string
+    buttonCard?:ButtonCardProps
   }>
 }
+interface ButtonCardProps {
+  id: number
+  title: string
+  description: string
+  color: string
+  img?: string
+  desde?: string
+}
+
 
 export function CardCarrusel({
   autoPlayInterval = 3000,
@@ -194,6 +204,7 @@ export function CardCarrusel({
                     <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
                       {card.description}
                     </p>
+                  <Button variant={"oland"}>Cotizar ahora</Button>
                   </div>
                 </CardContent>
               </Card>

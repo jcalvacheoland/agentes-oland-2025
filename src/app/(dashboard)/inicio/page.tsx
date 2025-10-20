@@ -21,7 +21,7 @@ export default function HomeAgentes() {
                 
             </section>
             <main >
-                <CardCarrusel autoPlayInterval={2000} isAutoPlay={true}></CardCarrusel>
+                <CardCarrusel autoPlayInterval={4000} isAutoPlay={true}></CardCarrusel>
             </main>
             </div>
         

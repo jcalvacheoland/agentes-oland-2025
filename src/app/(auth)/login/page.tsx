@@ -1,8 +1,5 @@
 import { auth } from "@/auth" // si usas la configuración de Auth.js 5+
 import { redirect } from "next/navigation"
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import Link from "next/link";
 import { LoginButton } from "./components/LoginButton";
 export default async function LoginPage() {
 
@@ -10,7 +7,7 @@ export default async function LoginPage() {
 
   if (session) {
     // 🔹 Si el usuario ya está autenticado
-    redirect("/dashboard")
+    redirect("/inicio") // Redirige a la página de inicio
   }
 
   return(
@@ -31,8 +28,8 @@ export default async function LoginPage() {
       <div className="flex flex-col items-center justify-center p-8">
          <img 
          src="/img/agentesLogo.jpg" 
-         width={200}
-         height={180}
+         width="200"
+         height="200"
          alt="" />
         <div className="w-full max-w-sm space-y-8">
           <div className="text-center">
