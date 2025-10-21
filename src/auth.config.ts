@@ -134,25 +134,19 @@ function resolveEmail(profile: BitrixProfile) {
 // ============================================================================
 
 async function parseAndNormalizeTokenResponse(response: Response) {
-  const cloned = response.clone()
-  const data = (await cloned.json().catch(() => null)) as BitrixTokenSet | null
+  const data = await response.json().catch(() => null) as BitrixTokenSet | null
 
   if (!data) {
     throw new Error("Bitrix provider: unable to parse token response as JSON.")
   }
 
+  // Aseguramos token_type por defecto
   if (!data.token_type) {
     data.token_type = "Bearer"
   }
 
-  const headers = new Headers(response.headers)
-  headers.set("Content-Type", "application/json")
-
-  return new Response(JSON.stringify(data), {
-    headers,
-    status: response.status,
-    statusText: response.statusText,
-  })
+  // Simplemente devolvemos el objeto normalizado de tokens (no un Response)
+  return data
 }
 
 // ============================================================================
@@ -452,12 +446,12 @@ const authConfig = {
       // Si hay usuario (primer login), guardar su ID real de la BD
       if (user) {
         token.sub = user.id
-        console.log('💾 Guardando ID de usuario en token:', user.id)
+        console.log(' Guardando ID de usuario en token:', user.id)
       }
       
       // PRIMER LOGIN: Guardar tokens iniciales de Bitrix
       if (account) {
-        console.log('🔐 Nuevo login - Guardando tokens de Bitrix24')
+        console.log(' Nuevo login - Guardando tokens de Bitrix24')
         
         const bitrix = resolveBitrixSessionPayload(account as BitrixTokenSet)
         token.bitrix = bitrix

@@ -5,6 +5,7 @@ import { PDFDownloadLink } from "@react-pdf/renderer"
 import { Button } from "@/components/ui/button";
 import { AseguradorasLogo } from "@/configuration/constants";
 import { PdfBuild, PdfClientInfo, PdfVehicleInfo } from "./PdfBuild";
+import { useRouter } from 'next/navigation';
 type PlanEntry = {
   insurerKey: string
   planIndex: number
@@ -57,6 +58,12 @@ interface ComparisonModalProps {
 export default function ComparisonModal({ selected, onClose, onConfirm }: ComparisonModalProps) {
   const [clientInfo, setClientInfo] = React.useState<PdfClientInfo | null>(null);
   const [vehicleInfo, setVehicleInfo] = React.useState<PdfVehicleInfo | null>(null);
+   const router = useRouter()
+
+
+  // Leer id de bitrix de localstorage
+  const idCotizacionBitrixFromLocalStorage = localStorage.getItem('idCotizacion2');
+  console.log(idCotizacionBitrixFromLocalStorage); 
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -499,7 +506,7 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
                             </img>
                           </div>
                         </div>
-                        <div className="font-bold text-blue-600 text-base">
+                        <div className="font-bold text-azul-oland-100 text-base">
                           {formatInsurerName(s.insurerKey)}
                         </div>
                       </div>
@@ -717,26 +724,35 @@ export default function ComparisonModal({ selected, onClose, onConfirm }: Compar
        {/* Descargar PDF */}
         <div className="flex flex-row items-center px-4">
           <div className="place-content-center space-x-3 mx-auto p-4">
-            <PDFDownloadLink
-              document={pdfDocument}
-              fileName="comparacion-oland-seguros.pdf"
-            >
-              {({ loading }) => (
-                <Button
-                  variant="oland"
-                  disabled={loading}
-                  onClick={(event) => {
-                    if (loading) {
-                      event.preventDefault()
-                      return
-                    }
-                    handleConfirm()
-                  }}
-                >
-                  {loading ? "Generando..." : "PDF OlandSeguros"}
-                </Button>
-              )}
-            </PDFDownloadLink>
+            
+             <PDFDownloadLink
+      document={pdfDocument}
+      fileName="comparacion-oland-seguros.pdf"
+    >
+      {({ loading }) => (
+        <Button
+          variant="oland"
+          disabled={loading}
+          onClick={(event) => {
+            if (loading) {
+              event.preventDefault()
+              return
+            }
+            handleConfirm()
+      
+            
+            // Redirigir con el parámetro en la URL
+            setTimeout(() => {
+              router.push(`/${idCotizacionBitrixFromLocalStorage}`)
+              // O si es un parámetro dinámico en la ruta:
+              // router.push(`/tu-ruta-destino/${idCotizacionBitrixFromLocalStorage}`)
+            }, 500)
+          }}
+        >
+          {loading ? "Generando..." : "PDF OlandSeguros"}
+        </Button>
+      )}
+    </PDFDownloadLink>
 
             <PDFDownloadLink
               document={pdfDocument}

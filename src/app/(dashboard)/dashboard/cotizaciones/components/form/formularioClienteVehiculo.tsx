@@ -29,7 +29,7 @@ const clienteSchema = z.object({
   edad: z.string().max(2, "Edad no válida").min(1, "Edad no válida"),
   genero: z.string().min(2, "El género es obligatorio"),
   estadoCivil: z.string().min(2, "El estado civil es obligatorio"),
-  email: z.union([z.string().email("Email inválido"), z.literal("")]).optional(),
+  email: z.union([z.string().email("Correo electrónico inválido"), z.literal("")]).optional(),
   celular: z.union([z.string().min(10, "El celular debe tener al menos 10 dígitos"), z.literal("")]).optional(),
   ciudad: z.string().min(2, "La ciudad es obligatoria"),
   provincia: z.string().optional(),
@@ -40,7 +40,7 @@ const clienteSchema = z.object({
 const vehiculoSchema = z.object({
   marca: z.string().optional(),
   modelo: z.string().optional(),
-  anio: z.coerce.number().min(1900, "Campo no valido").max(2026).optional(),
+  anio: z.coerce.number().min(1900, "Campo no válido").max(2026).optional(),
   placa: z.string().min(6, "Placa inválida").optional(),
   avaluo: z.coerce.number().min(0).optional(),
   avaluoOriginal: z.coerce.number().optional(),
@@ -546,13 +546,19 @@ export const FormularioClienteVehiculo = () => {
       alert("Error guardando la cotización en la BD");
       return;
     }
+    
+    const idCotizacionBitrix = result.data?.id ;
+    console.log("✅ Cotización guardada en BD con id:", idCotizacionBitrix);
 
-    const idCotizacion = result.data?.id;
-    console.log("✅ Cotización guardada en BD con id:", idCotizacion);
+    const idCotizacionBitrix2 = result.data?.bitrixDealId ;
+
+    if (typeof window !== "undefined" && idCotizacionBitrix2) {
+      localStorage.setItem("idCotizacion2", String(idCotizacionBitrix2));
+    }
 
     // 🟩 3️⃣ Guardar SOLO el idCotizacion en localStorage
-    if (typeof window !== "undefined" && idCotizacion) {
-      localStorage.setItem("idCotizacion", String(idCotizacion));
+    if (typeof window !== "undefined" && idCotizacionBitrix) {
+      localStorage.setItem("idCotizacion", String(idCotizacionBitrix));
     }
 
     // 🟩 4️⃣ Redirigir al comparador con idCotizacion
@@ -594,7 +600,7 @@ export const FormularioClienteVehiculo = () => {
                 {/* Placa */}
                 <div className="space-y-2">
                   <Label htmlFor="placa" className="text-sm font-semibold text-gray-700">
-                    Placa del Vehículo
+                Placa del vehículo
                   </Label>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <Input
@@ -614,7 +620,7 @@ export const FormularioClienteVehiculo = () => {
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Los datos se llenan automáticamente al escribir
+                Los datos se completan automáticamente al escribir.
                   </p>
                   {errorPlaca && <p className="text-sm text-red-600">{errorPlaca}</p>}
                   {errors.vehiculo?.placa && (
@@ -679,7 +685,7 @@ export const FormularioClienteVehiculo = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="avaluo" className="text-sm font-semibold text-gray-700">
-                      Valor del Vehículo
+                 Valor del vehículo (sugerido)
                     </Label>
                     <Input
                       
@@ -689,7 +695,7 @@ export const FormularioClienteVehiculo = () => {
                       {...register("vehiculo.avaluo")}
                       placeholder="15000"
                       className={cn("h-11", autoFilledVehiculo.marca && "autofill-lock")}
-                      readOnly={!!autoFilledVehiculo.marca}
+                    
            
                     />
                     {errors.vehiculo?.avaluo && (
@@ -747,7 +753,7 @@ export const FormularioClienteVehiculo = () => {
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Los datos se llenan automáticamente al escribir
+                Los datos se completan automáticamente al escribir.
                   </p>
                   {errorCedula && <p className="text-sm text-red-600">{errorCedula}</p>}
                   {errors.cliente?.cedula && (
@@ -787,7 +793,7 @@ export const FormularioClienteVehiculo = () => {
                 {/* Celular */}
                 <div className="space-y-2">
                   <Label htmlFor="celular" className="text-sm font-semibold text-gray-700">
-                    Celular (Opcional)
+              Celular (opcional)
                   </Label>
                   <Input
                     id="celular"
@@ -803,7 +809,7 @@ export const FormularioClienteVehiculo = () => {
                 {/* Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
-                    Email (Opcional)
+              Correo electrónico (opcional)
                   </Label>
                   <Input
                     id="email"

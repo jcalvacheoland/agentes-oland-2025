@@ -31,38 +31,23 @@ const STATIC_PLANS: StaticPlan[] = [
 
 export const StaticPlanCard = () => {
   return (
-    <div className="grid gap-4 grid-cols-1">
+    <div className="grid gap-4 grid-cols-1 font-outfit ">
       {STATIC_PLANS.map((plan) => (
         <article
           key={plan.name}
           className="relative flex flex-col gap-6 p-6 border-2 border-gray-400 rounded-xl border-border bg-card transition-all hover:shadow-lg"
         >
-          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-start">
+          <div className="flex flex-col gap-6 lg:grid h-[130px] lg:grid-cols-[auto_1fr_auto] lg:items-start">
             <div className="flex flex-col items-center gap-2">
               <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
                 <img src={plan.img}  alt={plan.name} />
               </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-foreground">
-                  {plan.name}
-                </div>
-                <div className="flex gap-0.5 mt-1">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <svg
-                      key={index}
-                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M10 15l-5.878 3.09L5.82 12.18.94 8.41l6.09-.88L10 2.5l2.97 5.03 6.09.88-4.88 3.77 1.7 5.91z" />
-                    </svg>
-                  ))}
-                </div>
-              </div>
+             
             </div>
 
             <div className="flex flex-col gap-4">
               <div>
-                <h3 className="text-xl font-bold text-foreground">
+                <h3 className="text-xl font-bold uppercase text-foreground">
                   Planes con {plan.name}
                 </h3>
                 <p className="text-sm text-muted-foreground">

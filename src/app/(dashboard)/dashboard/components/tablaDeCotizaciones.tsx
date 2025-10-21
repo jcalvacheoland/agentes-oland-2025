@@ -29,16 +29,16 @@ import {
 
 const stageLabels: Record<string, string> = {
   "C24:NEW": "Nuevo",
-  "C24:PREPARATION": "Preparacion",
-  "C24:UC_ZCRTSB": "Inspeccion",
-  "C24:PREPAYMENT_INVOIC": "Inspeccion Favorable",
-  "C24:UC_87UXF3": "Formulario Vinculacion",
-  "C24:EXECUTING": "Orden de Emision",
+  "C24:PREPARATION": "Preparación",
+  "C24:UC_ZCRTSB": "Inspección",
+  "C24:PREPAYMENT_INVOIC": "Inspección favorable",
+  "C24:UC_87UXF3": "Formulario de vinculación",
+  "C24:EXECUTING": "Orden de emisión",
   "C24:UC_CJKKJS": "Emitida",
-  "C24:UC_GFUHD0": "Despacho de Emision",
+  "C24:UC_GFUHD0": "Despacho de emisión",
   "C24:UC_9TDBGH": "Cobranza",
   "C24:UC_D2MRZM": "Pagado",
-  "C24:UC_XMLGTG": "Comision",
+  "C24:UC_XMLGTG": "Comisión",
   "C24:WON": "Cerrada",
 };
 
@@ -62,7 +62,7 @@ const formatUsdValue = (value: string | number | null | undefined) => {
   return rawAmount ? `$${rawAmount}` : null;
 };
 
-export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
+export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
   const { items, err, loading } = useDeals(userId);
 
   const pageSize = 10;
@@ -84,15 +84,24 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
   const contarCotizaciones = () => items.length;
   const contarPendientes = () =>
     items.filter((item) => item.STAGE_ID === "C24:NEW").length;
-  const contarAprobadas = () =>
-    items.filter((item) => item.STAGE_ID === "C24:UC_ZCRTSB").length;
+
   const contarConComision = () =>
     items.filter((item) => item.STAGE_ID === "C24:UC_XMLGTG").length;
 
+  const contarInspeccion = () =>
+    items.filter((item) => item.STAGE_ID === "C24:UC_ZCRTSB").length;
+
+  const contarEmision = () =>
+    items.filter((item) => item.STAGE_ID === "C24:EXECUTING").length;
+
+
+  const contarComisionPagada = () =>
+    items.filter((item) => item.STAGE_ID === "C24:UC_D2MRZM").length;
+
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold text-center sm:text-left">
+      <header className="grid grid-cols-1 gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold md:text-center sm:text-left">
           Tus cotizaciones
         </h1>
         <div className="flex w-full justify-center sm:w-auto sm:justify-end">
@@ -104,11 +113,11 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-6 text-w">
+        <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total cotizaciones
+              Total de cotizaciones
             </CardTitle>
             <CotizacionIcon width={24} height={24} />
           </CardHeader>
@@ -117,27 +126,46 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
+            <CardTitle className="text-sm font-medium">En proceso / Negociación</CardTitle>
             <PendienteIcon width={24} height={24} />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{contarPendientes()}</div>
           </CardContent>
         </Card>
-
-        <Card>
+        <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aprobadas</CardTitle>
-            <AprobadoIcon width={24} height={24}  />
+            <CardTitle className="text-sm font-medium">Inspección</CardTitle>
+            <PendienteIcon width={24} height={24} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{contarAprobadas()}</div>
+            <div className="text-2xl font-bold">{contarInspeccion()}</div>
           </CardContent>
         </Card>
 
-        <Card>
+          <Card className="bg-azul-oland-100 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Emisión</CardTitle>
+            <PendienteIcon width={24} height={24} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{contarEmision()}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-azul-oland-100 text-white">  
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Comisión pagada</CardTitle>
+            <AprobadoIcon width={24} height={24}  />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{contarComisionPagada()}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Cotización con comisión
@@ -156,13 +184,13 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
         </div>
       )}
 
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
+      <Card className="overflow-hidden  ">
+        <div className="">
           <Table className="min-w-[560px] ">
             <TableHeader>
               <TableRow>
                 <TableHead className="text-center">ID</TableHead>
-                <TableHead className="text-left">Titulo</TableHead>
+                <TableHead className="text-left">Título</TableHead>
                 <TableHead className="text-center">Valor cotizado</TableHead>
                 <TableHead className="text-center">Etapa</TableHead>
               </TableRow>
@@ -186,7 +214,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
                       <TableCell className="text-center font-medium">
                         {items.length - (startIndex + idx)}
                       </TableCell>
-                      <TableCell className="max-w-xs">
+                      <TableCell className="max-w-xs text-left">
                         <div className="truncate" title={item.TITLE}>
                           <Link href={`/${item.ID}`}>{item.TITLE}</Link>
                         </div>
@@ -226,9 +254,8 @@ export const TablaDeCotizaciones = ({ userId }: { userId: any }) => {
           </Table>
         </div>
         <div className="flex flex-col gap-3 border-t border-muted/20 p-4 md:flex-row md:items-center md:justify-between">
-          <div className="text-center text-sm text-muted-foreground md:text-left">
-            Pagina {page} de {totalPages}. Mostrando {pageItems.length} de{" "}
-            {items.length}.
+            <div className="text-center text-sm text-muted-foreground md:text-left">
+            Página {page} de {totalPages}. Mostrando {pageItems.length} de {items.length}.
           </div>
           <div className="flex justify-center md:justify-end">
             <Pagination>

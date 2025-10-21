@@ -510,13 +510,13 @@ export default function Planes({
             onClick={() => toggleSelect(e)}
             className={`relative p-6 rounded-xl cursor-pointer transition-all border-2  hover:border-azul-oland-100
               ${isSelected ? 
-                "border-green-600 bg-card shadow-md " : 
+                "border-azul-oland-100 bg-card shadow-md " : 
                 "border-gris-oland-100 bg-card hover:border-blue-oland-100 hover:shadow-lg "}`}
           >
             <div className="absolute top-1 right-2">
               <Circle
                 className={`w-5 h-5 transition-colors ${
-                  isSelected ? "text-green-600 fill-green-600 border-b-black" : "text-gray-300"
+                  isSelected ? "text-azul-oland-100 fill-azul-oland-100 border-b-black" : "text-gray-300"
                 }`}
               />
             </div>

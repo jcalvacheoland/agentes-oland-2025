@@ -52,24 +52,67 @@ export default async function DealPage(props: DealPageProps) {
     { icon: MapPin, label: "Ciudad", value: deal.UF_CRM_1758140561898 },
     { icon: Heart, label: "Estado civil", value: deal.UF_CRM_1757969782406 },
     { icon: Users, label: "Genero", value: deal.UF_CRM_1758140844163 },
+    
   ];
 
   const vehiculoItems = [
     { label: "Marca", value: deal.UF_CRM_1708442550726 },
     { label: "Modelo", value: deal.UF_CRM_1708442569166 },
-    { label: "Anio", value: deal.UF_CRM_1708442612728 },
+    { label: "Año", value: deal.UF_CRM_1708442612728 },
     { label: "Placa", value: deal.UF_CRM_1708442675536 },
     { label: "Uso del vehiculo", value: deal.UF_CRM_1747676789932 },
-    { label: "Valor del vehiculo", value: deal.UF_CRM_1757947153789 },
+    { label: "Valor sugerido del vehiculo", value: formatValorVehiculo(deal.UF_CRM_1757947153789) },
   ];
+  const stageLabels: Record<string, string> = {
+  "C24:NEW": "Nuevo",
+  "C24:PREPARATION": "Preparación",
+  "C24:UC_ZCRTSB": "Inspección",
+  "C24:PREPAYMENT_INVOIC": "Inspección favorable",
+  "C24:UC_87UXF3": "Formulario de vinculación",
+  "C24:EXECUTING": "Orden de emisión",
+  "C24:UC_CJKKJS": "Emitida",
+  "C24:UC_GFUHD0": "Despacho de emisión",
+  "C24:UC_9TDBGH": "Cobranza",
+  "C24:UC_D2MRZM": "Pagado",
+  "C24:UC_XMLGTG": "Comisión",
+  "C24:WON": "Cerrada",
+};
 
+function formatValorVehiculo(valor?: string) {
+  if (!valor) return "No especificado";
+
+  // Ejemplo de valor: "17000|USD"
+  const [numStr] = valor.split("|");
+  const num = Number(numStr);
+
+  if (isNaN(num)) return valor;
+
+  // Formato: $17,000
+  return `$${num.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}`;
+}
   return (
     <div className={typography.page}>
       <div className={typography.header}>
         <h1 className={typography.title}>{deal.TITLE}</h1>
-        <p className={typography.muted}>
-          <span className="font-medium text-slate-900">Etapa:</span> {deal.STAGE_ID}
-        </p>
+       <p
+  className={`
+    inline-flex items-center justify-center 
+    px-3 py-1.5 rounded-full 
+    text-sm font-medium
+    text-white
+    bg-azul-oland-100 
+    shadow-sm
+    transition-all
+    hover:opacity-90
+  `}
+>
+  <span className="font-medium text-white">Etapa:</span>{" "}
+  <span className="ml-1">{stageLabels[deal.STAGE_ID] || deal.STAGE_ID}</span>
+</p>
+
       </div>
 
       <section className="grid grid-cols-2 grid-flow-col space-x-4 gap-6">
@@ -118,6 +161,7 @@ export default async function DealPage(props: DealPageProps) {
               <File className="w-5 h-5" />
               Planes comparados
             </CardTitle>
+            <h2>Escoge 1 de los planes comparados</h2>
           </CardHeader>
           <CardContent className="space-y-4">
             <PlanSelector dealId={deal.ID} plans={cotizacion.planesComparados ?? []} />
