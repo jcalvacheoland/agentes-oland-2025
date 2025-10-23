@@ -1,93 +1,8 @@
 ﻿import type { NextAuthConfig } from "next-auth"
 import type { OAuthConfig } from "next-auth/providers"
-import { prisma } from "@/lib/prisma"
+import { BITRIX_USER_AGENT } from "./configuration/constants"
+import type { BitrixProfile, BitrixTokenSet, BitrixUserinfoContext, BitrixSessionPayload, BitrixUserResponse, BitrixProviderOptions } from "@/interfaces/bitrixData.type"
 
-// ============================================================================
-// TIPOS Y DEFINICIONES
-// ============================================================================
-
-type BitrixEmailEntry = {
-  VALUE?: string | null
-  VALUE_TYPE?: string | null
-}
-
-interface BitrixProfile {
-  ID?: string | number | null
-  id?: string | number | null
-  EMAIL?: string | BitrixEmailEntry[] | null
-  EMAIL_UNCONFIRMED?: string | null
-  PERSONAL_EMAIL?: string | null
-  WORK_EMAIL?: string | null
-  LOGIN?: string | null
-  NAME?: string | null
-  FIRST_NAME?: string | null
-  LAST_NAME?: string | null
-  SECOND_NAME?: string | null
-  PERSONAL_PHOTO?: string | null
-  PERSONAL_PHOTO_URL?: string | null
-  [key: string]: unknown
-}
-
-interface BitrixUserResponse {
-  result?: BitrixProfile
-  error?: string
-  error_description?: string
-  [key: string]: unknown
-}
-
-type BitrixTokenSet = {
-  access_token?: string
-  token_type?: string | null
-  refresh_token?: string
-  scope?: string
-  expires?: number
-  expires_in?: number
-  domain?: string
-  server_domain?: string
-  server_endpoint?: string
-  client_endpoint?: string
-  rest_url?: string
-  member_id?: string
-  user_id?: string | number
-  [key: string]: unknown
-}
-
-type BitrixUserinfoContext = {
-  tokens: BitrixTokenSet
-  provider: { authorization?: { params?: Record<string, string> } }
-  [key: string]: unknown
-}
-
-type BitrixProviderOptions = {
-  domain?: string
-  oauthHost?: string
-  scope?: string
-  clientId?: string
-  clientSecret?: string
-  authorizationUrl?: string
-  tokenUrl?: string
-  apiUrl?: string
-  userLang?: string
-  redirectUri?: string
-  [key: string]: unknown
-}
-
-interface BitrixSessionPayload {
-  accessToken?: string
-  refreshToken?: string
-  tokenType?: string
-  scope?: string
-  expiresAt?: number
-  domain?: string
-  serverDomain?: string
-  serverEndpoint?: string
-  clientEndpoint?: string
-  restUrl?: string
-  memberId?: string
-  userId?: string | number
-}
-
-const BITRIX_USER_AGENT = "oland-agentes/1.0"
 
 // ============================================================================
 // FUNCIONES AUXILIARES PARA NORMALIZACIÓN DE URLs
@@ -274,7 +189,7 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
   token: {
   url: tokenUrl,
   // Transformar la respuesta antes de procesarla
-  async conform(response) {
+  async conform(response: Response) {
     const text = await response.text();
     const data = JSON.parse(text);
     
@@ -382,11 +297,11 @@ const authConfig = {
   },
   
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ }) {
       return true
     },
 
-    async jwt({ token, account, user, trigger }) {
+    async jwt({ token, account, user }) {
       if (user) {
         token.sub = user.id
         console.log('💾 Guardando ID de usuario en token:', user.id)
@@ -396,11 +311,12 @@ const authConfig = {
         console.log('🔐 Nuevo login - Guardando tokens de Bitrix24')
         
         // Normalizar token_type si Bitrix no lo envía
-        if (!account.token_type) {
-          account.token_type = "Bearer"
+        const accountData: BitrixTokenSet = {
+          ...account,
+          token_type: account.token_type || "Bearer"
         }
         
-        const bitrix = resolveBitrixSessionPayload(account as BitrixTokenSet)
+        const bitrix = resolveBitrixSessionPayload(accountData as BitrixTokenSet)
         token.bitrix = bitrix
         token.accessToken = bitrix.accessToken
         
