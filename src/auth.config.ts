@@ -130,26 +130,6 @@ function resolveEmail(profile: BitrixProfile) {
 }
 
 // ============================================================================
-// FUNCIÓN PARA NORMALIZAR LA RESPUESTA DE TOKENS
-// ============================================================================
-
-async function parseAndNormalizeTokenResponse(response: Response) {
-  const data = await response.json().catch(() => null) as BitrixTokenSet | null
-
-  if (!data) {
-    throw new Error("Bitrix provider: unable to parse token response as JSON.")
-  }
-
-  // Aseguramos token_type por defecto
-  if (!data.token_type) {
-    data.token_type = "Bearer"
-  }
-
-  // Simplemente devolvemos el objeto normalizado de tokens (no un Response)
-  return data
-}
-
-// ============================================================================
 // FUNCIÓN PARA PROCESAR Y ORGANIZAR LOS TOKENS DE BITRIX
 // ============================================================================
 
@@ -186,7 +166,7 @@ async function refreshBitrixAccessToken(refreshToken: string): Promise<BitrixTok
   const oauthHost = process.env.BITRIX_OAUTH_HOST ?? "https://oauth.bitrix.info"
   const tokenUrl = `${normalizeHost(oauthHost)}/oauth/token/`
 
-  console.log('Renovando token de Bitrix24...')
+  console.log('🔄 Renovando token de Bitrix24...')
 
   try {
     const response = await fetch(tokenUrl, {
@@ -291,12 +271,25 @@ function BitrixProvider(options: BitrixProviderOptions = {}): OAuthConfig<Bitrix
       params: authorizationParams,
     },
     
-    token: {
-      url: tokenUrl,
-      async conform(response: any) {
-        return parseAndNormalizeTokenResponse(response)
+  token: {
+  url: tokenUrl,
+  // Transformar la respuesta antes de procesarla
+  async conform(response) {
+    const text = await response.text();
+    const data = JSON.parse(text);
+    
+    // Agregar el token_type faltante
+    data.token_type = data.token_type || "Bearer";
+    
+    return new Response(JSON.stringify(data), {
+      status: response.status,
+      statusText: response.statusText,
+      headers: {
+        'Content-Type': 'application/json',
       },
-    },
+    });
+  },
+},
     
     userinfo: {
       url: defaultUserinfoEndpoint,
@@ -389,69 +382,23 @@ const authConfig = {
   },
   
   callbacks: {
-    /**
-     * Callback SignIn - NUEVO
-     * Se ejecuta cuando un usuario hace login con Bitrix
-     * Crea o actualiza el usuario en la base de datos PostgreSQL
-     */
     async signIn({ user, account, profile }) {
-      if (account?.provider === "bitrix") {
-        try {
-          // Buscar si el usuario ya existe por email
-          const existingUser = await prisma.user.findUnique({
-            where: { email: user.email! }
-          })
-
-          if (existingUser) {
-            // Si existe, actualizar su información
-            await prisma.user.update({
-              where: { id: existingUser.id },
-              data: {
-                name: user.name,
-                image: user.image,
-              }
-            })
-            
-            // IMPORTANTE: Usar el ID de la base de datos
-            user.id = existingUser.id
-            console.log('✅ Usuario existente actualizado:', existingUser.id)
-          } else {
-            // Si no existe, crear el usuario nuevo
-            const newUser = await prisma.user.create({
-              data: {
-                email: user.email!,
-                name: user.name,
-                image: user.image,
-              }
-            })
-            
-            // IMPORTANTE: Usar el ID del nuevo usuario
-            user.id = newUser.id
-            console.log('✅ Usuario nuevo creado:', newUser.id)
-          }
-        } catch (error) {
-          console.error('❌ Error al sincronizar usuario con BD:', error)
-          return false // Bloquear el login si falla
-        }
-      }
-      
       return true
     },
 
-    /**
-     * Callback JWT - MODIFICADO
-     * Ahora guarda el ID real de la base de datos
-     */
     async jwt({ token, account, user, trigger }) {
-      // Si hay usuario (primer login), guardar su ID real de la BD
       if (user) {
         token.sub = user.id
-        console.log(' Guardando ID de usuario en token:', user.id)
+        console.log('💾 Guardando ID de usuario en token:', user.id)
       }
       
-      // PRIMER LOGIN: Guardar tokens iniciales de Bitrix
       if (account) {
-        console.log(' Nuevo login - Guardando tokens de Bitrix24')
+        console.log('🔐 Nuevo login - Guardando tokens de Bitrix24')
+        
+        // Normalizar token_type si Bitrix no lo envía
+        if (!account.token_type) {
+          account.token_type = "Bearer"
+        }
         
         const bitrix = resolveBitrixSessionPayload(account as BitrixTokenSet)
         token.bitrix = bitrix
@@ -460,7 +407,6 @@ const authConfig = {
         return token
       }
 
-      // RENOVACIÓN AUTOMÁTICA: Verificar si necesitamos renovar el token
       const bitrixData = token.bitrix as BitrixSessionPayload | undefined
       
       if (!bitrixData?.expiresAt) {
@@ -495,10 +441,6 @@ const authConfig = {
       return token
     },
 
-    /**
-     * Callback Session - Sin cambios
-     * Transfiere los datos del JWT a la sesión
-     */
     async session({ session, token }) {
       const bitrix = token.bitrix as BitrixSessionPayload | undefined
       
