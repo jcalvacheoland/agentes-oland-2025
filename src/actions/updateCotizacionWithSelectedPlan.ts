@@ -1,5 +1,5 @@
 "use server"
-import { cookies } from "next/headers" // ← Agregar este import
+import { cookies } from "next/headers" 
 import { prisma } from "@/lib/prisma"
 
 interface PlanComparadoInput {

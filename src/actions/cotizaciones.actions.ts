@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { IPlanRequest } from "@/interfaces/interfaces.type";
+import { tr } from "zod/v4/locales";
 
 /**
  * Server Action para crear una nueva cotización
@@ -290,3 +291,27 @@ export async function getCotizacionByBitrixId(dealId: string) {
   }
 }
 
+//Funcion para buscar solo la cotizacion por bitrix id
+export async function searchJustCotizacionByBitrixId(dealId: string) {
+  try {
+    // Inicializa cookies (importante si estás usando autenticación por sesión)
+    await cookies()
+
+    // Obtener el usuario autenticado (opcional si no lo necesitas)
+    const session = await auth()
+    if (!session?.user) {
+      throw new Error("Usuario no autenticado")
+    }
+    
+    const cotizacion = await prisma.cotizacion.findFirst({
+      where: { bitrixDealId: dealId },
+    })
+
+    // Retornar el resultado
+    return cotizacion
+
+  } catch (error) {
+    console.error("Error al buscar cotización para comparar:", error)
+    throw error // o return null según tu manejo de errores
+  }
+}

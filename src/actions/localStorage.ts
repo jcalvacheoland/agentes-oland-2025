@@ -1,3 +1,25 @@
+//actualmente no se usa
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
 export function setInLocalstorage<T>(key: string, value: T): void {
   try {
     const serialized = JSON.stringify(value);

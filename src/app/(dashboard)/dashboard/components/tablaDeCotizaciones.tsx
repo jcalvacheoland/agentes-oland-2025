@@ -39,7 +39,7 @@ const stageLabels: Record<string, string> = {
   "C24:UC_9TDBGH": "Cobranza",
   "C24:UC_D2MRZM": "Pagado",
   "C24:UC_XMLGTG": "Comisión",
-  "C24:WON": "Cerrada",
+  "WON": "Cerrada",
 };
 
 const formatUsdValue = (value: string | number | null | undefined) => {
@@ -157,7 +157,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
 
         <Card className="bg-azul-oland-100 text-white">  
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Comisión pagada</CardTitle>
+            <CardTitle className="text-sm font-medium">Póliza pagada</CardTitle>
             <AprobadoIcon width={24} height={24}  />
           </CardHeader>
           <CardContent>
@@ -168,7 +168,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
         <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Cotización con comisión
+              Comisión Ganada
             </CardTitle>
             <ValorAprobadoIcon width={24} height={24}  />
           </CardHeader>
