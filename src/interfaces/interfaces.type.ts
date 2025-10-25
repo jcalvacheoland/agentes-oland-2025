@@ -51,7 +51,7 @@ export interface IPlanRequest {
     gender: string;
     civilStatus: string;
     birthdate: string;
-    age: number;
+    age: number | string;
     cityCodeMapfre: number;
     chubb_mm?: string;
     asur_brand?: string;
@@ -97,36 +97,49 @@ export interface IPersona  {
     age: number;
 };
 
-export interface IPlanResponse  {
-    chargeCard: number;
-    description: string;
-    emissionValue: number;
-    id: number;
-    ivaTax: number;
-    name: string;
-    netPremium: number;
-    peasantTax: number;
-    period: number;
-    principals: {
-        DEDUCIBLE: string;
-        ["PRINCIPALES COBERTURAS"]: string;
-        BENEFICIOS_ESPECIALES: string;
-    };
-    ranking: number;
-    rate: number;
-    restrictions: [];
-    secondaries: [];
-    status: number;
-    subtotalPremium: number;
-    subtotalPremium2: number;
-    superintendencyBanksTax: number;
-    totalPremium: number;
-    netPremiumValidity: number;
-    totalPremiumValidity: number;
-    rateValidity: number;
-    vatValidity: number;
-    taxValidity: number;
-};
+export interface IPlanResponse {
+  id: string | number;
+  planName: string;
+  insurer: string;
+  period: number;
+  status: number;
+  status_cc?: number;
+  ranking: number;
+  netPremium: number;
+  rate: number;
+  superintendencyBanksTax: number;
+  peasantTax: number;
+  emissionValue: number;
+  subtotalPremium: number;
+  subtotalPremium2?: number | null;
+  ivaTax: number;
+  totalPremium: number;
+  chargeCard?: number | null;
+
+  principals: {
+    ["PRINCIPALES COBERTURAS"]?: string;
+    ["BENEFICIOS ESPECIALES"]?: string;
+    DEDUCIBLE?: string;
+  };
+
+  notes?: { title: string; text: string }[];
+  secondaries?: { name: string; detail: string }[];
+  restrictions?: any[];
+  coverageBenefits?: any[];
+  filters?: Record<string, any>;
+  clickSeguros?: any[];
+  oland?: any[];
+  dataVehiculo?: any[];
+
+  // Validity fields
+  netPremiumValidity?: number | null;
+  totalPremiumValidity?: number | null;
+  rateValidity?: number | null;
+  ivaTaxValidity?: number | null;
+  superintendencyBanksTaxValidity?: number | null;
+  subtotalPremiumValidity?: number | null;
+}
+
 
 export type ICliente = {
   cedula: string;
