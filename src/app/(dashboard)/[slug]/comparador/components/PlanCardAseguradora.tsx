@@ -51,7 +51,7 @@ export const PlanCardAseguradora = ({
     >
       <div
         id={id}
-        className="relative p-6 space-y-2 rounded-xl cursor-pointer transition-all border-2 border-gris-oland-100 bg-card hover:border-azul-oland-100 hover:shadow-lg"
+        className="relative p-6 space-y-2 rounded-xl cursor-pointer transition-all border bg-card hover:border-azul-oland-100 hover:shadow-lg"
       >
         {/* Icono de selección */}
         {/* Botón con estilo de checkbox */}

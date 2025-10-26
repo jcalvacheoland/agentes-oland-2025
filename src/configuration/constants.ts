@@ -46,3 +46,22 @@ export const AseguradorasLogo = [
   { name: "asur", img: "/img/logoAseguradora/asur.png" },
   { name: "ASEGURADORA DEL SUR", img: "/img/logoAseguradora/asur.png" },
 ]
+
+// utils/coberturasOrdenadas.ts
+export const COBERTURAS_ORDENADAS = [
+  "Responsabilidad Civil",
+  "Muerte Accidental",
+  "Gastos Médicos",
+  "Amparo Patrimonial",
+  "Pérdida parcial por daño o robo",
+  "Pérdida total por daño",
+  "Pérdida total por robo (sin dispositivo de rastreo)",
+  "Pérdida total por robo (con dispositivo de rastreo)",
+  "Pacto Andino",
+  "Airbag",
+  "Servicio de grúa",
+  "Asistencia vehicular",
+  "Asistencia legal",
+  "Asistencia exequial",
+  "Auto sustituto",
+];

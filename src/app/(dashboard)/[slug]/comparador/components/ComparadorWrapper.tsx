@@ -9,6 +9,7 @@ import { HeaderComparatorCard } from "./HeaderComparador";
 import { StaticPlanCard } from "@/app/(dashboard)/dashboard/comparador/components/StaticPlanCard";
 import { IPlanResponse } from "@/interfaces/interfaces.type";
 import { ShoppingCart } from "lucide-react";
+import { ComparadorModal } from "./ComparadorModal";
 
 interface Props {
   slug: string;
@@ -33,8 +34,8 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
         );
       } else {
         // Agregar al array (máximo 4)
-        if (prev.length >= 4) {
-          alert('Máximo 4 planes para comparar');
+        if (prev.length >= 3) {
+          alert('Máximo 3 planes para comparar');
           return prev;
         }
         return [...prev, plan];
@@ -47,6 +48,18 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     return selectedPlans.some(p => 
       p.insurer === plan.insurer && p.planName === plan.planName
     );
+  };
+
+   // 👇 Función para cerrar el modal
+  const handleCloseModal = () => {
+    setShowComparison(false);
+  };
+
+  // 👇 Función para abrir el modal
+  const handleOpenComparison = () => {
+    if (selectedPlans.length >= 2) {
+      setShowComparison(true);
+    }
   };
 
   return (
@@ -77,7 +90,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
                   {selectedPlans.length} {selectedPlans.length === 1 ? 'plan seleccionado' : 'planes seleccionados'}
                 </div>
                 <div className="text-xs text-blue-100">
-                  Máximo 4 planes
+                  Máximo 3 planes
                 </div>
               </div>
             </div>
@@ -91,7 +104,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
                 Limpiar
               </Button>
               <Button
-                onClick={() => setShowComparison(true)}
+                onClick={handleOpenComparison}
                 disabled={selectedPlans.length < 2}
                 size="sm"
                 className="bg-blue-700 hover:bg-blue-800"
@@ -103,11 +116,16 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
         </div>
       )}
 
-      {/* Vista de comparación */}
-   
+     {/* 👇 Modal de Comparación */}
+      <ComparadorModal
+        isOpen={showComparison}
+        onClose={handleCloseModal}
+        selectedPlans={selectedPlans}
+      />
+      
 
       {/* Lista de planes (ocultar cuando se muestra comparación) */}
-      {!showComparison && (
+ 
         <div className="my-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Todos los Planes</h2>
@@ -133,7 +151,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
             <StaticPlanCard />
           </div>
         </div>
-      )}
+    
     </div>
   );
 }

@@ -19,3 +19,13 @@ export const formatoPlaca = (placaFromDataBase: string | undefined | null): stri
   // Formato: ABC-1234
   return `${letters}-${numbers}`;
 };
+
+// Extraer cobertura específica en el Modal Comparador
+export function extraerCobertura(principals: any, tipo: string): string {
+  const coberturas = principals?.["PRINCIPALES COBERTURAS"] || "";
+  const regex = new RegExp(`${tipo}:\\s*([^/*\\n]+)`, "i");
+  const match = coberturas.match(regex);
+  return match && match[1] ? match[1].trim() : "N/A";
+}
+
+
