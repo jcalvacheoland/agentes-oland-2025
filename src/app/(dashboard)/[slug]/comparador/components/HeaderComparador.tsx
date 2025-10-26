@@ -26,7 +26,7 @@ export const HeaderComparatorCard = ({
         </h1>
         <p className="text-muted-foreground text-lg">
           Estos son los planes disponibles para el vehículo de tu cliente{" "}
-          <span className="lowercase">{nombreDelCliente}</span>
+          <span className="font-bold normal-case">{nombreDelCliente}</span>
         </p>
       </article>
 

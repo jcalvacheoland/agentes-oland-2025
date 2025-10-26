@@ -37,7 +37,7 @@ export const StaticPlanCard = () => {
           key={plan.name}
           className="relative flex flex-col gap-6 p-6 border-2 border-gray-400 rounded-xl border-border bg-card transition-all hover:shadow-lg"
         >
-          <div className="flex flex-col gap-6 lg:grid h-[130px] lg:grid-cols-[auto_1fr_auto] lg:items-start">
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-start min-h-[130px]">
             <div className="flex flex-col items-center gap-2">
               <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center border border-border">
                 <img src={plan.img}  alt={plan.name} />

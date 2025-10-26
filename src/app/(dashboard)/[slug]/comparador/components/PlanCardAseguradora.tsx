@@ -179,7 +179,7 @@ export const PlanCardAseguradora = ({
                       hasDeducible
                         ? deducibleOpen
                           ? "border-azul-oland-100 bg-azul-oland-100/5 text-azul-oland-100"
-                          : "border-gray-200 text-gray-700 hover:border-azul-oland-100 hover:text-azul-oland-100"
+                          : "border-transparent text-gray-700 hover:border-azul-oland-100 hover:text-azul-oland-100"
                         : "cursor-not-allowed border-dashed border-gray-200 text-gray-400"
                     }`}
                     disabled={!hasDeducible}
@@ -236,7 +236,7 @@ export const PlanCardAseguradora = ({
                       hasBeneficios
                         ? beneficiosOpen
                           ? "border-azul-oland-100 bg-azul-oland-100/5 text-azul-oland-100"
-                          : "border-gray-200 text-gray-700 hover:border-azul-oland-100 hover:text-azul-oland-100"
+                          : "border-transparent text-gray-700 hover:border-azul-oland-100 hover:text-azul-oland-100"
                         : "cursor-not-allowed border-dashed border-gray-200 text-gray-400"
                     }`}
                     disabled={!hasBeneficios}
