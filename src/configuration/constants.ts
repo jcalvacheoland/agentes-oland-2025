@@ -44,4 +44,5 @@ export const AseguradorasLogo = [
   { name: "AIG", img: "/img/logoAseguradora/aig.png" },
   { name: "Vaz Seguros", img: "/img/logoAseguradora/vaz.png" },
   { name: "asur", img: "/img/logoAseguradora/asur.png" },
+  { name: "ASEGURADORA DEL SUR", img: "/img/logoAseguradora/asur.png" },
 ]
