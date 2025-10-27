@@ -42,67 +42,115 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
     }
 
     // ===========================
-    // TABLA DE COBERTURAS
+    // INFORMACIÓN DE LA COTIZACIÓN
     // ===========================
-    const startX = doc.x;
-    const startY = doc.y;
-    const firstColWidth = 120; // ancho columna "Cobertura"
-    const colWidth = 140; // ancho columnas de aseguradoras
+    const { cotizacion } = invoiceData;
 
-    // ---- Encabezado ----
-    doc
-      .fontSize(10)
-      .text("Cobertura", startX, startY, { width: firstColWidth });
-    plans.forEach((plan: any, index: number) => {
-      const x = startX + firstColWidth + index * colWidth;
-      doc.text(plan.insurer, x, startY, { width: colWidth, align: "left" });
-    });
-    doc.moveDown(1);
+    if (cotizacion) {
+      doc.fontSize(12).fillColor("#333333");
 
-    // ---- Fila: Prima Mensual ----
-    const primaY = doc.y;
-    doc
-      .fontSize(9)
-      .text("Prima Mensual", startX, primaY, { width: firstColWidth });
+      // ===========================
+      // Datos del Usuario y Vehículo
+      // ===========================
+      doc
+        .table({
+          data: [
+            [
+              { text: `Nombre: ${cotizacion.name}`, border: false },
+              { text: `Marca: ${cotizacion.brand}`, border: false },
+            ],
+            [
+              { text: `Cédula: ${cotizacion.identification}`, border: false },
+              { text: `Modelo: ${cotizacion.model}`, border: false },
+            ],
+            [
+              { text: `Ciudad: ${cotizacion.city}`, border: false },
+              { text: `Año: ${cotizacion.year}`, border: false },
+            ],
+            [
+              { text: `Email:`, border: false },
+              { text: `Valor: ${cotizacion.vehicleValue}`, border: false },
+            ],
+            [
+              { text: `Celular:`, border: false },
+              {
+                text: `Fecha de Cotización: ${cotizacion.createdAt}`,
+                border: false,
+              },
+            ],
+          ],
+        })
+        .fillColor("black")
+        .moveDown(1);
+    }
 
-    plans.forEach((plan: any, index: number) => {
-      const primaMensual = (plan.totalPremium / 12).toFixed(2);
-      const x = startX + firstColWidth + index * colWidth;
-      doc.text(`$${primaMensual}`, x, primaY, {
-        width: colWidth,
-        align: "left",
-      });
-    });
+    // ===========================
+    // TABLA DE COBERTURAS CON CORTE MANUAL
+    // ===========================
 
-    doc.moveDown(2);
+    // Construir todas las filas normalmente
+    const tableData: any[] = [];
+    const headerRow = ["Cobertura", ...plans.map((p: any) => p.insurer)];
+    tableData.push(headerRow);
 
-    // ---- Filas de coberturas ----
+    const filaPrima = [
+      "Prima Mensual",
+      ...plans.map((p: any) => `$${(p.totalPremium / 12).toFixed(2)}`),
+    ];
+    tableData.push(filaPrima);
+
+    // Añadir todas las coberturas
     COBERTURAS_ORDENADAS.forEach((nombre: string, i: number) => {
-      const y = doc.y;
-      doc.fontSize(9).text(nombre, startX, y, { width: firstColWidth });
+      const fila = [
+        nombre,
+        ...plans.map((p: any) => {
+          const valor = p.coverageBenefits?.[i] ?? "N/A";
+          if (valor === "1" || valor === 1) return "✅";
+          if (valor === "0" || valor === 0) return "❌";
+          return String(valor).trim() || "N/A";
+        }),
+      ];
+      tableData.push(fila);
+    });
 
-      plans.forEach((plan: any, index: number) => {
-        const valor = plan.coverageBenefits?.[i] ?? "N/A";
-        const x = startX + firstColWidth + index * colWidth;
-        let texto = "";
+    // ===========================
+    // Cortar manualmente en dos tablas
+    // ===========================
 
-        if (valor === "1" || valor === 1) texto = "✅";
-        else if (valor === "0" || valor === 0) texto = "❌";
-        else texto = String(valor).trim() || "N/A";
+    // por ejemplo, las primeras 8 coberturas + encabezados
+    const primeraParte = tableData.slice(0, 10); // encabezado + 9 filas
+    const segundaParte = tableData.slice(10); // el resto
 
-        doc.text(texto, x, y, { width: colWidth, align: "left" });
-      });
+    // ---- Primera tabla ----
+    doc.moveDown(1);
+    doc.table({
+      data: primeraParte.map((row: any[]) =>
+        row.map((cell) => ({
+          text: String(cell),
+          border: true,
+          fontSize: 9,
+        }))
+      ),
+    });
 
-      doc.moveDown(2);
+    // ---- Forzar salto de página ----
+    doc.addPage(); // 👈 este es tu corte manual
+
+    // ---- Segunda tabla ----
+    doc.table({
+      data: segundaParte.map((row: any[]) =>
+        row.map((cell) => ({
+          text: String(cell),
+          border: true,
+          fontSize: 9,
+        }))
+      ),
     });
 
     // ===========================
     // PIE DE PÁGINA
     // ===========================
-    // ===========================
-    // PIE DE PÁGINA FIJO
-    // ===========================
-    const bottomY = doc.page.height - doc.page.margins.bottom - 60; // distancia desde el borde inferior
+    const bottomY = doc.page.height - doc.page.margins.bottom - 60;
 
     doc
       .fontSize(9)
@@ -113,8 +161,8 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
           "No constituye una póliza ni garantiza la contratación del seguro. " +
           "Las condiciones, coberturas y valores están sujetos a verificación y aprobación por parte de la aseguradora. " +
           "La validez de esta cotización es de 15 días calendario a partir de su fecha de emisión.",
-        40, // margen izquierdo
-        bottomY, // posición vertical fija
+        40,
+        bottomY,
         { width: doc.page.width - 80, align: "justify" }
       )
       .moveDown(0.5)

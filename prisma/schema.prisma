@@ -96,6 +96,8 @@ model Cotizacion {
   civilStatus    String?
   birthdate      String?
   age            String?
+  email          String?
+  phone          String?
   cityCodeMapfre Int?
   status         String   @default("draft")
   createdAt      DateTime @default(now())

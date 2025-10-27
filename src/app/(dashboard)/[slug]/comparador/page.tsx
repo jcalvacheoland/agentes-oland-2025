@@ -1,3 +1,4 @@
+import { getBitrixDeal } from "@/actions/bitrixActions";
 import { ComparadorWrapper } from "./components/ComparadorWrapper";
 import { searchJustCotizacionByBitrixId } from "@/actions/cotizaciones.actions";
 import { IPlanRequest } from "@/interfaces/interfaces.type";
@@ -6,7 +7,7 @@ import { formatoPlaca } from "@/lib/utils";
 export default async function PageComparador({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params:{ slug: string }
 }) {
   const { slug } = await params;
   const cotizacion = await searchJustCotizacionByBitrixId(slug);

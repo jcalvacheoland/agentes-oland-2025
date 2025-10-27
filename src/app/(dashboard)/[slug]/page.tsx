@@ -69,7 +69,10 @@ export default async function DealPage(props: DealPageProps) {
     { icon: MapPin, label: "Ciudad", value: deal.UF_CRM_1758140561898 },
     { icon: Heart, label: "Estado civil", value: deal.UF_CRM_1757969782406 },
     { icon: Users, label: "Genero", value: deal.UF_CRM_1758140844163 },
+    { icon: Users, label: "Email", value: deal.UF_CRM_1675696721 },
+    { icon: Users, label: "Celular", value: deal.UF },
   ];
+  
 
   const vehiculoItems = [
     { label: "Marca", value: deal.UF_CRM_1708442550726 },

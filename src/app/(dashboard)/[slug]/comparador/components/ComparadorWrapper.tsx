@@ -73,7 +73,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     const res = await fetch("/api/pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ selectedPlans }),
+      body: JSON.stringify({ selectedPlans,cotizacion }),
     });
 
     if (!res.ok) {
@@ -87,7 +87,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "planes_comparados_OlandSeguro.pdf";
+    a.download = "planes_comparados_OlandSeguros.pdf";
     a.click();
     URL.revokeObjectURL(url);
   } catch (error) {
