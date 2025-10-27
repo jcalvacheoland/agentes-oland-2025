@@ -11,6 +11,7 @@ export interface ComparadorModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedPlans: IPlanResponse[];
+  onGeneratePdf?: () => void;
 }
 
 export function formatearCobertura(valor: string | number | null) {
@@ -30,6 +31,7 @@ export const ComparadorModal = ({
   isOpen,
   onClose,
   selectedPlans,
+  onGeneratePdf,
 }: ComparadorModalProps) => {
   // Prevenir scroll del body cuando el modal está abierto
 
@@ -126,9 +128,23 @@ export const ComparadorModal = ({
                     );
                   })}
                 </tr>
-                
 
-                {/* Amparo Patrimonial  */}
+                {/* Amparo Patrimonial,"Responsabilidad Civil",
+                  "Muerte Accidental",
+                  "Gastos Médicos",
+                  "Amparo Patrimonial",
+                  "Pérdida parcial por daño o robo",
+                  "Pérdida total por daño",
+                  "Pérdida total por robo (sin dispositivo de rastreo)",
+                  "Pérdida total por robo (con dispositivo de rastreo)",
+                  "Pacto Andino",
+                  "Airbag",
+                  "Servicio de grúa",
+                  "Asistencia vehicular",
+                  "Asistencia legal",
+                  "Asistencia exequial",
+                  "Auto sustituto",  */
+                  }
                 {COBERTURAS_ORDENADAS.map((nombre, i) => (
                   <tr
                     key={i}
@@ -151,9 +167,11 @@ export const ComparadorModal = ({
 
           {/* Footer del Modal */}
           <div className="flex justify-center gap-3 p-6 border-t border-gray-200 bg-gray-50">
-            <Button variant="oland" onClick={onClose}>
-              PDF OlandSeguros
-            </Button>
+            {onGeneratePdf && (
+              <Button variant="oland" onClick={onGeneratePdf}>
+                PDF OlandSeguros
+              </Button>
+            )}
             <Button variant="oland" onClick={onClose}>
               PDF Personalizado
             </Button>

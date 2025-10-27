@@ -1,3 +1,4 @@
+import { WhatsAppHTML } from "@/components/WhatsApp";
 import { AseguradorasLogo } from "@/configuration/constants";
 type StaticPlan = {
   name: string;
@@ -55,7 +56,10 @@ export const StaticPlanCard = () => {
                 </p>
               </div>
               <div className="text-sm text-muted-foreground">
-                <p className="font-semibold text-foreground">Teléfono: {plan.phone}</p>
+               
+                  <WhatsAppHTML numberPhone={plan.phone} />
+
+               
               </div>
             </div>
 

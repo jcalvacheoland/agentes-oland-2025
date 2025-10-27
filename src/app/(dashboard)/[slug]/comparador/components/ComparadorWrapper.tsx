@@ -63,6 +63,39 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     }
   };
 
+  const handleGeneratePdf = async () => {
+  if (selectedPlans.length === 0) {
+    alert("Primero selecciona al menos un plan");
+    return;
+  }
+  try {
+    // Llamar a tu API
+    const res = await fetch("/api/pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ selectedPlans }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Error al generar el PDF");
+    }
+
+    // Convertir respuesta a Blob (archivo binario)
+    const blob = await res.blob();
+
+    // Crear un enlace temporal para descargar
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "planes_comparados_OlandSeguro.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo generar el PDF");
+  }
+};
+
   return (
     <div className="max-w-6xl mx-auto px-6 lg:px-0 ">
       <div className="mt-2">
@@ -134,6 +167,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
         isOpen={showComparison}
         onClose={handleCloseModal}
         selectedPlans={selectedPlans}
+        onGeneratePdf={handleGeneratePdf}
       />
 
       {/* Lista de planes (ocultar cuando se muestra comparación) */}
