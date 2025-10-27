@@ -118,6 +118,7 @@ export function PlanAseguradoraClient({
               coberturas={plan.secondaries}
               deducible={procesarDeducible(plan.principals)}
               beneficios={procesarBeneficios(plan.principals)}
+              period={plan.period}
                // Props nuevos para la selección
               isSelected={isPlanSelected(plan)}
               onToggleSelect={() => onToggleSelection(plan)}

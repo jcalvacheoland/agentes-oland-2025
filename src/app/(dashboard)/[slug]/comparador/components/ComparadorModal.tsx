@@ -120,7 +120,7 @@ export const ComparadorModal = ({
                     Prima Total (valor mensual)
                   </td>
                   {selectedPlans.map((plan, index) => {
-                    const primaMens = (plan.totalPremium / 12).toFixed(2);
+                    const primaMens = (plan.totalPremium / plan.period).toFixed(2);
                     return (
                       <td key={index} className="p-2">
                         ${primaMens}

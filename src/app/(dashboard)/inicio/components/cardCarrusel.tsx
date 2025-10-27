@@ -49,14 +49,14 @@ export function CardCarrusel({
     {
       id: 3,
       title: "Seguros empresariales",
-      description: "Aseguramos tu negocio con soluciones personalizadas",
+      description: "Aseguramos tu negocio con soluciones personalizadas.",
       color: "bg-gradient-to-br from-azul-oland-100 to-white",
       img: "/img/empresarial.webp",
     },
     {
       id: 4,
       title: "Seguro de vida",
-      description: "Protege el futuro de tus seres queridos con nuestro seguro de vida",
+      description: "Protege el futuro de tus seres queridos con nuestro seguro de vida.",
       color: "bg-gradient-to-br from-azul-oland-100 to-white",
       img: "/img/salud.jpg",
     },

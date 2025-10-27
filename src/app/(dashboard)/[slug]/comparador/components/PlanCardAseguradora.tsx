@@ -12,6 +12,7 @@ export interface PlanCardAseguradoraProps {
   deducible?: string[] | null;
   beneficios?: string[] | null;
   isSelected?: boolean;
+  period?:number;
   onToggleSelect?: () => void;
 }
 
@@ -26,6 +27,7 @@ export const PlanCardAseguradora = ({
   deducible,
   beneficios,
   isSelected = false,
+  period,
   onToggleSelect,
 }: PlanCardAseguradoraProps) => {
   const [coberturasOpen, setCoberturasOpen] = useState(false);
@@ -37,8 +39,8 @@ export const PlanCardAseguradora = ({
   const hasBeneficios = beneficios && beneficios.length > 0;
 
   const precioAnualFormatted = precioAnual.toFixed(2);
-  const calcularPrecioMensual = (precioAnual: number) => {
-    return (precioAnual / 12).toFixed(2);
+  const calcularPrecioMensual = (precioAnual: number, period:any) => {
+    return (precioAnual / period).toFixed(2);
   };
 
   return (
@@ -288,10 +290,10 @@ export const PlanCardAseguradora = ({
             <div className="grid grid-cols-2 lg:grid-cols-1">
               <div className="text-center lg:text-right">
                 <div className="text-3xl font-bold text-foreground lg:text-4xl">
-                  ${calcularPrecioMensual(precioAnual)}
+                  ${calcularPrecioMensual(precioAnual, period)}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  12 cuotas mensuales
+                  {period} cuotas mensuales
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Pago con tarjeta de crédito

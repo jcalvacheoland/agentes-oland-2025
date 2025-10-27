@@ -1,7 +1,7 @@
 import { CardCarrusel } from "./components/cardCarrusel"
 const HomeAgentesInfoPage={
     title: "Inicio - Agentes",
-    description: "Transforma vidas, protege sueños: Cada Poliza, que vender es una familia que duerme tranquila. Tu exito es su seguridad.",
+    description: "Transforma vidas, protege sueños. Cada póliza que vendes es una familia que duerme tranquila. Tu éxito es su seguridad.",
     keywords: "Inicio, Agentes",
 }
 export default function HomeAgentes() {

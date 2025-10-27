@@ -1,4 +1,4 @@
-import PDFDocument from "pdfkit";
+import PDFDocument, { text } from "pdfkit";
 import path from "path";
 import { COBERTURAS_ORDENADAS } from "@/configuration/constants";
 
@@ -17,6 +17,8 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       size: "A4",
       margin: 40,
     });
+
+    
 
     const chunks: Buffer[] = [];
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -95,7 +97,7 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
 
     const filaPrima = [
       "Prima Mensual",
-      ...plans.map((p: any) => `$${(p.totalPremium / 12).toFixed(2)}`),
+      ...plans.map((p: any) => `$${(p.totalPremium / p.period).toFixed(2)}`),
     ];
     tableData.push(filaPrima);
 
@@ -105,8 +107,8 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
         nombre,
         ...plans.map((p: any) => {
           const valor = p.coverageBenefits?.[i] ?? "N/A";
-          if (valor === "1" || valor === 1) return "✅";
-          if (valor === "0" || valor === 0) return "❌";
+          if (valor === "1" || valor === 1) return "SI";
+          if (valor === "0" || valor === 0) return "NO";
           return String(valor).trim() || "N/A";
         }),
       ];
@@ -146,6 +148,45 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
         }))
       ),
     });
+
+    
+  // ===========================
+    // FILAS DE PRIMA NETA Y PRIMA TOTAL
+    // ===========================
+    doc.moveDown(0.5); // Pequeña separación
+
+    // Fila Prima Neta
+    const filaPrimaNeta = [
+      "Prima Neta",
+      ...plans.map((p: any) => `$${(p.netPremium || 0).toFixed(2)}`),
+    ];
+
+    doc.table({
+      data: [
+        filaPrimaNeta.map((cell) => ({
+          text: String(cell),
+          border: true,
+          fontSize: 9,
+        })),
+      ],
+    });
+
+    // Fila Prima Total
+    const filaPrimaTotal = [
+      "Prima Total",
+      ...plans.map((p: any) => `$${(p.totalPremium || 0).toFixed(2)}`),
+    ];
+
+    doc.table({
+      data: [
+        filaPrimaTotal.map((cell) => ({
+          text: String(cell),
+          border: true,
+          fontSize: 9,
+        })),
+      ],
+    });
+
 
     // ===========================
     // PIE DE PÁGINA

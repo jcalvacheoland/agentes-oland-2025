@@ -62,13 +62,13 @@ export default async function DealPage(props: DealPageProps) {
     { icon: User, label: "Nombre", value: deal.UF_CRM_1675696681 },
     {
       icon: CreditCard,
-      label: "Cedula / Identificacion",
+      label: "Cédula / Identificación",
       value: deal.UF_CRM_1699991426,
     },
     { icon: Users, label: "Edad", value: deal.UF_CRM_1747676789932 },
     { icon: MapPin, label: "Ciudad", value: deal.UF_CRM_1758140561898 },
     { icon: Heart, label: "Estado civil", value: deal.UF_CRM_1757969782406 },
-    { icon: Users, label: "Genero", value: deal.UF_CRM_1758140844163 },
+    { icon: Users, label: "Género", value: deal.UF_CRM_1758140844163 },
     { icon: Users, label: "Email", value: deal.UF_CRM_1675696721 },
     { icon: Users, label: "Celular", value: deal.UF },
   ];
@@ -80,7 +80,7 @@ export default async function DealPage(props: DealPageProps) {
     { label: "Año", value: deal.UF_CRM_1708442612728 },
     { label: "Placa", value: formatoPlaca(deal.UF_CRM_1708442675536) },
     {
-      label: "Valor sugerido del vehiculo",
+      label: "Valor sugerido del vehículo",
       value: formatValorVehiculo(deal.UF_CRM_1757947153789),
     },
   ];
@@ -183,12 +183,12 @@ export default async function DealPage(props: DealPageProps) {
         </Card>
 
 
-        {/* datos del vehiculo */}
+        {/* datos del vehículo */}
         <Card className="w-full h-fit  ">
           <CardHeader>
             <CardTitle className={typography.sectionTitle}>
               <Car className="w-5 h-5" />
-              Datos del vehiculo
+              Datos del vehículo
             </CardTitle>
           </CardHeader>
           <CardContent>
