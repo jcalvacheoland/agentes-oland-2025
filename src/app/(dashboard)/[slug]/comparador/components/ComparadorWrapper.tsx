@@ -68,6 +68,8 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     alert("Primero selecciona al menos un plan");
     return;
   }
+
+  
   try {
     // Llamar a tu API
     const res = await fetch("/api/pdf", {
@@ -88,6 +90,41 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     const a = document.createElement("a");
     a.href = url;
     a.download = "planes_comparados_OlandSeguros.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo generar el PDF");
+  }
+};
+
+ const handleGeneratePdfCustom = async () => {
+  if (selectedPlans.length === 0) {
+    alert("Primero selecciona al menos un plan");
+    return;
+  }
+
+  
+  try {
+    // Llamar a tu API
+    const res = await fetch("/api/pdfCustom", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ selectedPlans,cotizacion }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Error al generar el PDF");
+    }
+
+    // Convertir respuesta a Blob (archivo binario)
+    const blob = await res.blob();
+
+    // Crear un enlace temporal para descargar
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "planes_comparados.pdf";
     a.click();
     URL.revokeObjectURL(url);
   } catch (error) {
@@ -168,6 +205,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
         onClose={handleCloseModal}
         selectedPlans={selectedPlans}
         onGeneratePdf={handleGeneratePdf}
+        onGeneratePdfCustom={handleGeneratePdfCustom}
       />
 
       {/* Lista de planes (ocultar cuando se muestra comparación) */}

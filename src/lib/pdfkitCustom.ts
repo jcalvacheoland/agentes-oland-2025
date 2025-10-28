@@ -38,8 +38,8 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       .fontSize(20)
       .text("COTIZACIÓN DE SU SEGURO", 40, 20, { align: "left" });
 
-    // Imagen del logo (ajusta ruta según tu proyecto)
-    const logoPath = path.join(
+    // Imagen del logo personalizado (ajusta ruta según tu proyecto)
+    /* const logoPath = path.join(
       process.cwd(),
       "public",
       "img",
@@ -49,7 +49,7 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       width: 45,
       height: 45,
     });
-
+ */
     // Espacio después del encabezado
     doc.moveDown(2);
 
@@ -217,7 +217,7 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       },
       // Estilos por columna
       columnStyles: ((i: number) => {
-        if (i === 0) return { backgroundColor: "#0b2240", textColor: "white" }; // 👈 azul solo para la columna Cobertura
+        if (i === 0) return { backgroundColor: "#E8E8E8", textColor: "black" }; // 👈 azul solo para la columna Cobertura
         return { align: "center" } as unknown as any;
       }) as unknown as any,
       data: primeraParte,
@@ -233,7 +233,7 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
         padding: 4,
       },
       columnStyles: ((i: number) => {
-        if (i === 0) return { backgroundColor: "#0b2240", textColor: "white" }; // 👈 igual, azul en la columna de coberturas
+        if (i === 0) return { backgroundColor: "#E8E8E8", textColor: "black" }; // 👈 igual, azul en la columna de coberturas
         return { align: "center" } as unknown as any;
       }) as unknown as any,
       data: segundaParte,
@@ -292,7 +292,7 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       .fillColor("gray")
       .opacity(0.8)
       .text(
-        "⚠️  Este documento corresponde a una cotización referencial emitida por Oland Seguros. " +
+        "⚠️  Este documento corresponde a una cotización referencial. " +
           "No constituye una póliza ni garantiza la contratación del seguro. " +
           "Las condiciones, coberturas y valores están sujetos a verificación y aprobación por parte de la aseguradora. " +
           "La validez de esta cotización es de 15 días calendario a partir de su fecha de emisión.",
@@ -303,7 +303,6 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       .moveDown(0.5)
       .fontSize(10)
       .opacity(0.6)
-      .text("Generado automáticamente por Oland Seguros", { align: "center" })
       .opacity(1)
       .fillColor("black");
 

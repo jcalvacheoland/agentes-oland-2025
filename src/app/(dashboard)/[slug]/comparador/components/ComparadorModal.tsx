@@ -12,6 +12,7 @@ export interface ComparadorModalProps {
   onClose: () => void;
   selectedPlans: IPlanResponse[];
   onGeneratePdf?: () => void;
+  onGeneratePdfCustom?: ()=>void;
 }
 
 export function formatearCobertura(valor: string | number | null) {
@@ -32,6 +33,7 @@ export const ComparadorModal = ({
   onClose,
   selectedPlans,
   onGeneratePdf,
+  onGeneratePdfCustom
 }: ComparadorModalProps) => {
   // Prevenir scroll del body cuando el modal está abierto
 
@@ -169,12 +171,16 @@ export const ComparadorModal = ({
           <div className="flex justify-center gap-3 p-6 border-t border-gray-200 bg-gray-50">
             {onGeneratePdf && (
               <Button variant="oland" onClick={onGeneratePdf}>
-                PDF OlandSeguros
+                PDF Agentes Oland
               </Button>
             )}
-            <Button variant="oland" onClick={onClose}>
-              PDF Personalizado
-            </Button>
+
+            {onGeneratePdfCustom && (
+              <Button variant="oland" onClick={onGeneratePdfCustom}>
+                PDF Personalizado
+              </Button>
+            )}
+            
           </div>
         </div>
       </div>
