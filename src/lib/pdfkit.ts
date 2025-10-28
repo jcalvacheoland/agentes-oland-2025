@@ -43,7 +43,7 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       process.cwd(),
       "public",
       "img",
-      "agentesLogo.jpg"
+      "agentesLogoSquare.png"
     );
     doc.image(logoPath, doc.page.width - 100, 10, {
       width: 45,

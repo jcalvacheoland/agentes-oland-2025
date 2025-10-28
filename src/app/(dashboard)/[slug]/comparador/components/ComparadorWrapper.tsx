@@ -11,6 +11,7 @@ import { IPlanResponse } from "@/interfaces/interfaces.type";
 import { Car } from "lucide-react";
 import { ComparadorModal } from "./ComparadorModal";
 import { ArrowLeft } from "lucide-react";
+import { updateCotizacionWithPlanesHistorial } from "@/actions/updateCotizacionWithSelectedPlan";
 
 interface Props {
   slug: string;
@@ -21,6 +22,7 @@ interface Props {
 export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
   const [selectedPlans, setSelectedPlans] = useState<IPlanResponse[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false); 
 
   const togglePlanSelection = (plan: IPlanResponse) => {
     setSelectedPlans((prev) => {
@@ -63,13 +65,47 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     }
   };
 
+  // 🔥 Función helper para guardar en BD
+  const savePlanesToDatabase = async (pdfUrl?: string) => {
+    try {
+      // Mapear selectedPlans al formato que espera tu server action
+      const planesParaGuardar = selectedPlans.map((plan) => ({
+        aseguradora: plan.insurer,
+        nombrePlan: plan.planName,
+        primaTotal: plan.totalPremium,
+        primaNeta: plan.netPremium ?? null,
+        Tasa: plan.rate ?? null,
+        pdfUrl: pdfUrl,
+      }));
+
+      // Llamar al server action
+      const result = await updateCotizacionWithPlanesHistorial(
+        cotizacion.id, // ID de la cotización
+        planesParaGuardar
+      );
+
+      if (result.ok) {
+        console.log("✅ Planes guardados en BD:", result.message);
+      } else {
+        console.error("❌ Error guardando planes:", result.message);
+        alert("No se pudieron guardar los planes en el historial");
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error al guardar planes:", error);
+      alert("Error al guardar en base de datos");
+      return { ok: false, message: "Error desconocido" };
+    }
+  };
+
   const handleGeneratePdf = async () => {
   if (selectedPlans.length === 0) {
     alert("Primero selecciona al menos un plan");
     return;
   }
 
-  
+  setIsGeneratingPdf(true);
   try {
     // Llamar a tu API
     const res = await fetch("/api/pdf", {
@@ -92,10 +128,20 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     a.download = "planes_comparados_OlandSeguros.pdf";
     a.click();
     URL.revokeObjectURL(url);
+    
+      // 2️⃣ Guardar en BD (después de generar el PDF exitosamente)
+      await savePlanesToDatabase();
+
+      // 3️⃣ Opcional: Cerrar modal después de guardar
+      setShowComparison(false);
+      alert("PDF generado y planes guardados correctamente ✅");
   } catch (error) {
     console.error(error);
     alert("No se pudo generar el PDF");
   }
+  finally {
+      setIsGeneratingPdf(false);
+    }
 };
 
  const handleGeneratePdfCustom = async () => {
@@ -127,11 +173,20 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
     a.download = "planes_comparados.pdf";
     a.click();
     URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error(error);
-    alert("No se pudo generar el PDF");
-  }
-};
+    // 2️⃣ Guardar en BD
+      await savePlanesToDatabase();
+
+      // 3️⃣ Opcional: Cerrar modal
+      setShowComparison(false);
+      alert("PDF personalizado generado y planes guardados correctamente ✅");
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo generar el PDF");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
 
   return (
     <div className="max-w-6xl mx-auto px-6 lg:px-0 ">
@@ -178,6 +233,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
               <div className="flex gap-2">
                 <Button
                   onClick={() => setSelectedPlans([])}
+                   disabled={isGeneratingPdf}
                   variant="outline"
                   size="sm"
                   className="bg-white text-black"
