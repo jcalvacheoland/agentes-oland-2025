@@ -1,6 +1,7 @@
 import PDFDocument, { text } from "pdfkit";
 import path from "path";
 import { COBERTURAS_ORDENADAS } from "@/configuration/constants";
+import { AseguradorasLogo } from "@/configuration/constants";
 
 export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -17,8 +18,6 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       size: "A4",
       margin: 40,
     });
-
-    
 
     const chunks: Buffer[] = [];
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -50,6 +49,23 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
 
     if (cotizacion) {
       doc.fontSize(12).fillColor("#333333");
+      // ===========================
+      // Formateos previos
+      // ===========================
+      const fechaFormateada = new Date(cotizacion.createdAt).toLocaleDateString(
+        "es-EC",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }
+      );
+
+      const valorFormateado = new Intl.NumberFormat("es-EC", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 0,
+      }).format(cotizacion.vehicleValue || 0);
 
       // ===========================
       // Datos del Usuario y Vehículo
@@ -71,12 +87,12 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
             ],
             [
               { text: `Email:`, border: false },
-              { text: `Valor: ${cotizacion.vehicleValue}`, border: false },
+              { text: `Valor: ${valorFormateado}`, border: false },
             ],
             [
               { text: `Celular:`, border: false },
               {
-                text: `Fecha de Cotización: ${cotizacion.createdAt}`,
+                text: `Fecha de Cotización:  ${fechaFormateada}`,
                 border: false,
               },
             ],
@@ -85,6 +101,55 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
         .fillColor("black")
         .moveDown(1);
     }
+    // ===========================
+    // Fila de logos dinámicos (ajuste automático)
+    // ===========================
+
+    doc.moveDown(1);
+
+    const y = doc.y;
+    let imageWidth = 100;
+    let imageHeight = 65;
+    let startX = 185;
+    let spacing = 130;
+
+    // Ajustes simples según cantidad de planes
+    if (plans.length === 2) {
+      // si solo hay 2 logos, los centramos más y los hacemos un poco más grandes
+      imageWidth = 120;
+      imageHeight = 70;
+      startX = 240; // movemos más al centro
+      spacing = 170; // más distancia entre ambos
+    } else if (plans.length === 1) {
+      // si hay solo uno, centrado en la página
+      imageWidth = 140;
+      imageHeight = 80;
+      startX = (doc.page.width - imageWidth) / 2;
+      spacing = 0;
+    }
+
+    // recorrer los planes seleccionados
+    plans.forEach((plan: any, index: number) => {
+      const logoObj = AseguradorasLogo.find((logo) =>
+        logo.name.toLowerCase().includes(plan.insurer.toLowerCase())
+      );
+
+      const logoPath = logoObj
+        ? path.join(process.cwd(), "public", logoObj.img)
+        : null;
+
+      if (logoPath) {
+        try {
+          doc.image(logoPath, startX + index * spacing, y, {
+            fit: [imageWidth, imageHeight],
+          });
+        } catch (err) {
+          console.error("⚠️ No se pudo cargar el logo:", logoPath, err);
+        }
+      }
+    });
+
+    doc.moveDown(3);
 
     // ===========================
     // TABLA DE COBERTURAS CON CORTE MANUAL
@@ -123,16 +188,18 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
     const primeraParte = tableData.slice(0, 10); // encabezado + 9 filas
     const segundaParte = tableData.slice(10); // el resto
 
-    // ---- Primera tabla ----
     doc.moveDown(1);
     doc.table({
-      data: primeraParte.map((row: any[]) =>
-        row.map((cell) => ({
-          text: String(cell),
-          border: true,
-          fontSize: 9,
-        }))
-      ),
+      defaultStyle: {
+        border: 1,
+        padding: 4,
+      },
+      // Estilos por columna
+      columnStyles: ((i: number) => {
+        if (i === 0) return { backgroundColor: "#0b2240", textColor: "white" }; // 👈 azul solo para la columna Cobertura
+        return { align: "center" } as unknown as any;
+      }) as unknown as any,
+      data: primeraParte,
     });
 
     // ---- Forzar salto de página ----
@@ -140,35 +207,40 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
 
     // ---- Segunda tabla ----
     doc.table({
-      data: segundaParte.map((row: any[]) =>
-        row.map((cell) => ({
-          text: String(cell),
-          border: true,
-          fontSize: 9,
-        }))
-      ),
+      defaultStyle: {
+        border: 1,
+        padding: 4,
+      },
+      columnStyles: ((i: number) => {
+        if (i === 0) return { backgroundColor: "#0b2240", textColor: "white" }; // 👈 igual, azul en la columna de coberturas
+        return { align: "center" } as unknown as any;
+      }) as unknown as any,
+      data: segundaParte,
     });
 
-    
-  // ===========================
+    // ===========================
     // FILAS DE PRIMA NETA Y PRIMA TOTAL
     // ===========================
     doc.moveDown(0.5); // Pequeña separación
 
+    // ===========================
     // Fila Prima Neta
+    // ===========================
     const filaPrimaNeta = [
       "Prima Neta",
       ...plans.map((p: any) => `$${(p.netPremium || 0).toFixed(2)}`),
     ];
 
     doc.table({
-      data: [
-        filaPrimaNeta.map((cell) => ({
-          text: String(cell),
-          border: true,
-          fontSize: 9,
-        })),
-      ],
+      defaultStyle: {
+        border: 1,
+        padding: 4,
+      },
+      columnStyles: ((i: number) => {
+        if (i === 0) return { align: "left" } as unknown as any; // título a la izquierda
+        return { align: "center" } as unknown as any; // valores centrados
+      }) as unknown as any,
+      data: [filaPrimaNeta],
     });
 
     // Fila Prima Total
@@ -178,16 +250,17 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
     ];
 
     doc.table({
-      data: [
-        filaPrimaTotal.map((cell) => ({
-          text: String(cell),
-          border: true,
-          fontSize: 9,
-        })),
-      ],
+      defaultStyle: {
+        border: 1,
+        padding: 4,
+      },
+      // 👇 misma solución que tu tabla principal, sin errores TS
+      columnStyles: ((i: number) => {
+        if (i === 0) return { align: "left" }; // primera columna alineada a la izquierda
+        return { align: "center" } as unknown as any; // las demás centradas
+      }) as unknown as any,
+      data: [filaPrimaTotal],
     });
-
-
     // ===========================
     // PIE DE PÁGINA
     // ===========================
