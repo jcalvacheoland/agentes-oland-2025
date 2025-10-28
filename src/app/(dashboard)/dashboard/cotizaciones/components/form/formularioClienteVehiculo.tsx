@@ -495,7 +495,7 @@ export const FormularioClienteVehiculo = () => {
     try {
       apiResult = await response.json();
     } catch (error) {
-      console.error("No se pudo parsear la respuesta de /api/bitrix/putDealBitrix:", error);
+      /* console.error("No se pudo parsear la respuesta de /api/bitrix/putDealBitrix:", error); */
     }
 
     console.log("Respuesta de la API /api/bitrix/putDealBitrix:", {
@@ -510,7 +510,7 @@ export const FormularioClienteVehiculo = () => {
       const dealIdValue = Number(apiResult.dealId ?? NaN);
       if (!Number.isNaN(dealIdValue) && dealIdValue > 0) {
         bitrixDealId = dealIdValue;
-        console.log("✅ Deal creado en Bitrix con ID:", bitrixDealId);
+       /*  console.log("✅ Deal creado en Bitrix con ID:", bitrixDealId); */
       }
     }
 
@@ -548,21 +548,12 @@ export const FormularioClienteVehiculo = () => {
     }
     
     const idCotizacionBitrix = result.data?.id ;
-    console.log("✅ Cotización guardada en BD con id:", idCotizacionBitrix);
+    /* console.log("✅ Cotización guardada en BD con id:", idCotizacionBitrix); */
 
     const idCotizacionBitrix2 = result.data?.bitrixDealId ;
 
-    if (typeof window !== "undefined" && idCotizacionBitrix2) {
-      localStorage.setItem("idCotizacion2", String(idCotizacionBitrix2));
-    }
-
-    // 🟩 3️⃣ Guardar SOLO el idCotizacion en localStorage
-    if (typeof window !== "undefined" && idCotizacionBitrix) {
-      localStorage.setItem("idCotizacion", String(idCotizacionBitrix));
-    }
-
     // 🟩 4️⃣ Redirigir al comparador con idCotizacion
-    const destino = `/dashboard/comparador`;
+    const destino = `/dashboard/cotizaciones/${idCotizacionBitrix2}`;
     router.push(destino);
 
   } catch (error) {
