@@ -9,23 +9,18 @@ type StaticPlan = {
 
 const STATIC_PLANS: StaticPlan[] = [
   {
-    name: "Generali",
-    img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("generali".toLowerCase()))?.img || "",
-    phone: "099 1234 5678",
-  },
-  {
-    name: "Mapfre",
-    img:  AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("mapfre".toLowerCase()))?.img || "",
-    phone: "099 1234 5678",
-  },
-  {
-    name: "Vaz Seguros",
-    img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("vaz".toLowerCase()))?.img || "",
-    phone: "099 1234 5678",
-  },
-  {
     name: "AIG",
     img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("aig".toLowerCase()))?.img || "",
+    phone: "099 1234 5678",
+  },
+  {
+    name: "Equinoccial",
+    img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("equinoccial".toLowerCase()))?.img || "",
+    phone: "099 1234 5678",
+  },
+  {
+    name: "Atlántida",
+    img:  AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("atlantida".toLowerCase()))?.img || "",
     phone: "099 1234 5678",
   },
 ];

@@ -29,7 +29,7 @@ import {
 
 const stageLabels: Record<string, string> = {
   "C24:NEW": "Nuevo",
-  "C24:PREPARATION": "Preparación",
+  "C24:PREPARATION": "Propuesta enviada",
   "C24:UC_ZCRTSB": "Inspección",
   "C24:PREPAYMENT_INVOIC": "Inspección favorable",
   "C24:UC_87UXF3": "Formulario de vinculación",
@@ -38,8 +38,9 @@ const stageLabels: Record<string, string> = {
   "C24:UC_GFUHD0": "Despacho de emisión",
   "C24:UC_9TDBGH": "Cobranza",
   "C24:UC_D2MRZM": "Pagado",
-  "C24:UC_XMLGTG": "Comisión",
+  "C24:UC_XMLGTG": "Comisión Ganada",
   "WON": "Cerrada",
+  "C24:WON": "Cerrada",
 };
 
 const formatUsdValue = (value: string | number | null | undefined) => {
@@ -82,17 +83,34 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
   }, [page, totalPages]);
 
   const contarCotizaciones = () => items.length;
+  const contarEnProceso = () =>
+    items.filter((item) => item.STAGE_ID === "C24:PREPARATION").length;
+
   const contarPendientes = () =>
     items.filter((item) => item.STAGE_ID === "C24:NEW").length;
+
+  const contarFormularioVinculacion = () =>
+    items.filter((item) => item.STAGE_ID === "C24:UC_87UXF3").length;
 
   const contarConComision = () =>
     items.filter((item) => item.STAGE_ID === "C24:UC_XMLGTG").length;
 
   const contarInspeccion = () =>
-    items.filter((item) => item.STAGE_ID === "C24:UC_ZCRTSB").length;
+  items.filter(
+    (item) =>
+      item.STAGE_ID === "C24:UC_ZCRTSB" ||
+      item.STAGE_ID === "C24:PREPAYMENT_INVOIC"
+  ).length;
+
 
   const contarEmision = () =>
-    items.filter((item) => item.STAGE_ID === "C24:EXECUTING").length;
+    items.filter((item) => 
+      item.STAGE_ID === "C24:EXECUTING"||
+      item.STAGE_ID === "C24:UC_CJKKJS"||
+      item.STAGE_ID === "C24:UC_GFUHD0"||
+      item.STAGE_ID === "C24:UC_9TDBGH"
+  
+  ).length;
 
 
   const contarComisionPagada = () =>
@@ -113,7 +131,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-6 text-w">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-7 text-w">
         <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -132,7 +150,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
             <PendienteIcon width={24} height={24} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{contarPendientes()}</div>
+            <div className="text-2xl font-bold">{contarEnProceso()}</div>
           </CardContent>
         </Card>
         <Card className="bg-azul-oland-100 text-white">
@@ -142,6 +160,16 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{contarInspeccion()}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-azul-oland-100 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Formulario de vinculación</CardTitle>
+            <PendienteIcon width={24} height={24} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{contarFormularioVinculacion()}</div>
           </CardContent>
         </Card>
 

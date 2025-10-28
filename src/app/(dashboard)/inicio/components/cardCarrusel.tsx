@@ -39,27 +39,7 @@ export function CardCarrusel({
       color: "bg-gradient-to-br from-azul-oland-100 to-white",
       img: "/img/carros.png",
     },
-    {
-      id: 2,
-      title: "Seguro de casas",
-      description: "Protege tu hogar con nuestro seguro de casas, brindándote tranquilidad y seguridad para ti y tu familia.",
-      color: "bg-gradient-to-br from-azul-oland-100 to-white",
-      img: "/img/casa.jpg",
-    },
-    {
-      id: 3,
-      title: "Seguros empresariales",
-      description: "Aseguramos tu negocio con soluciones personalizadas.",
-      color: "bg-gradient-to-br from-azul-oland-100 to-white",
-      img: "/img/empresarial.webp",
-    },
-    {
-      id: 4,
-      title: "Seguro de vida",
-      description: "Protege el futuro de tus seres queridos con nuestro seguro de vida.",
-      color: "bg-gradient-to-br from-azul-oland-100 to-white",
-      img: "/img/salud.jpg",
-    },
+   
   ],
 }: CardCarruselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
