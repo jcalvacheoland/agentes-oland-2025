@@ -27,10 +27,31 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
     // ===========================
     // ENCABEZADO
     // ===========================
+    const headerHeight = 60;
+
+    // Fondo gris claro similar al de la imagen
+    doc.rect(0, 0, doc.page.width, headerHeight).fill("#f3f4f6");
+
+    // Texto principal
     doc
+      .fillColor("#0b2240") // Azul oscuro Oland
       .fontSize(20)
-      .text("Comparación de Planes - Oland Seguros", { align: "center" })
-      .moveDown(1);
+      .text("COTIZACIÓN DE SU SEGURO", 40, 20, { align: "left" });
+
+    // Imagen del logo (ajusta ruta según tu proyecto)
+    const logoPath = path.join(
+      process.cwd(),
+      "public",
+      "img",
+      "agentesLogo.jpg"
+    );
+    doc.image(logoPath, doc.page.width - 100, 10, {
+      width: 45,
+      height: 45,
+    });
+
+    // Espacio después del encabezado
+    doc.moveDown(2);
 
     const plans = Array.isArray(invoiceData?.selectedPlans)
       ? invoiceData.selectedPlans
