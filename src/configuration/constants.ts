@@ -44,7 +44,9 @@ export const AseguradorasLogo = [
   { name: "AIG", img: "/img/logoAseguradora/aig.png" },
   { name: "Vaz Seguros", img: "/img/logoAseguradora/vaz.png" },
   { name: "asur", img: "/img/logoAseguradora/asur.png" },
-  { name: "ASEGURADORA DEL SUR", img: "/img/logoAseguradora/asur.png" },
+  { name: "equinoccial", img: "/img/logoAseguradora/equinoccial.png" },
+  { name: "atlantida", img: "/img/logoAseguradora/atlantida.png" },
+  { name: "ASEGURADORA DEL SUR", img: "/img/logoAseguradora/asurHdSquare.png" },
 ]
 
 // utils/coberturasOrdenadas.ts

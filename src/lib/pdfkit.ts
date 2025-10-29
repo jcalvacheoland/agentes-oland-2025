@@ -204,30 +204,52 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
         .table({
           data: [
             [
-              { text: `Nombre: ${cotizacion.name}`, border: false },
-              { text: `Marca: ${cotizacion.brand}`, border: false },
+              {
+                text: `Nombre: ${cotizacion.name}`,
+                border: [true, false, false, true],
+              }, // arriba + izquierda
+              {
+                text: `Marca: ${cotizacion.brand}`,
+                border: [true, true, false, false],
+              }, // arriba + derecha
             ],
             [
-              { text: `Cédula: ${cotizacion.identification}`, border: false },
-              { text: `Modelo: ${cotizacion.model}`, border: false },
+              {
+                text: `Cédula: ${cotizacion.identification}`,
+                border: [false, false, false, true],
+              },
+              {
+                text: `Modelo: ${cotizacion.model}`,
+                border: [false, true, false, false],
+              },
             ],
             [
-              { text: `Ciudad: ${cotizacion.city}`, border: false },
-              { text: `Año: ${cotizacion.year}`, border: false },
+              {
+                text: `Ciudad: ${cotizacion.city}`,
+                border: [false, false, false, true],
+              },
+              {
+                text: `Año: ${cotizacion.year}`,
+                border: [false, true, false, false],
+              },
             ],
             [
-              { text: `Email:`, border: false },
-              { text: `Valor: ${valorFormateado}`, border: false },
+              { text: `Email:`, border: [false, false, false, true] },
+              {
+                text: `Valor: ${valorFormateado}`,
+                border: [false, true, false, false],
+              },
             ],
             [
-              { text: `Celular:`, border: false },
+              { text: `Celular:`, border: [false, false, true, true] }, // abajo + izquierda
               {
                 text: `Fecha de Cotización:  ${fechaFormateada}`,
-                border: false,
-              },
+                border: [false, true, true, false],
+              }, // abajo + derecha
             ],
           ],
         })
+
         .fillColor("black")
         .moveDown(1);
     }

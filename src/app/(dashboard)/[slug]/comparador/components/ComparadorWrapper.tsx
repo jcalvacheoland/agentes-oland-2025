@@ -190,7 +190,7 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto px-6 lg:px-0 ">
-      <div className="mt-2">
+      <div className="mt-2 ">
         <Button
           asChild
           variant="oland"
@@ -269,9 +269,9 @@ export function ComparadorWrapper({ slug, planRequest, cotizacion }: Props) {
       <div className="my-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Todos los Planes</h2>
-          <p className="text-sm text-gray-500">
-            {Aseguradoras.length} aseguradoras
-          </p>
+         {/*  <p className="text-sm text-gray-500">
+        
+          </p> */}
         </div>
 
         <div className="space-y-4">

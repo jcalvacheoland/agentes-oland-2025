@@ -11,17 +11,22 @@ const STATIC_PLANS: StaticPlan[] = [
   {
     name: "AIG",
     img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("aig".toLowerCase()))?.img || "",
-    phone: "099 1234 5678",
+    phone: "593968904816",
   },
   {
     name: "Equinoccial",
     img: AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("equinoccial".toLowerCase()))?.img || "",
-    phone: "099 1234 5678",
+    phone: "593968904816",
   },
   {
     name: "Atlántida",
     img:  AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("atlantida".toLowerCase()))?.img || "",
-    phone: "099 1234 5678",
+    phone: "593968904816",
+  },
+  {
+    name: "Generali",
+    img:  AseguradorasLogo.find((logo) => logo.name.toLowerCase().includes("generali".toLowerCase()))?.img || "",
+    phone: "593968904816",
   },
 ];
 
