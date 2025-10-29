@@ -1,4 +1,4 @@
-import PDFDocument, { text } from "pdfkit";
+import PDFDocument from "pdfkit";
 import path from "path";
 import { COBERTURAS_ORDENADAS } from "@/configuration/constants";
 import { AseguradorasLogo } from "@/configuration/constants";
@@ -19,78 +19,187 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       margin: 40,
     });
 
+    // asegurar que la fuente esté aplicada
+    doc.font(fontPath);
+
     const chunks: Buffer[] = [];
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    // ===========================
+    // -----------------------
+    // UTIL: drawTableManual
+    // -----------------------
+    function drawTableManual(
+      doc: any,
+      tableData: (string | { text: string })[][],
+      opts: {
+        x?: number;
+        y?: number;
+        columnWidths?: number[];
+        rowHeight?: number;
+        padding?: number;
+        headerBg?: string;
+        firstColBg?: string;
+        headerTextColor?: string;
+        firstColTextColor?: string;
+        fontSize?: number;
+      } = {}
+    ) {
+      const x = opts.x ?? 40;
+      let curY = opts.y ?? doc.y;
+      const padding = opts.padding ?? 8;
+      const rowHeight = opts.rowHeight ?? 40;
+      const headerBg = opts.headerBg ?? "#0b2240";
+      const firstColBg = opts.firstColBg ?? "#0b2240";
+      const headerTextColor = opts.headerTextColor ?? "white";
+      const firstColTextColor = opts.firstColTextColor ?? "black";
+      const fontSize = opts.fontSize ?? 10;
+
+      const columnCount = (tableData[0] || []).length;
+      const totalWidth =
+        opts.columnWidths?.reduce((a: number, b: number) => a + b, 0) ??
+        doc.page.width - x - 40;
+      const columnWidths =
+        opts.columnWidths ??
+        Array.from({ length: columnCount }, () => totalWidth / columnCount);
+
+      const bottomLimit = doc.page.height - doc.page.margins.bottom - 60;
+
+      // recorrer filas
+      for (let r = 0; r < tableData.length; r++) {
+        // salto de página si se excede
+        if (curY + rowHeight > bottomLimit) {
+          doc.addPage();
+          doc.font(fontPath);
+          curY = doc.page.margins.top;
+        }
+
+        let curX = x;
+        const row = tableData[r];
+
+        for (let c = 0; c < columnCount; c++) {
+          const cellRaw = row[c];
+          const text =
+            typeof cellRaw === "object"
+              ? (cellRaw as any).text
+              : String(cellRaw ?? "");
+          const colW = columnWidths[c] ?? totalWidth / columnCount;
+
+          // fondo & borde
+          if (r === 0 && c === 0) {
+            // CELDA [0,0] - "Plan" - igual que primera columna
+            doc.save();
+            doc.fillColor(firstColBg).rect(curX, curY, colW, rowHeight).fill();
+            doc
+              .strokeColor("#000000")
+              .rect(curX, curY, colW, rowHeight)
+              .stroke();
+            doc.restore();
+            doc.fillColor(firstColTextColor);
+          } else if (r === 0) {
+            // RESTO DEL HEADER (r=0 pero c>0)
+            doc.save();
+            doc.fillColor(headerBg).rect(curX, curY, colW, rowHeight).fill();
+            doc
+              .strokeColor("#000000")
+              .rect(curX, curY, colW, rowHeight)
+              .stroke();
+            doc.restore();
+            doc.fillColor(headerTextColor);
+          } else if (c === 0) {
+            // PRIMERA COLUMNA (pero r>0)
+            doc.save();
+            doc.fillColor(firstColBg).rect(curX, curY, colW, rowHeight).fill();
+            doc
+              .strokeColor("#000000")
+              .rect(curX, curY, colW, rowHeight)
+              .stroke();
+            doc.restore();
+            doc.fillColor(firstColTextColor);
+          } else {
+            // celdas normales
+            doc
+              .strokeColor("#000000")
+              .rect(curX, curY, colW, rowHeight)
+              .stroke();
+            doc.fillColor("#333333");
+          }
+          // centrar verticalmente
+          doc.font(fontPath).fontSize(fontSize);
+          const textWidth = colW - padding * 2;
+          const textHeight = doc.heightOfString(text, { width: textWidth });
+          const textY = curY + Math.max(padding, (rowHeight - textHeight) / 2);
+
+          const align = c === 0 ? "left" : "center";
+          doc.text(text, curX + padding, textY, { width: textWidth, align });
+
+          curX += colW;
+        }
+
+        curY += rowHeight;
+      }
+
+      doc.y = curY + 6;
+    }
+
+    // -----------------------
     // ENCABEZADO
-    // ===========================
+    // -----------------------
     const headerHeight = 60;
-
-    // Fondo gris claro similar al de la imagen
     doc.rect(0, 0, doc.page.width, headerHeight).fill("#ffffff");
-
-    // Texto principal
     doc
-      .fillColor("#0b2240") // Azul oscuro Oland
+      .fillColor("#0b2240")
       .fontSize(20)
-      .text("COTIZACIÓN DE SU SEGURO", 40, 20, { align: "left" });
+      .text("COTIZACIÓN DE SU SEGURO", 40, 20, {
+        align: "left",
+      });
 
-    // Imagen del logo (ajusta ruta según tu proyecto)
     const logoPath = path.join(
       process.cwd(),
       "public",
       "img",
-      "agentesLogoSquare.png"
+      "agentesLogo.jpg"
     );
-    doc.image(logoPath, doc.page.width - 100, 10, {
-      width: 45,
-      height: 45,
-    });
+    try {
+      doc.image(logoPath, doc.page.width - 100, 10, {
+        width: 50,
+        height: 45,
+      });
+    } catch (err) {
+      console.warn("No se cargó logo encabezado:", err);
+    }
 
-    // Espacio después del encabezado
     doc.moveDown(2);
 
+    // -----------------------
+    // PLANES SELECCIONADOS
+    // -----------------------
     const plans = Array.isArray(invoiceData?.selectedPlans)
       ? invoiceData.selectedPlans
       : [];
-
     if (plans.length === 0) {
       doc.fontSize(12).text("Sin planes seleccionados.");
       doc.end();
       return;
     }
 
-    // ===========================
-    // INFORMACIÓN DE LA COTIZACIÓN
-    // ===========================
+    // -----------------------
+    // DATOS COTIZACIÓN (cliente/vehículo)
+    // -----------------------
     const { cotizacion } = invoiceData;
-
     if (cotizacion) {
       doc.fontSize(12).fillColor("#333333");
-      // ===========================
-      // Formateos previos
-      // ===========================
       const fechaFormateada = new Date(cotizacion.createdAt).toLocaleDateString(
         "es-EC",
-        {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }
+        { day: "2-digit", month: "2-digit", year: "numeric" }
       );
-
       const valorFormateado = new Intl.NumberFormat("es-EC", {
         style: "currency",
         currency: "USD",
         minimumFractionDigits: 0,
       }).format(cotizacion.vehicleValue || 0);
 
-      // ===========================
-      // Datos del Usuario y Vehículo
-      // ===========================
       doc
         .table({
           data: [
@@ -122,63 +231,107 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
         .fillColor("black")
         .moveDown(1);
     }
-    // ===========================
-    // Fila de logos dinámicos (ajuste automático)
-    // ===========================
 
+    // -----------------------
+    // Fila de logos (mejorada)
+    // -----------------------
     doc.moveDown(1);
 
-    const y = doc.y;
-    let imageWidth = 100;
-    let imageHeight = 65;
-    let startX = 185;
-    let spacing = 130;
+    const leftMargin = doc.page.margins.left;
+    const usableWidth =
+      doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const totalColumns = 1 + plans.length;
+    const colWidth = usableWidth / totalColumns;
+    const rowHeightLogos = 80;
+    const yStart = doc.y;
 
-    // Ajustes simples según cantidad de planes
-    if (plans.length === 2) {
-      // si solo hay 2 logos, los centramos más y los hacemos un poco más grandes
-      imageWidth = 120;
-      imageHeight = 70;
-      startX = 240; // movemos más al centro
-      spacing = 170; // más distancia entre ambos
-    } else if (plans.length === 1) {
-      // si hay solo uno, centrado en la página
-      imageWidth = 140;
-      imageHeight = 80;
-      startX = (doc.page.width - imageWidth) / 2;
-      spacing = 0;
+    function drawCell(
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      imagePath: string,
+      text: string,
+      isFirst: boolean
+    ) {
+      const savedY = doc.y;
+      const savedX = doc.x;
+
+      // borde de celda
+      doc.strokeColor("#000000").rect(x, y, width, height).stroke();
+
+      // imagen (fit dentro de un area)
+      try {
+        doc.image(imagePath, x + 10, y + 8, {
+          fit: [width - 20, height - 36],
+          align: "center",
+          valign: "center",
+        });
+      } catch (err) {
+        // si falla, no romper
+        // console.error("⚠️ Error cargando imagen:", imagePath, err);
+      }
+
+      // nombre del plan (fuente más grande que antes)
+      doc
+        .font(fontPath)
+        .fontSize(10)
+        .fillColor("#333333")
+        .text(text, x + 6, y + height - 20, {
+          width: width - 12,
+          align: "center",
+        });
+
+      doc.x = savedX;
+      doc.y = savedY;
     }
 
-    // recorrer los planes seleccionados
+    // Título PLANES (primera columna)
+    doc
+      .strokeColor("#000000")
+      .rect(leftMargin, yStart, colWidth, rowHeightLogos)
+      .stroke();
+    doc
+      .font(fontPath)
+      .fontSize(11)
+      .fillColor("#0b2240")
+      .text("Aseguradoras", leftMargin + 5, yStart + rowHeightLogos / 2 - 6, {
+        width: colWidth - 10,
+        align: "center",
+      });
+
+    // logos para cada plan
     plans.forEach((plan: any, index: number) => {
-      const logoObj = AseguradorasLogo.find((logo) =>
-        logo.name.toLowerCase().includes(plan.insurer.toLowerCase())
+      const x = leftMargin + colWidth + index * colWidth;
+      const logoObj = AseguradorasLogo.find((logo: any) =>
+        logo.name
+          .toLowerCase()
+          .includes(String(plan.insurer || "").toLowerCase())
       );
-
-      const logoPath = logoObj
+      const logoPathPlan = logoObj
         ? path.join(process.cwd(), "public", logoObj.img)
-        : null;
-
-      if (logoPath) {
-        try {
-          doc.image(logoPath, startX + index * spacing, y, {
-            fit: [imageWidth, imageHeight],
-          });
-        } catch (err) {
-          console.error("⚠️ No se pudo cargar el logo:", logoPath, err);
-        }
-      }
+        : path.join(process.cwd(), "public", "img", "default.png");
+      const planName = plan.insurer || `Plan ${index + 1}`;
+      drawCell(
+        x,
+        yStart,
+        colWidth,
+        rowHeightLogos,
+        logoPathPlan,
+        planName,
+        false
+      );
     });
 
-    doc.moveDown(3);
+    // mover cursor debajo de logos
+    doc.y = yStart + rowHeightLogos;
+    doc.x = leftMargin;
 
-    // ===========================
-    // TABLA DE COBERTURAS CON CORTE MANUAL
-    // ===========================
-
-    // Construir todas las filas normalmente
+    // -----------------------
+    // Construir datos de tabla de coberturas
+    // -----------------------
     const tableData: any[] = [];
-    const headerRow = ["Cobertura", ...plans.map((p: any) => p.insurer)];
+    const headerRow = ["Plan", ...plans.map((p: any) => p.planName)];
     tableData.push(headerRow);
 
     const filaPrima = [
@@ -187,7 +340,6 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
     ];
     tableData.push(filaPrima);
 
-    // Añadir todas las coberturas
     COBERTURAS_ORDENADAS.forEach((nombre: string, i: number) => {
       const fila = [
         nombre,
@@ -201,98 +353,74 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       tableData.push(fila);
     });
 
-    // ===========================
-    // Cortar manualmente en dos tablas
-    // ===========================
+    const columnsSize = new Array(totalColumns).fill(colWidth);
 
-    // por ejemplo, las primeras 8 coberturas + encabezados
-    const primeraParte = tableData.slice(0, 10); // encabezado + 9 filas
-    const segundaParte = tableData.slice(10); // el resto
-
-    doc.moveDown(1);
-    doc.table({
-      defaultStyle: {
-        border: 1,
-        padding: 4,
-      },
-      // Estilos por columna
-      columnStyles: ((i: number) => {
-        if (i === 0) return { backgroundColor: "#0b2240", textColor: "white" }; // 👈 azul solo para la columna Cobertura
-        return { align: "center" } as unknown as any;
-      }) as unknown as any,
-      data: primeraParte,
+    // -----------------------
+    // Dibujar tabla completa de una sola vez
+    // -----------------------
+    doc.font(fontPath);
+    drawTableManual(doc, tableData, {
+      x: leftMargin,
+      y: doc.y,
+      columnWidths: columnsSize,
+      rowHeight: 50, // <-- ajusta según necesites
+      firstColBg: "#0b2240",
+      headerTextColor: "#000000",
+      firstColTextColor: "#ffffff",
+      headerBg: "#ffffff",
+      fontSize: 10,
     });
 
-    // ---- Forzar salto de página ----
-    doc.addPage(); // 👈 este es tu corte manual
+    // -----------------------
+    // Filas de Prima Neta y Prima Total
+    // -----------------------
+    doc.moveDown(0.5);
 
-    // ---- Segunda tabla ----
-    doc.table({
-      defaultStyle: {
-        border: 1,
-        padding: 4,
-      },
-      columnStyles: ((i: number) => {
-        if (i === 0) return { backgroundColor: "#0b2240", textColor: "white" }; // 👈 igual, azul en la columna de coberturas
-        return { align: "center" } as unknown as any;
-      }) as unknown as any,
-      data: segundaParte,
-    });
-
-    // ===========================
-    // FILAS DE PRIMA NETA Y PRIMA TOTAL
-    // ===========================
-    doc.moveDown(0.5); // Pequeña separación
-
-    // ===========================
-    // Fila Prima Neta
-    // ===========================
     const filaPrimaNeta = [
       "Prima Neta",
       ...plans.map((p: any) => `$${(p.netPremium || 0).toFixed(2)}`),
     ];
-
-    doc.table({
-      defaultStyle: {
-        border: 1,
-        padding: 4,
-      },
-      columnStyles: ((i: number) => {
-        if (i === 0) return { align: "left" } as unknown as any; // título a la izquierda
-        return { align: "center" } as unknown as any; // valores centrados
-      }) as unknown as any,
-      data: [filaPrimaNeta],
+    drawTableManual(doc, [["Prima Neta", ...filaPrimaNeta.slice(1)]], {
+      x: leftMargin,
+      y: doc.y,
+      columnWidths: columnsSize,
+      rowHeight: 34,
+      padding: 8,
+      headerBg: "#ffffff",
+      firstColBg: "#ffffff",
+      headerTextColor: "#000000",
+      firstColTextColor: "#000000",
+      fontSize: 10,
     });
 
-    // Fila Prima Total
     const filaPrimaTotal = [
       "Prima Total",
       ...plans.map((p: any) => `$${(p.totalPremium || 0).toFixed(2)}`),
     ];
-
-    doc.table({
-      defaultStyle: {
-        border: 1,
-        padding: 4,
-      },
-      // 👇 misma solución que tu tabla principal, sin errores TS
-      columnStyles: ((i: number) => {
-        if (i === 0) return { align: "left" }; // primera columna alineada a la izquierda
-        return { align: "center" } as unknown as any; // las demás centradas
-      }) as unknown as any,
-      data: [filaPrimaTotal],
+    drawTableManual(doc, [["Prima Total", ...filaPrimaTotal.slice(1)]], {
+      x: leftMargin,
+      y: doc.y,
+      columnWidths: columnsSize,
+      rowHeight: 34,
+      padding: 8,
+      headerBg: "#ffffff",
+      firstColBg: "#ffffff",
+      headerTextColor: "#000000",
+      firstColTextColor: "#000000",
+      fontSize: 10,
     });
-    // ===========================
-    // PIE DE PÁGINA
-    // ===========================
-    const bottomY = doc.page.height - doc.page.margins.bottom - 60;
 
+    // -----------------------
+    // PIE DE PÁGINA
+    // -----------------------
+    const bottomY = doc.page.height - doc.page.margins.bottom - 60;
     doc
-      .fontSize(9)
-      .fillColor("gray")
+      .font(fontPath)
+      .fontSize(10)
+      .fillColor("black")
       .opacity(0.8)
       .text(
-        "⚠️  Este documento corresponde a una cotización referencial emitida por Oland Seguros. " +
+        "Este documento corresponde a una cotización referencial emitida por Oland Seguros. " +
           "No constituye una póliza ni garantiza la contratación del seguro. " +
           "Las condiciones, coberturas y valores están sujetos a verificación y aprobación por parte de la aseguradora. " +
           "La validez de esta cotización es de 15 días calendario a partir de su fecha de emisión.",
@@ -304,7 +432,6 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       .fontSize(10)
       .opacity(0.6)
       .text("Generado automáticamente por Oland Seguros", { align: "center" })
-      .opacity(1)
       .fillColor("black");
 
     doc.end();
