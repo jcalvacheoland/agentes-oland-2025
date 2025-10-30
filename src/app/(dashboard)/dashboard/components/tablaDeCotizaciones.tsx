@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -39,7 +40,7 @@ const stageLabels: Record<string, string> = {
   "C24:UC_9TDBGH": "Cobranza",
   "C24:UC_D2MRZM": "Pagado",
   "C24:UC_XMLGTG": "Comisión Ganada",
-  "WON": "Cerrada",
+  WON: "Cerrada",
   "C24:WON": "Cerrada",
 };
 
@@ -96,22 +97,20 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
     items.filter((item) => item.STAGE_ID === "C24:UC_XMLGTG").length;
 
   const contarInspeccion = () =>
-  items.filter(
-    (item) =>
-      item.STAGE_ID === "C24:UC_ZCRTSB" ||
-      item.STAGE_ID === "C24:PREPAYMENT_INVOIC"
-  ).length;
-
+    items.filter(
+      (item) =>
+        item.STAGE_ID === "C24:UC_ZCRTSB" ||
+        item.STAGE_ID === "C24:PREPAYMENT_INVOIC"
+    ).length;
 
   const contarEmision = () =>
-    items.filter((item) => 
-      item.STAGE_ID === "C24:EXECUTING"||
-      item.STAGE_ID === "C24:UC_CJKKJS"||
-      item.STAGE_ID === "C24:UC_GFUHD0"||
-      item.STAGE_ID === "C24:UC_9TDBGH"
-  
-  ).length;
-
+    items.filter(
+      (item) =>
+        item.STAGE_ID === "C24:EXECUTING" ||
+        item.STAGE_ID === "C24:UC_CJKKJS" ||
+        item.STAGE_ID === "C24:UC_GFUHD0" ||
+        item.STAGE_ID === "C24:UC_9TDBGH"
+    ).length;
 
   const contarComisionPagada = () =>
     items.filter((item) => item.STAGE_ID === "C24:UC_D2MRZM").length;
@@ -146,7 +145,9 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
 
         <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En proceso / Negociación</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              En proceso / Negociación
+            </CardTitle>
             <PendienteIcon width={24} height={24} />
           </CardHeader>
           <CardContent>
@@ -165,15 +166,19 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
 
         <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Formulario de vinculación</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Formulario de vinculación
+            </CardTitle>
             <PendienteIcon width={24} height={24} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{contarFormularioVinculacion()}</div>
+            <div className="text-2xl font-bold">
+              {contarFormularioVinculacion()}
+            </div>
           </CardContent>
         </Card>
 
-          <Card className="bg-azul-oland-100 text-white">
+        <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Emisión</CardTitle>
             <PendienteIcon width={24} height={24} />
@@ -183,10 +188,10 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-azul-oland-100 text-white">  
+        <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Póliza pagada</CardTitle>
-            <AprobadoIcon width={24} height={24}  />
+            <AprobadoIcon width={24} height={24} />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{contarComisionPagada()}</div>
@@ -198,7 +203,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
             <CardTitle className="text-sm font-medium">
               Comisión Ganada
             </CardTitle>
-            <ValorAprobadoIcon width={24} height={24}  />
+            <ValorAprobadoIcon width={24} height={24} />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{contarConComision()}</div>
@@ -221,6 +226,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
                 <TableHead className="text-left">Título</TableHead>
                 <TableHead className="text-center">Valor cotizado</TableHead>
                 <TableHead className="text-center">Etapa</TableHead>
+                <TableHead className="text-center">Ir a Negociación</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -235,7 +241,9 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
                 </TableRow>
               ) : pageItems.length ? (
                 pageItems.map((item, idx) => {
-                  const formattedVehicleValue = formatUsdValue(item.UF_CRM_1757947153789);
+                  const formattedVehicleValue = formatUsdValue(
+                    item.UF_CRM_1757947153789
+                  );
 
                   return (
                     <TableRow key={item.ID}>
@@ -265,6 +273,26 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
                           <span className="text-muted-foreground">--</span>
                         )}
                       </TableCell>
+
+                      <TableCell className="text-center">
+                        {item.ID ? (
+                          <Link
+                            href={`https://oland.bitrix24.com/crm/deal/details/${item.ID}/`}
+                            target="_blank"
+                          >
+                            <Button
+                              variant="oland"
+                              size="sm"
+                              className=" gap-2"
+                            >
+                              Ver en CRM
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">--</span>
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })
@@ -274,7 +302,8 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
                     colSpan={4}
                     className="py-6 text-center text-muted-foreground"
                   >
-                    No encontramos cotizaciones para mostrar.
+                    No encontramos cotizaciones para mostrar. Realiza tu primera
+                    cotización.
                   </TableCell>
                 </TableRow>
               )}
@@ -282,8 +311,9 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
           </Table>
         </div>
         <div className="flex flex-col gap-3 border-t border-muted/20 p-4 md:flex-row md:items-center md:justify-between">
-            <div className="text-center text-sm text-muted-foreground md:text-left">
-            Página {page} de {totalPages}. Mostrando {pageItems.length} de {items.length}.
+          <div className="text-center text-sm text-muted-foreground md:text-left">
+            Página {page} de {totalPages}. Mostrando {pageItems.length} de{" "}
+            {items.length}.
           </div>
           <div className="flex justify-center md:justify-end">
             <Pagination>

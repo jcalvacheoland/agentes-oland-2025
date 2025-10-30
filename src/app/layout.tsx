@@ -40,7 +40,7 @@ export default function RootLayout({
         ></Script>
       </head>
       <body
-        className={`${geistSans.variable} ${outfit.variable} ${geistMono.variable} antialiased`}  
+        className={`${geistSans.variable} ${outfit.variable} ${geistMono.variable} font-[var(--font-outfit)] antialiased`}  
       >
         {children}
       </body>

@@ -151,7 +151,7 @@ export default async function DealPage(props: DealPageProps) {
 
       
 
-      <section className="grid  grid-cols-1 grid-flow-col grid-rows-3 md:grid-cols-2 md:grid-rows-none  space-x-4 gap-6">
+      <section className="grid  grid-cols-1   md:grid-cols-2  space-x-4 gap-6">
 
        {/*  datos del cliente */}
 
@@ -162,7 +162,7 @@ export default async function DealPage(props: DealPageProps) {
               Datos del cliente
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 grid grid-cols-3">
             {clienteItems.map(({ icon: Icon, label, value }) => (
               <div
                 key={label}
@@ -205,26 +205,27 @@ export default async function DealPage(props: DealPageProps) {
             </div>
           </CardContent>
         </Card>
+        
+      </section>
 
-
-        {/*  Planes comparados */}
-        <Card className="w-full  space-y-0">
+      <article>
+         {/*  Planes comparados */}
+        <Card className="  space-y-0">
           <CardHeader className="pb-2">
             <CardTitle className={typography.sectionTitle}>
               <File className="w-5 h-5" />
               Planes comparados
             </CardTitle>
-            <h2>Escoge 1 de los planes comparados</h2>
+            <h2>¿Tu cliente ya escogio un plan? Ahora! Escoge 1 de los planes comparados</h2>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 ">
             <PlanSelector
               dealId={deal.ID}
               plans={cotizacion.planesComparados ?? []}
             />
           </CardContent>
         </Card>
-        
-      </section>
+      </article>
 
       <div>
         <div>

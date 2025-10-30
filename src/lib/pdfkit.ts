@@ -385,12 +385,12 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       x: leftMargin,
       y: doc.y,
       columnWidths: columnsSize,
-      rowHeight: 50, // <-- ajusta según necesites
+      rowHeight: 53, // <-- ajusta según necesites
       firstColBg: "#0b2240",
       headerTextColor: "#000000",
       firstColTextColor: "#ffffff",
       headerBg: "#ffffff",
-      fontSize: 10,
+      fontSize: 9,
     });
 
     // -----------------------

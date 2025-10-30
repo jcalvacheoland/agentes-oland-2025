@@ -58,6 +58,8 @@ export interface IPlanRequest {
     asur_model?: string;
     useOfVehicle?: string;
     bitrixDealId?: any;
+    email?:string,
+    phone?:string
 };
 
 export interface IVehiculoRequest  {

@@ -539,6 +539,8 @@ export const FormularioClienteVehiculo = () => {
       useOfVehicle: data.vehiculo.tipoUso ?? "",
       chubb_mm: "AD",
       bitrixDealId: bitrixDealId ? String(bitrixDealId) : "",
+      email: data.cliente.email ?? "",
+      phone: data.cliente.celular ?? "",
     });
 
     if (!result.success) {

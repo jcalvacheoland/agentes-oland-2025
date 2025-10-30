@@ -59,6 +59,8 @@ export async function createCotizacion(
         cityCodeMapfre: data.cityCodeMapfre || null,
         chubb_mm: data.chubb_mm || null,
         status: "draft",
+        email:data.email||null,
+        phone:data.phone||null
       },
     });
 
@@ -259,7 +261,7 @@ export async function getCotizacionByBitrixId(dealId: string) {
         where: { cotizacion: { bitrixDealId: dealId } },
         distinct: ["version"],
         orderBy: { version: "desc" },
-        take: 1,
+        take: 3,
         select: { version: true },
       })
 

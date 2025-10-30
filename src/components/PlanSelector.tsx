@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useTransition } from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 import { updateBitrixDealWithPlanSelected } from '@/actions/bitrixActions';
 import { updatePlanSelection } from '@/actions/planesComparados.actions';
@@ -28,6 +29,7 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
   const [feedbackType, setFeedbackType] = useState<'success' | 'error' | null>(null);
   const [isPending, startTransition] = useTransition();
   const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
 
   const aseguradoraNombres: Record<string, string> = {
     asur: 'Aseguradora del Sur',
@@ -40,8 +42,25 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
 
   const planNombres: Record<string, string> = {
     "s123 chubb": "CHUBB",
-    // agrega más según tus códigos internos
   };
+
+  // Agrupar planes por versión
+  const planesPorVersion = plans.reduce((acc, plan) => {
+    if (!acc[plan.version]) {
+      acc[plan.version] = [];
+    }
+    acc[plan.version].push(plan);
+    return acc;
+  }, {} as Record<number, Plan[]>);
+
+  // Ordenar versiones de mayor a menor
+  const versionesOrdenadas = Object.keys(planesPorVersion)
+    .map(Number)
+    .sort((a, b) => b - a);
+
+  const totalVersiones = versionesOrdenadas.length;
+  const canGoUp = currentVersionIndex > 0;
+  const canGoDown = currentVersionIndex < totalVersiones - 1;
 
   useEffect(() => {
     if (!plans.length) {
@@ -63,7 +82,6 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
     setFeedbackType(null);
     setPendingPlanId(plan.id);
 
-    // Transformamos la abreviatura al nombre completo para Bitrix
     const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? '';
     const aseguradoraNombre = aseguradoraNombres[aseguradoraKey] || plan.aseguradora || '';
 
@@ -104,65 +122,160 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
     });
   };
 
+  const goUp = () => {
+    if (canGoUp) {
+      setCurrentVersionIndex(prev => prev - 1);
+    }
+  };
+
+  const goDown = () => {
+    if (canGoDown) {
+      setCurrentVersionIndex(prev => prev + 1);
+    }
+  };
+
   if (!plans.length) {
     return <p className="text-sm text-slate-500">No hay planes comparados en esta cotización.</p>;
   }
 
+  const currentVersion = versionesOrdenadas[currentVersionIndex];
+  const planesDeVersion = planesPorVersion[currentVersion];
+
   return (
-    <div className="space-y-3">
-      {plans.map((plan) => {
-        const isSelected = plan.id === selectedPlanId;
-        const isProcessing = isPending && plan.id === pendingPlanId;
+    <div className="space-y-4">
+      {/* Botón superior */}
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={goUp}
+          disabled={!canGoUp}
+          className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+            canGoUp
+              ? 'border-blue-500 text-blue-500 hover:bg-blue-50 active:scale-95'
+              : 'border-slate-200 text-slate-300 cursor-not-allowed'
+          }`}
+          aria-label="Versión anterior"
+        >
+          <ChevronUp className="w-5 h-5" />
+        </button>
+      </div>
 
-        // Normalizamos el nombre de la aseguradora para mostrarlo
-        const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? '';
-        const aseguradoraNombre = aseguradoraNombres[aseguradoraKey] || 'Aseguradora no especificada';
+      {/* Contenedor con versión actual */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <h3 className="text-sm font-semibold text-slate-700 px-3 py-1.5 bg-slate-100 rounded-full">
+            Versión {currentVersion}
+          </h3>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {planesDeVersion.map((plan) => {
+            const isSelected = plan.id === selectedPlanId;
+            const isProcessing = isPending && plan.id === pendingPlanId;
 
-        const planKey = plan.nombrePlan?.toLowerCase() ?? '';
-        const planNombreLimpio = planNombres[planKey] || plan.nombrePlan || 'Sin nombre';
+            const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? '';
+            const aseguradoraNombre = aseguradoraNombres[aseguradoraKey] || 'Aseguradora no especificada';
 
-        return (
-          <button
-            key={plan.id}
-            type="button"
-            onClick={() => handleSelect(plan)}
-            className={`w-full text-left rounded-lg border p-4 transition-colors ${
-              isSelected
-                ? 'border-blue-500 bg-blue-50/70'
-                : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50/40'
-            } ${isPending ? 'cursor-wait opacity-80' : ''}`}
-            disabled={isPending}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1.5">
-                <p className="text-sm font-semibold text-slate-900">{aseguradoraNombre}</p>
-                <p className="text-sm text-slate-700">Plan: {planNombreLimpio}</p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-                  <span>Prima total: ${Number(plan.primaTotal ?? 0).toFixed(2)}</span>
-                  <span>Prima neta: ${Number(plan.primaNeta ?? 0).toFixed(2)}</span>
-                  <span>Tasa: {Number(plan.Tasa ?? 0).toFixed(2)}%</span>
-                  <span>Versión: {plan.version}</span>
-                </div>
-              </div>
-              <span
-                className={`mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full border ${
-                  isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300 text-slate-400'
-                }`}
-                aria-hidden
+            const planKey = plan.nombrePlan?.toLowerCase() ?? '';
+            const planNombreLimpio = planNombres[planKey] || plan.nombrePlan || 'Sin nombre';
+
+            return (
+              <button
+                key={plan.id}
+                type="button"
+                onClick={() => handleSelect(plan)}
+                className={`text-left rounded-lg border p-4 transition-all hover:shadow-md ${
+                  isSelected
+                    ? 'border-blue-500 bg-blue-50 shadow-sm'
+                    : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50/40'
+                } ${isPending ? 'cursor-wait opacity-80' : ''}`}
+                disabled={isPending}
               >
-                {isSelected ? '✓' : ''}
-              </span>
-            </div>
-            {isProcessing && <p className="mt-2 text-xs text-blue-600">Actualizando deal...</p>}
-          </button>
-        );
-      })}
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900">{aseguradoraNombre}</p>
+                      <p className="text-xs text-slate-600 mt-1">Plan: {planNombreLimpio}</p>
+                    </div>
+                    <span
+                      className={`flex-shrink-0 inline-flex h-5 w-5 items-center justify-center rounded-full border ${
+                        isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300 text-slate-300'
+                      }`}
+                      aria-hidden
+                    >
+                      {isSelected ? '✓' : ''}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-1.5 text-xs text-slate-600">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Prima total:</span>
+                      <span className="font-medium text-slate-700">${Number(plan.primaTotal ?? 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Prima neta:</span>
+                      <span className="font-medium text-slate-700">${Number(plan.primaNeta ?? 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Tasa:</span>
+                      <span className="font-medium text-slate-700">{Number(plan.Tasa ?? 0).toFixed(2)}%</span>
+                    </div>
+                  </div>
+                </div>
+                {isProcessing && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <p className="text-xs text-blue-600">Actualizando cotización...</p>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Botón inferior */}
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={goDown}
+          disabled={!canGoDown}
+          className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+            canGoDown
+              ? 'border-blue-500 text-blue-500 hover:bg-blue-50 active:scale-95'
+              : 'border-slate-200 text-slate-300 cursor-not-allowed'
+          }`}
+          aria-label="Siguiente versión"
+        >
+          <ChevronDown className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Indicador de posición */}
+      <div className="flex justify-center gap-1.5">
+        {versionesOrdenadas.map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            onClick={() => setCurrentVersionIndex(index)}
+            className={`h-1.5 rounded-full transition-all ${
+              index === currentVersionIndex
+                ? 'w-8 bg-blue-500'
+                : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+            }`}
+            aria-label={`Ir a versión ${versionesOrdenadas[index]}`}
+          />
+        ))}
+      </div>
+
       {feedback && (
-        <p className={`text-xs ${feedbackType === 'error' ? 'text-red-600' : 'text-green-600'}`}>
-          {feedback}
-        </p>
+        <div className={`p-3 rounded-lg ${
+          feedbackType === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+        }`}>
+          <p className="text-sm">{feedback}</p>
+        </div>
       )}
     </div>
   );
 }
-
