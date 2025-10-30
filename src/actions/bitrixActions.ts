@@ -55,6 +55,7 @@ export async function updateBitrixDealWithPlanSelected(
           UF_CRM_PRIMA_TOTAL: planData.primaTotal, // Prima Total
           UF_CRM_ASEGURADORA_SELECCIONADA: planData.aseguradora, // Aseguradora
           UF_CRM_PLAN_SELECCIONADO: planData.plan, // Plan
+          STAGE_ID:"C24:PREPARATION",
         },
       }),
     })

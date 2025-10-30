@@ -49,27 +49,7 @@ export default function HomeAgentes() {
         </main>
         <section className=" mx-auto">
           <h2 className="font-bold text-xl">Novedades</h2>
-          <div className="flex flex-col md:flex-row items-start gap-6 my-10">
-            <div className="md:w-1/2">
-              <img
-                src="/img/capacitacionZurich.jpg"
-                alt="Capacitación Zurich Seguros Julio"
-                className="rounded-2xl shadow-md w-full h-auto object-cover"
-              />
-            </div>
-
-            <div className="md:w-1/2 space-y-3">
-              <h2 className="text-2xl font-semibold text-azul-oland-100">
-                Capacitación Zúrich Seguros – Julio
-              </h2>
-              <p className="text-gray-700 leading-relaxed text-justify">
-                Capacitación con el equipo comercial de Zúrich en el ramo de
-                Vehículos y Pymes. Fue una excelente oportunidad para fortalecer
-                conocimientos y conocer de primera mano las últimas herramientas
-                y beneficios que ofrece la aseguradora.
-              </p>
-            </div>
-          </div>
+            <CardCarrusel></CardCarrusel>
         </section>
       </div>
     </div>

@@ -30,7 +30,7 @@ import {
 
 const stageLabels: Record<string, string> = {
   "C24:NEW": "Nuevo",
-  "C24:PREPARATION": "Propuesta enviada",
+  "C24:PREPARATION": "Oferta Aceptada",
   "C24:UC_ZCRTSB": "Inspección",
   "C24:PREPAYMENT_INVOIC": "Inspección favorable",
   "C24:UC_87UXF3": "Formulario de vinculación",
@@ -146,7 +146,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
         <Card className="bg-azul-oland-100 text-white">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              En proceso / Negociación
+              Oferta Aceptada
             </CardTitle>
             <PendienteIcon width={24} height={24} />
           </CardHeader>
