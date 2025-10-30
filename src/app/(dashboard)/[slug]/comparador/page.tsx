@@ -1,7 +1,7 @@
-import { ComparadorWrapper } from "./components/ComparadorWrapper";
 import { searchJustCotizacionByBitrixId } from "@/actions/cotizaciones.actions";
 import { IPlanRequest } from "@/interfaces/interfaces.type";
 import { formatoPlaca } from "@/lib/utils";
+import { ComparadorWrapper } from "./components/ComparadorWrapper";
 
 export default async function PageComparador({
   params,
@@ -37,7 +37,7 @@ export default async function PageComparador({
   };
 
   return (
-    <ComparadorWrapper 
+    <ComparadorWrapper
       slug={slug} 
       planRequest={planRequest}
       cotizacion={cotizacion}

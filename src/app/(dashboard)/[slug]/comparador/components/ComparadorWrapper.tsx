@@ -71,7 +71,7 @@ export function ComparadorWrapper({
   };
 
   // 🔥 Función helper para guardar en BD
-  const savePlanesToDatabase = async (pdfUrl?: string) => {
+  const savePlanesToDatabase = async (pdfUrl?: string|null) => {
     try {
       // Mapear selectedPlans al formato que espera tu server action
       const planesParaGuardar = selectedPlans.map((plan) => ({
@@ -125,17 +125,21 @@ export function ComparadorWrapper({
 
       // Convertir respuesta a Blob (archivo binario)
       const blob = await res.blob();
-
+      
       // Crear un enlace temporal para descargar
       const url = URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
-      a.download = "planes_comparados_OlandSeguros.pdf";
+      a.download = "planes_comparados_AgentesOland.pdf";
       a.click();
       URL.revokeObjectURL(url);
-
+       
+      const azureUrl = res.headers.get("X-Azure-Pdf-Url");
+      console.log("🌐 URL del PDF en Azure:", azureUrl);
+      
       // 2️⃣ Guardar en BD (después de generar el PDF exitosamente)
-      await savePlanesToDatabase();
+      await savePlanesToDatabase(azureUrl);
 
       // 3️⃣ Opcional: Cerrar modal después de guardar
       setShowComparison(false);
@@ -186,8 +190,13 @@ export function ComparadorWrapper({
       a.download = "planes_comparados.pdf";
       a.click();
       URL.revokeObjectURL(url);
-      // 2️⃣ Guardar en BD
-      await savePlanesToDatabase();
+
+      // 2️⃣ Guardar en azure
+      const azureUrl = res.headers.get("X-Azure-Pdf-Url");
+      console.log("🌐 URL del PDF en Azure:", azureUrl);
+      
+      // 2️⃣ Guardar en BD (después de generar el PDF exitosamente)
+      await savePlanesToDatabase(azureUrl);
 
       // 3️⃣ Opcional: Cerrar modal
       setShowComparison(false);
