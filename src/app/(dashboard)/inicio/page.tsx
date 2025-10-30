@@ -1,4 +1,4 @@
-import { CardCarrusel } from "./components/cardCarrusel";
+import  CardCarrusel  from "./components/cardCarrusel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";

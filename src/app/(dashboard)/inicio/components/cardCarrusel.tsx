@@ -12,10 +12,12 @@ interface CardCarruselProps {
     id: number
     title: string
     description: string
-    color: string
+    color?: string
     img?: string
     desde?: string
     buttonCard?:ButtonCardProps
+    date?:string
+    categoty?:string
   }>
 }
 interface ButtonCardProps {
@@ -25,22 +27,44 @@ interface ButtonCardProps {
   color: string
   img?: string
   desde?: string
+  date?:string
+  categoty?:string
 }
 
 
-export function CardCarrusel({
+export default function CardCarrusel({
   autoPlayInterval = 3000,
   isAutoPlay = true,
-  cards = [
-    {
-      id: 1,
-      title: "Seguro de autos",
-      description: "Asegura tu viaje con nuestro seguro de autos, protegiendo lo que más importa en cada kilómetro recorrido.",
-      color: "bg-gradient-to-br from-azul-oland-100 to-white",
-      img: "/img/carros.png",
-    },
-   
-  ],
+    cards = [
+  {
+    id: 1,
+    title: "Capacitación Zürich Seguros",
+    description: "JULIO.- Capacitación con el equipo comercial de Zürich en el ramo de Vehículos, Pymes. Fue una excelente oportunidad para fortalecer conocimiento y conocer de primera mano las últimas herramientas y beneficios.",
+    img: "img/capacitacionZurich.jpg",
+    date: "Julio 2025",
+  },
+  {
+    id: 2,
+    title: "Capacitación Seguros Equinoccial",
+    description: "SEPTIEMBRE.- Jornada de formación con Seguros Equinoccial, centrada en los ramos de Vehículos y Pymes. Este espacio nos permitió actualizar conocimientos, intercambiar experiencias con el equipo comercial y explorar nuevas soluciones que fortalecen nuestra propuesta de valor.",
+    img: "img/capacitacionEquinoccial.jpg",
+    date: "Septiembre 2025"
+  },
+  {
+    id: 3,
+    title: "Próxima Capacitación AIG",
+    description: "NOVIEMBRE.- Próxima capacitación con AIG (fecha por confirmar). Mantente atento a los próximos eventos de formación que seguiremos compartiendo.",
+    img: "/img/capacitacionZurich4.jpg",
+    date: "Noviembre 2025",
+  },
+  {
+    id: 4,
+    title: "Extra Bono",
+    description: "Nos complace anunciar el extra-bono que aplicará para este último trimestre del año, desde el 01/10/2025 hasta el 31/12/2025. ¡Una excelente oportunidad para cerrar el año con fuerza y entusiasmo!",
+    img: "/img/extraBono.jpg",
+    date: "Oct - Dic 2025",
+  }
+]
 }: CardCarruselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -166,25 +190,22 @@ export function CardCarrusel({
             >
               <Card className="h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                 <CardContent className="p-0">
-                  <div className={`${card.color} h-48 sm:h-56 relative overflow-hidden`}>
+                  <div className={`${card.color} h-48 sm:h-56 relative`}>
                     {card.img && (
                       <img 
                         src={card.img} 
                         alt={card.title}
-                        className="w-full h-full object-cover mix-blend-overlay opacity-50"
+                        className="w-full h-full object-cover"
                       />
                     )}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <h3 className="text-white text-2xl sm:text-3xl font-bold text-center px-4 drop-shadow-lg">
-                        {card.title}
-                      </h3>
-                    </div>
                   </div>
                   <div className="p-5 sm:p-6">
-                    <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                    <h3 className="text-black text-xl sm:text-2xl font-bold mb-3 text-left">
+                      {card.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm sm:text-base leading-relaxed text-left">
                       {card.description}
                     </p>
-                  <Button variant={"oland"}>Cotizar ahora</Button>
                   </div>
                 </CardContent>
               </Card>
