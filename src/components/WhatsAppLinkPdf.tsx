@@ -1,8 +1,8 @@
 import { WhatsAppIcon } from "./icons/WhatsApp";
 
 interface WhatsAppHTMLProps {
-  numberPhone: string|null;
-  nombre: string|null;
+  numberPhone?: string|null;
+  nombre?: string|null;
   pdfUrl: string;
   version: number;
 }
@@ -14,7 +14,7 @@ export const WhatsAppLinkPdf = ({
   version,
 }: WhatsAppHTMLProps) => {
   const mensaje = encodeURIComponent(
-    `Hola ${nombre}, te envío la cotización versión ${version}. Puedes verla aquí: ${pdfUrl}`
+    `Hola ${nombre}, te envío la cotización . Puedes verla aquí: ${pdfUrl}`
   );
 
   return (
