@@ -106,6 +106,8 @@ const buildDealPayload = (rawBody: any) => {
       UF_CRM_1758140844163: gender,
       UF_CRM_1758120573688: useOfVehicle,
       UF_CRM_1757969782406: civilStatus,
+      UF_CRM_1761681191971: email,
+      UF_CRM_1761681216704: phone,
     },
     value,
   }
