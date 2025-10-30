@@ -1,5 +1,5 @@
 import { searchJustCotizacionByBitrixId } from "@/actions/cotizaciones.actions";
-import { ComparadorWrapper } from "@/app/(dashboard)/[slug]/comparador/components/ComparadorWrapper";
+import { ComparadorWrapperPostForm } from "./components/ComparadorWrapper";
 import { IPlanRequest } from "@/interfaces/interfaces.type";
 import { formatoPlaca } from "@/lib/utils";
 
@@ -38,11 +38,11 @@ export default async function PageComparadorPostForm({
 
   return (
     <div>
-      <ComparadorWrapper
+      <ComparadorWrapperPostForm
         slug={slug}
         planRequest={planRequest}
         cotizacion={cotizacion}
-      ></ComparadorWrapper>
+      ></ComparadorWrapperPostForm>
     </div>
   );
 }

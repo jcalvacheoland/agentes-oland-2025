@@ -77,11 +77,10 @@ const buildDealPayload = (rawBody: any) => {
   const useOfVehicle = rawBody?.useOfVehicle ?? vehiculo.tipoUso ?? ""
 
   const titleParts = [
-    "Cotizacion",
     name || "Sin nombre",
     brand || null,
     model || null,
-    value || null,
+    `$ ${value }`|| null,
   ].filter(Boolean)
 
   return {

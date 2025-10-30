@@ -224,7 +224,7 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
               <TableRow>
                 <TableHead className="text-center">ID</TableHead>
                 <TableHead className="text-left">Título</TableHead>
-                <TableHead className="text-center">Valor cotizado</TableHead>
+                <TableHead className="text-center">Suma Asegurada</TableHead>
                 <TableHead className="text-center">Etapa</TableHead>
                 <TableHead className="text-center">Ir a Negociación</TableHead>
               </TableRow>

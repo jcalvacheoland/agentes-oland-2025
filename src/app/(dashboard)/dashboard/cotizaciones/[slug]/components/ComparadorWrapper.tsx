@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Aseguradoras } from "@/configuration/constants";
 import { IPlanRequest } from "@/interfaces/interfaces.type";
-import { PlanAseguradoraClient } from "./PlanAseguradoraClient";
-import { HeaderComparatorCard } from "./HeaderComparador";
+import { PlanAseguradoraClientPostForm } from "./PlanAseguradoraClient";
+import { HeaderComparatorCardPostForm } from "./HeaderComparador";
 import { StaticPlanCard } from "@/app/(dashboard)/dashboard/comparador/components/StaticPlanCard";
 import { IPlanResponse } from "@/interfaces/interfaces.type";
 import { ArrowRight, Car } from "lucide-react";
-import { ComparadorModal } from "./ComparadorModal";
+import { ComparadorModalPostForm } from "./ComparadorModal";
 import { ArrowLeft } from "lucide-react";
 import { updateCotizacionWithPlanesHistorial } from "@/actions/updateCotizacionWithSelectedPlan";
 import toast from "react-hot-toast";
@@ -20,7 +20,7 @@ interface Props {
   cotizacion: any;
 }
 
-export function ComparadorWrapper({
+export function ComparadorWrapperPostForm({
   slug,
   planRequest,
   cotizacion,
@@ -229,7 +229,7 @@ export function ComparadorWrapper({
       </div>
 
       {/* Información de cotización */}
-      <HeaderComparatorCard
+      <HeaderComparatorCardPostForm
         nombreDelCliente={cotizacion.name}
         vehiculoDelCliente={cotizacion.brand}
         modeloDelVehiculo={cotizacion.model}
@@ -281,7 +281,7 @@ export function ComparadorWrapper({
       </section>
 
       {/* 👇 Modal de Comparación */}
-      <ComparadorModal
+      <ComparadorModalPostForm
         isOpen={showComparison}
         onClose={handleCloseModal}
         selectedPlans={selectedPlans}
@@ -301,7 +301,7 @@ export function ComparadorWrapper({
 
         <div className="space-y-4">
           {Aseguradoras.map((aseguradora) => (
-            <PlanAseguradoraClient
+            <PlanAseguradoraClientPostForm
               key={aseguradora}
               aseguradora={aseguradora}
               planRequest={planRequest}
