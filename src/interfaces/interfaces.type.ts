@@ -182,3 +182,16 @@ export type ICiudadAPI = {
 };
 
 
+
+export interface PlanComparadoInput {
+  aseguradora: string
+  nombrePlan: string
+  primaTotal: number
+  primaNeta?: number | null
+  Tasa?: number | null
+  deducible?: string
+  cobertura?: string
+  beneficios?: string
+  pdfUrl?: string|null
+  selected?: boolean
+}

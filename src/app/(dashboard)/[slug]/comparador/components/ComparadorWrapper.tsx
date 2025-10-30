@@ -13,6 +13,7 @@ import { ComparadorModal } from "./ComparadorModal";
 import { ArrowLeft } from "lucide-react";
 import { updateCotizacionWithPlanesHistorial } from "@/actions/updateCotizacionWithSelectedPlan";
 import toast from "react-hot-toast";
+import { PlanComparadoInput } from "@/interfaces/interfaces.type";
 
 interface Props {
   slug: string;
@@ -74,13 +75,13 @@ export function ComparadorWrapper({
   const savePlanesToDatabase = async (pdfUrl?: string|null) => {
     try {
       // Mapear selectedPlans al formato que espera tu server action
-      const planesParaGuardar = selectedPlans.map((plan) => ({
+      const planesParaGuardar:PlanComparadoInput[] = selectedPlans.map((plan) => ({
         aseguradora: plan.insurer,
         nombrePlan: plan.planName,
         primaTotal: plan.totalPremium,
         primaNeta: plan.netPremium ?? null,
         Tasa: plan.rate ?? null,
-        pdfUrl: pdfUrl,
+        pdfUrl: pdfUrl?? null,
       }));
 
       // Llamar al server action

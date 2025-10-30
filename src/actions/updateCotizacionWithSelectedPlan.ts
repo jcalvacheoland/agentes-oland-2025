@@ -1,20 +1,7 @@
 "use server"
 import { cookies } from "next/headers" 
 import { prisma } from "@/lib/prisma"
-
-interface PlanComparadoInput {
-  aseguradora: string
-  nombrePlan: string
-  primaTotal: number
-  primaNeta?: number | null
-  Tasa?: number | null
-  deducible?: string
-  cobertura?: string
-  beneficios?: string
-  pdfUrl?: string
-  selected?: boolean
-}
-
+import { PlanComparadoInput } from "@/interfaces/interfaces.type"
 export async function updateCotizacionWithPlanesHistorial(
   cotizacionId: string,
   planes: PlanComparadoInput[]
