@@ -234,14 +234,14 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
               },
             ],
             [
-              { text: `Email:`, border: [false, false, false, true] },
+              { text: `Email: ${cotizacion.email}`, border: [false, false, false, true] },
               {
                 text: `Valor: ${valorFormateado}`,
                 border: [false, true, false, false],
               },
             ],
             [
-              { text: `Celular:`, border: [false, false, true, true] }, // abajo + izquierda
+              { text: `Celular: ${cotizacion.phone}`, border: [false, false, true, true] }, // abajo + izquierda
               {
                 text: `Fecha de Cotización:  ${fechaFormateada}`,
                 border: [false, true, true, false],
