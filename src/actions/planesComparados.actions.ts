@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 type UpdatePlanSelectionInput = {
   primaNeta?: number | null;
   Tasa?: number | null;
+  deselect?: boolean;
 };
 
 export async function updatePlanSelection(
@@ -40,14 +41,16 @@ export async function updatePlanSelection(
     }
 
     await prisma.$transaction([
+      // ✅ Desactiva TODOS los planes de la cotización (sin filtrar por versión)
       prisma.planesComparados.updateMany({
         where: {
           cotizacionId: plan.cotizacionId,
-          version: plan.version,
+          // ❌ REMOVIDO: version: plan.version,
           NOT: { id: planId },
         },
         data: { selected: false },
       }),
+      // ✅ Activa solo el plan seleccionado
       prisma.planesComparados.update({
         where: { id: planId },
         data: {
@@ -65,4 +68,3 @@ export async function updatePlanSelection(
     return { ok: false, error: "No se pudo actualizar el plan seleccionado" };
   }
 }
-

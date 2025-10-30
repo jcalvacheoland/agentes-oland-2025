@@ -2,15 +2,18 @@ import { getBitrixDeal } from "@/actions/bitrixActions";
 import { getCotizacionByBitrixId } from "@/actions/cotizaciones.actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WhatsAppHTML } from "@/components/WhatsApp";
+import { AseguradorasLogo } from "@/configuration/constants";
 import Link from "next/link";
 import {
   User,
   CreditCard,
   MapPin,
-  Heart,
   Users,
   File,
   Car,
+  PhoneIcon,
+  Mail,
 } from "lucide-react";
 import { PlanSelector } from "@/components/PlanSelector";
 
@@ -67,8 +70,8 @@ export default async function DealPage(props: DealPageProps) {
     },
     { icon: Users, label: "Edad", value: deal.UF_CRM_1747676789932 },
     { icon: MapPin, label: "Ciudad", value: deal.UF_CRM_1758140561898 },
-    { icon: Heart, label: "Estado civil", value: deal.UF_CRM_1757969782406 },
-    { icon: Users, label: "Género", value: deal.UF_CRM_1758140844163 },
+    { icon: PhoneIcon, label: "Celular", value: cotizacion.phone },
+    { icon: Mail, label: "E-mail", value: cotizacion.email || "No registrado" },
   ];
   
 
@@ -130,17 +133,17 @@ export default async function DealPage(props: DealPageProps) {
     <div className={typography.page}>
       <div className={typography.header}>
         <h1 className={typography.title}>{deal.TITLE}</h1>
-        <p
-          className={`
-    inline-flex items-center justify-center 
-    px-3 py-1.5 rounded-full 
-    text-sm font-medium
-    text-white
-    bg-azul-oland-100 
-    shadow-sm
-    transition-all
-    hover:opacity-90
-  `}
+              <p
+                className={`
+          inline-flex items-center justify-center 
+          px-3 py-1.5 rounded-full 
+          text-sm font-medium
+          text-white
+          bg-azul-oland-100 
+          shadow-sm
+          transition-all
+          hover:opacity-90
+          `}
         >
           <span className="font-medium text-white">Etapa:</span>{" "}
           <span className="ml-1">
@@ -155,14 +158,14 @@ export default async function DealPage(props: DealPageProps) {
 
        {/*  datos del cliente */}
 
-        <Card className="w-auto  md:row-span-2 h-fit ">
+        <Card className="w-auto h-fit ">
           <CardHeader>
             <CardTitle className={typography.sectionTitle}>
               <User className="w-5 h-5" />
               Datos del cliente
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 grid grid-cols-3">
+          <CardContent className="space-y-4 grid  grid-cols-1 md:grid-cols-3">
             {clienteItems.map(({ icon: Icon, label, value }) => (
               <div
                 key={label}
@@ -211,12 +214,23 @@ export default async function DealPage(props: DealPageProps) {
       <article>
          {/*  Planes comparados */}
         <Card className="  space-y-0">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 grid grid-cols-1 md:flex md:justify-between">
+            <div>
             <CardTitle className={typography.sectionTitle}>
               <File className="w-5 h-5" />
               Planes comparados
             </CardTitle>
             <h2>¿Tu cliente ya escogio un plan? Ahora! Escoge 1 de los planes comparados</h2>
+            </div>
+            <div>
+             {/*  Botón */}
+            <div>
+              <Button asChild variant="oland" className="cursor-pointer">
+                <Link href={`/${slug}/comparador`}>Volver a Comparar Planes</Link>
+              </Button>
+            </div>
+
+          </div>
           </CardHeader>
           <CardContent className="space-y-4 ">
             <PlanSelector
@@ -227,13 +241,7 @@ export default async function DealPage(props: DealPageProps) {
         </Card>
       </article>
 
-      <div>
-        <div>
-          <Button asChild variant="oland" className="cursor-pointer">
-            <Link href={`/${slug}/comparador`}>Volver a Comparar Planes</Link>
-          </Button>
-        </div>
-      </div>
+      
 
            
       
