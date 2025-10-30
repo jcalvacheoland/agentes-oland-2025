@@ -355,7 +355,7 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
                     <div className="flex justify-between">
                       <span className="text-slate-500">Tasa:</span>
                       <span className="font-medium text-slate-700">
-                        {Number(plan.Tasa ?? 0).toFixed(2)}%
+                        {Number((plan.Tasa ?? 0) * 100).toFixed(2)}%
                       </span>
                     </div>
                   </div>

@@ -40,7 +40,7 @@ export const AseguradorasLogo = [
   {name: "sweaden", img: "/img/logoAseguradora/sweaden.png" },
   { name: "Chubb", img: "/img/logoAseguradora/chubb.png" },
   { name: "Mapfre", img: "/img/logoAseguradora/mapfrev2.png" },
-  { name: "Generali", img: "/img/logoAseguradora/Generali.png" },
+  { name: "Generali", img: "/img/logoAseguradora/generali.png" },
   { name: "AIG", img: "/img/logoAseguradora/aig.png" },
   { name: "Vaz Seguros", img: "/img/logoAseguradora/vaz.png" },
   { name: "asur", img: "/img/logoAseguradora/asur.png" },

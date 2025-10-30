@@ -456,7 +456,6 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
       )
       .moveDown(0.5)
       .fontSize(10)
-      .text("Generado por", { align: "center" })
       .fillColor("black");
 
     doc.end();
