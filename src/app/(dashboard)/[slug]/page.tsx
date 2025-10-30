@@ -236,6 +236,10 @@ export default async function DealPage(props: DealPageProps) {
             <PlanSelector
               dealId={deal.ID}
               plans={cotizacion.planesComparados ?? []}
+              cotizacion={{
+              name: deal.UF_CRM_1675696681 || "Cliente",
+              phone: cotizacion.phone || "",
+            }}
             />
           </CardContent>
         </Card>

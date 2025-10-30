@@ -4,6 +4,8 @@ import { ChevronUp, ChevronDown, CheckCircle2 } from "lucide-react";
 import { AseguradorasLogo } from "@/configuration/constants";
 import { updateBitrixDealWithPlanSelected } from "@/actions/bitrixActions";
 import { updatePlanSelection } from "@/actions/planesComparados.actions";
+import { WhatsAppLinkPdf } from "./WhatsAppLinkPdf";
+import { number } from "zod";
 
 type Plan = {
   id: string;
@@ -14,14 +16,19 @@ type Plan = {
   Tasa: number | null;
   version: number;
   selected?: boolean;
+  pdfUrl?: string | null;
 };
 
 type PlanSelectorProps = {
   dealId: string;
   plans: Plan[];
+  cotizacion: {
+    name?: string | null;
+    phone?: string | null;
+  };
 };
 
-export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
+export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(
     () => plans.find((plan) => plan.selected)?.id ?? null
   );
@@ -46,6 +53,22 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
   const planNombres: Record<string, string> = {
     "s123 chubb": "CHUBB",
   };
+
+    function normalizarTelefono(phone?: string | null) {
+    if (!phone) return "";
+    // Elimina espacios, guiones y paréntesis
+    let limpio = phone.replace(/\D/g, "");
+    // Si no empieza con 593, lo agrega
+    if (!limpio.startsWith("593")) {
+      limpio = `593${limpio}`;
+    }
+    return limpio;
+  }
+  function obtenerPrimerNombre(nombreCompleto?: string | null) {
+    if (!nombreCompleto) return "Cliente";
+    const partes = nombreCompleto.trim().split(/\s+/);
+    return partes[0] || "Cliente";
+  }
 
   // Agrupar planes por versión
   const planesPorVersion = plans.reduce((acc, plan) => {
@@ -256,7 +279,6 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
           </h3>
           <div className="h-px flex-1 bg-slate-200" />
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {planesDeVersion.map((plan) => {
             const isSelected = plan.id === selectedPlanId;
@@ -284,7 +306,7 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
                 disabled={isPending}
               >
                 <div className="space-y-3">
-                    {/* <div className="w-6 h-6 place-content-center grid">
+                  {/* <div className="w-6 h-6 place-content-center grid">
                       <img
                         src={
                           AseguradorasLogo.find((logo) =>
@@ -297,7 +319,6 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
                       />
                     </div> */}
                   <div className="flex items-start justify-between gap-2">
-                      
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-900">
                         {plan.aseguradora}
@@ -349,6 +370,47 @@ export function PlanSelector({ dealId, plans }: PlanSelectorProps) {
               </button>
             );
           })}
+        </div>
+
+        {/* Botones de acciones para la versión actual */}
+        <div className="flex justify-center gap-3 mt-4">
+          {(() => {
+
+            const pdfPlan = planesDeVersion.find((p) => p.pdfUrl);
+
+            const pdfButton = pdfPlan?.pdfUrl ? (
+              <a
+                href={pdfPlan.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-rojo-oland-100 hover:bg-rojo-oland-100/90 text-white px-6 py-2 rounded-lg font-medium transition-all"
+              >
+                Ver PDF cotización {currentVersion}
+              </a>
+            ) : (
+              <button
+                disabled
+                className="bg-slate-200 text-slate-500 cursor-not-allowed px-6 py-2 rounded-lg font-medium"
+              >
+                PDF no disponible
+              </button>
+            );
+
+            return (
+              <>
+                {pdfButton}
+
+                {pdfPlan?.pdfUrl && (
+                  <WhatsAppLinkPdf
+                    numberPhone={normalizarTelefono(cotizacion.phone)}
+                    nombre={obtenerPrimerNombre(cotizacion.name)}
+                    pdfUrl={pdfPlan.pdfUrl}
+                    version={currentVersion}
+                  />
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
 
