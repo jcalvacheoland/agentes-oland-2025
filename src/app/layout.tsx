@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" className={outfit.className}>
       <head>
          <Script
         src="https://unpkg.com/@bitrix24/b24jssdk@latest/dist/umd/index.min.js"
@@ -40,7 +40,7 @@ export default function RootLayout({
         ></Script>
       </head>
       <body
-        className={`${geistSans.variable} ${outfit.variable} ${geistMono.variable} font-[var(--font-outfit)] antialiased`}  
+        className={`${geistSans.variable} ${outfit.variable} ${geistMono.variable} antialiased`}  
       >
         {children}
       </body>
