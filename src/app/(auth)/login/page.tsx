@@ -26,7 +26,7 @@ export default async function LoginPage() {
 
       {/* Right side with login form */}
       <div className="flex flex-col items-center justify-center p-8  ">
-        <img src="/img/agentesLogo.jpg" width="200" height="200" alt="Agentes Oland" className="mix-blend-overlay" />
+        <img src="/img/agentesLogo.jpg" width="200" height="200" alt="Agentes Oland" />
         <div className="w-full max-w-sm space-y-8">
           <div className="text-center">
             <h1 className="text-2xl font-script mb-6"></h1>
