@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Check } from "lucide-react";
+import { formatPrecioUSD } from "@/lib/utils";
 export interface PlanCardAseguradoraProps {
   id?: string;
   nombreAseguradora: string;
@@ -38,9 +39,15 @@ export const PlanCardAseguradora = ({
   const hasDeducible = deducible && deducible.length > 0;
   const hasBeneficios = beneficios && beneficios.length > 0;
 
-  const precioAnualFormatted = precioAnual.toFixed(2);
   const calcularPrecioMensual = (precioAnual: number, period:any) => {
-    return (precioAnual / period).toFixed(2);
+  const precioMensual = precioAnual / period;
+
+  return precioMensual.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   };
 
   return (
@@ -290,7 +297,7 @@ export const PlanCardAseguradora = ({
             <div className="grid grid-cols-2 lg:grid-cols-1">
               <div className="text-center lg:text-right">
                 <div className="text-3xl font-bold text-foreground lg:text-4xl">
-                  ${calcularPrecioMensual(precioAnual, period)}
+                  {calcularPrecioMensual(precioAnual, period)}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
                   {period} cuotas mensuales
@@ -302,7 +309,7 @@ export const PlanCardAseguradora = ({
 
               <div className="text-center lg:text-right">
                 <div className="text-2xl font-bold text-foreground lg:text-3xl">
-                  ${precioAnualFormatted}
+                  {formatPrecioUSD(precioAnual)}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Incluye impuestos

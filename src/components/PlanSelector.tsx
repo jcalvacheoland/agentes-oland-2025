@@ -6,6 +6,7 @@ import { updateBitrixDealWithPlanSelected } from "@/actions/bitrixActions";
 import { updatePlanSelection } from "@/actions/planesComparados.actions";
 import { WhatsAppLinkPdf } from "./WhatsAppLinkPdf";
 import { number } from "zod";
+import { formatPrecioUSD } from "@/lib/utils";
 
 type Plan = {
   id: string;
@@ -53,7 +54,7 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
   const planNombres: Record<string, string> = {
     "s123 chubb": "CHUBB",
   };
-
+  
     function normalizarTelefono(phone?: string | null) {
     if (!phone) return "";
     // Elimina espacios, guiones y paréntesis
@@ -87,7 +88,7 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
   const totalVersiones = versionesOrdenadas.length;
   const canGoUp = currentVersionIndex > 0;
   const canGoDown = currentVersionIndex < totalVersiones - 1;
-
+  
   // Obtener información del plan seleccionado
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
   const selectedPlanAseguradora = selectedPlan
@@ -283,12 +284,10 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
           {planesDeVersion.map((plan) => {
             const isSelected = plan.id === selectedPlanId;
             const isProcessing = isPending && plan.id === pendingPlanId;
-
+            const primaTotalPlan = plan.primaTotal;
+            const primaNetaPlan=plan.primaNeta;
             const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? "";
-            const aseguradoraNombre =
-              aseguradoraNombres[aseguradoraKey] ||
-              "Aseguradora no especificada";
-
+            
             const planKey = plan.nombrePlan?.toLowerCase() ?? "";
             const planNombreLimpio =
               planNombres[planKey] || plan.nombrePlan || "Sin nombre";
@@ -343,13 +342,13 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
                     <div className="flex justify-between">
                       <span className="text-slate-500">Prima total:</span>
                       <span className="font-medium text-slate-700">
-                        ${Number(plan.primaTotal ?? 0).toFixed(2)}
+                        {formatPrecioUSD(primaTotalPlan)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Prima neta:</span>
                       <span className="font-medium text-slate-700">
-                        ${Number(plan.primaNeta ?? 0).toFixed(2)}
+                        {formatPrecioUSD(primaNetaPlan)}
                       </span>
                     </div>
                     <div className="flex justify-between">

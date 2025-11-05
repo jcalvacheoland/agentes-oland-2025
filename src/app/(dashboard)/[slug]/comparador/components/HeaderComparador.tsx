@@ -1,5 +1,6 @@
 "use client";
 import { useBitrixUser } from "@/hooks/useBitrixUser";
+import { formatPrecioUSD } from "@/lib/utils";
 
 interface HeaderProps {
   nombreDelCliente: string;
@@ -67,11 +68,8 @@ export const HeaderComparatorCard = ({
                 Valor Asegurado
               </p>
               <p className="text-xl font-bold text-primary">
-                $
-                {valorAsegurado.toLocaleString("es-ES", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                
+                {formatPrecioUSD(valorAsegurado)}
               </p>
             </div>
           </div>

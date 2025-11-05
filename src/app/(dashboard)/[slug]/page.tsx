@@ -2,8 +2,6 @@ import { getBitrixDeal } from "@/actions/bitrixActions";
 import { getCotizacionByBitrixId } from "@/actions/cotizaciones.actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { WhatsAppHTML } from "@/components/WhatsApp";
-import { AseguradorasLogo } from "@/configuration/constants";
 import Link from "next/link";
 import {
   User,

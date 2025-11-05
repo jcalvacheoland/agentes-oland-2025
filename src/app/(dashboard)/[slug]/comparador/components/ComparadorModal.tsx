@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
 import React from "react";
 import { COBERTURAS_ORDENADAS } from "@/configuration/constants";
+import { formatearMontoConTexto } from "@/lib/utils";
 
 export interface ComparadorModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedPlans: IPlanResponse[];
   onGeneratePdf?: () => void;
-  onGeneratePdfCustom?: ()=>void;
+  onGeneratePdfCustom?: () => void;
 }
 
 export function formatearCobertura(valor: string | number | null) {
@@ -25,6 +26,21 @@ export function formatearCobertura(valor: string | number | null) {
   if (typeof valor === "string" && valor.trim() !== "") {
     return valor;
   }
+  /* // 2️⃣ Si es uno de los tres primeros (Responsabilidad Civil, Muerte Accidental, Gastos Médicos)
+  if (index <= 2) {
+    return formatearMontoConTexto(valor:);
+  }
+
+  // 3️⃣ Si tiene valores en dólares o USD en cualquier otra parte
+  if (typeof valor === "string" && /\$[\d.,]+/.test(valor)) {
+    return formatearMontoConTexto(valor);
+  }
+
+  // 4️⃣ Texto normal
+  if (typeof valor === "string" && valor.trim() !== "") {
+    return valor;
+  }
+ */
   return "N/A";
 }
 
@@ -33,7 +49,7 @@ export const ComparadorModal = ({
   onClose,
   selectedPlans,
   onGeneratePdf,
-  onGeneratePdfCustom
+  onGeneratePdfCustom,
 }: ComparadorModalProps) => {
   // Prevenir scroll del body cuando el modal está abierto
 
@@ -122,16 +138,27 @@ export const ComparadorModal = ({
                     Prima Total (valor mensual)
                   </td>
                   {selectedPlans.map((plan, index) => {
-                    const primaMens = (plan.totalPremium / plan.period).toFixed(2);
+                    const primaMensual = plan.totalPremium / plan.period;
+
+                    const primaMensualFormatted = primaMensual.toLocaleString(
+                      "en-US",
+                      {
+                        style: "currency",
+                        currency: "USD",
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }
+                    );
                     return (
                       <td key={index} className="p-2">
-                        ${primaMens}
+                        {primaMensualFormatted}
                       </td>
                     );
                   })}
                 </tr>
 
-                {/* Amparo Patrimonial,"Responsabilidad Civil",
+                {/* 
+                  "Responsabilidad Civil",
                   "Muerte Accidental",
                   "Gastos Médicos",
                   "Amparo Patrimonial",
@@ -145,8 +172,7 @@ export const ComparadorModal = ({
                   "Asistencia vehicular",
                   "Asistencia legal",
                   "Asistencia exequial",
-                  "Auto sustituto",  */
-                  }
+                  "Auto sustituto",  */}
                 {COBERTURAS_ORDENADAS.map((nombre, i) => (
                   <tr
                     key={i}
@@ -180,7 +206,6 @@ export const ComparadorModal = ({
                 PDF Personalizado
               </Button>
             )}
-            
           </div>
         </div>
       </div>
