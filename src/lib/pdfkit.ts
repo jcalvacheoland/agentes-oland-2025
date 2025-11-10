@@ -2,6 +2,7 @@ import PDFDocument from "pdfkit";
 import path from "path";
 import { COBERTURAS_ORDENADAS } from "@/configuration/constants";
 import { AseguradorasLogo } from "@/configuration/constants";
+import { formatearMontoTextoPlano, formatearNumeroMoneda } from "./utils";
 
 export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -234,14 +235,20 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
               },
             ],
             [
-              { text: `Email: ${cotizacion.email}`, border: [false, false, false, true] },
+              {
+                text: `Email: ${cotizacion.email ?? ""}`,
+                border: [false, false, false, true],
+              },
               {
                 text: `Valor: ${valorFormateado}`,
                 border: [false, true, false, false],
               },
             ],
             [
-              { text: `Celular: ${cotizacion.phone}`, border: [false, false, true, true] }, // abajo + izquierda
+              {
+                text: `Celular: ${cotizacion.phone  ?? ""} `,
+                border: [false, false, true, true],
+              }, // abajo + izquierda
               {
                 text: `Fecha de Cotización:  ${fechaFormateada}`,
                 border: [false, true, true, false],
@@ -367,11 +374,24 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
         nombre,
         ...plans.map((p: any) => {
           const valor = p.coverageBenefits?.[i] ?? "N/A";
+
+          // 1️⃣ Booleanos
           if (valor === "1" || valor === 1) return "SI";
           if (valor === "0" || valor === 0) return "NO";
+
+          // 2️⃣ Para los tres primeros (Responsabilidad Civil, Muerte Accidental, Gastos Médicos)
+          if (i <= 2) return formatearMontoTextoPlano(valor);
+
+          // 3️⃣ Si contiene un monto en dólares en cualquier parte
+          if (typeof valor === "string" && /\$[\s]?\d/.test(valor)) {
+            return formatearMontoTextoPlano(valor);
+          }
+
+          // 4️⃣ Texto normal
           return String(valor).trim() || "N/A";
         }),
       ];
+
       tableData.push(fila);
     });
 
@@ -399,9 +419,9 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
     doc.moveDown(0.5);
 
     const filaPrimaNeta = [
-      "Prima Neta",
-      ...plans.map((p: any) => `$${(p.netPremium || 0).toFixed(2)}`),
-    ];
+          "Prima Neta",
+          ...plans.map((p: any) => formatearNumeroMoneda(p.netPremium)),
+        ];
     drawTableManual(doc, [["Prima Neta", ...filaPrimaNeta.slice(1)]], {
       x: leftMargin,
       y: doc.y,
@@ -416,9 +436,12 @@ export function buildPDFBuffer(invoiceData: any): Promise<Buffer> {
     });
 
     const filaPrimaTotal = [
-      "Prima Total",
-      ...plans.map((p: any) => `$${(p.totalPremium || 0).toFixed(2)}`),
-    ];
+  "Prima Total",
+  ...plans.map((p: any) =>
+    formatearNumeroMoneda(p.totalPremium)
+  ),
+];
+
     drawTableManual(doc, [["Prima Total", ...filaPrimaTotal.slice(1)]], {
       x: leftMargin,
       y: doc.y,

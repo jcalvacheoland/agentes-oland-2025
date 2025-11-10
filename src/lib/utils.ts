@@ -52,23 +52,58 @@ export function formatPrecioUSD(valor:any, conSimbolo = true) {
   }
 }
 
-//formatear precios en las cobertutas del modal:
-export function formatearMontoConTexto(texto: string) {
-  const match = texto.match(/\$[\d.,]+/);
-  if (match) {
-    const numeroLimpio = match[0].replace(/[^0-9.,]/g, "");
-    const normalizado = numeroLimpio.replace(/\./g, "").replace(",", ".");
-    const numero = parseFloat(normalizado);
+// 🔹 Función que formatea el número dentro de un texto, manteniendo el resto igual
+export function formatearMontoDentroDeTexto(texto: string) {
+  const match = texto.match(/\$[\s]?\d[\d.,]*/);
+  if (!match) return texto;
 
-    if (!isNaN(numero)) {
-      const precioFormateado = numero.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-      });
-      return texto.replace(match[0], precioFormateado);
-    }
-  }
-  return texto;
+  const numeroLimpio = match[0].replace(/[^0-9.,]/g, "");
+  const normalizado = numeroLimpio.replace(/\./g, "").replace(",", ".");
+  const numero = parseFloat(normalizado);
+
+  if (isNaN(numero)) return texto;
+
+  // Formatea el número como USD sin decimales
+  const montoFormateado = numero.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+
+  // Reemplaza solo la parte del monto, dejando el resto intacto
+  return texto.replace(match[0], montoFormateado);
 }
+//funcion para formateaar pdf en el PDF
+export function formatearMontoTextoPlano(texto: string) {
+  if (!texto) return "N/A";
 
+  // Busca algo como "$20.000", "$ 25000", "$5,000"
+  const match = texto.match(/\$[\s]?\d[\d.,]*/);
+  if (!match) return texto;
+
+  const numeroLimpio = match[0].replace(/[^0-9.,]/g, "");
+  const normalizado = numeroLimpio.replace(/\./g, "").replace(",", ".");
+  const numero = parseFloat(normalizado);
+
+  if (isNaN(numero)) return texto;
+
+  // Formatea el número con separadores de miles
+  const montoFormateado = numero.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+
+  // Devuelve el texto con el monto reemplazado
+  return texto.replace(match[0], montoFormateado);
+}
+// 🔹 Utilidad común para pdf
+export function formatearNumeroMoneda(valor: number) {
+  const num = Number(valor) || 0;
+  return num.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}

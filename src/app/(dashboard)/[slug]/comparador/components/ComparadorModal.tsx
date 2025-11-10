@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
 import React from "react";
 import { COBERTURAS_ORDENADAS } from "@/configuration/constants";
-import { formatearMontoConTexto } from "@/lib/utils";
+import { formatearMontoDentroDeTexto } from "@/lib/utils";
 
 export interface ComparadorModalProps {
   isOpen: boolean;
@@ -16,31 +16,34 @@ export interface ComparadorModalProps {
   onGeneratePdfCustom?: () => void;
 }
 
-export function formatearCobertura(valor: string | number | null) {
+export function formatearCobertura(valor: string | number | null, index: number) {
+  if (valor === null || valor === undefined) return "N/A";
+
+  // 1️⃣ Booleanos
   if (valor === "1" || valor === 1) {
-    return <CheckCircle className="w-5 h-5 text-green-500 " />;
+    return <CheckCircle className="w-5 h-5 text-green-500" />;
   }
   if (valor === "0" || valor === 0) {
-    return <XCircle className="w-5 h-5 text-red-500 " />;
-  }
-  if (typeof valor === "string" && valor.trim() !== "") {
-    return valor;
-  }
-  /* // 2️⃣ Si es uno de los tres primeros (Responsabilidad Civil, Muerte Accidental, Gastos Médicos)
-  if (index <= 2) {
-    return formatearMontoConTexto(valor:);
+    return <XCircle className="w-5 h-5 text-red-500" />;
   }
 
-  // 3️⃣ Si tiene valores en dólares o USD en cualquier otra parte
-  if (typeof valor === "string" && /\$[\d.,]+/.test(valor)) {
-    return formatearMontoConTexto(valor);
+  // 2️⃣ Si el valor es texto
+  if (typeof valor === "string") {
+    // Para los tres primeros campos (Responsabilidad Civil, Muerte Accidental, Gastos Médicos)
+    if (index <= 2) return formatearMontoDentroDeTexto(valor);
+
+    // Si el texto contiene un monto en dólares en cualquier parte
+    if (/\$[\s]?\d/.test(valor)) {
+      return formatearMontoDentroDeTexto(valor);
+    }
+
+    // Si contiene porcentajes (ej: 10%)
+    if (/\d+%/.test(valor)) return valor.trim();
+
+    // Caso general (texto normal)
+    if (valor.trim() !== "") return valor.trim();
   }
 
-  // 4️⃣ Texto normal
-  if (typeof valor === "string" && valor.trim() !== "") {
-    return valor;
-  }
- */
   return "N/A";
 }
 
@@ -183,7 +186,7 @@ export const ComparadorModal = ({
                       const valor = plan.coverageBenefits?.[i] ?? "N/A";
                       return (
                         <td key={index} className="p-2 ">
-                          {formatearCobertura(valor)}
+                          {formatearCobertura(valor,i)}
                         </td>
                       );
                     })}

@@ -27,6 +27,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { formatPrecioUSD } from "@/lib/utils";
 
 const stageLabels: Record<string, string> = {
   "C24:NEW": "Nuevo",
@@ -225,6 +226,8 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
                 <TableHead className="text-center">ID</TableHead>
                 <TableHead className="text-left">Título</TableHead>
                 <TableHead className="text-center">Suma Asegurada</TableHead>
+                <TableHead className="text-center">Prima Neta</TableHead>
+                <TableHead className="text-center">Comisión</TableHead>
                 <TableHead className="text-center">Etapa</TableHead>
                 <TableHead className="text-center">Ir a Negociación</TableHead>
               </TableRow>
@@ -264,6 +267,29 @@ export const TablaDeCotizaciones = ({ userId }: { userId?: any }) => {
                           <span className="text-muted-foreground ">--</span>
                         )}
                       </TableCell>
+
+                      {/* Prima Neta */}
+                      <TableCell className="text-center">
+                        {item.UF_CRM_1733258852031 ? (
+                          <Badge variant="secondary" className="mx-auto w-fit">
+                            {formatPrecioUSD(Number(item.UF_CRM_1733258852031))}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">--</span>
+                        )}
+                      </TableCell>
+
+                      {/* Comisión */}
+                      <TableCell className="text-center">
+                        {item.UF_CRM_1760390697734 ? (
+                          <Badge variant="secondary" className="mx-auto w-fit">
+                            {formatPrecioUSD(Number(item.UF_CRM_1760390697734))}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">--</span>
+                        )}
+                      </TableCell>
+
                       <TableCell className="text-center">
                         {item.STAGE_ID ? (
                           <Badge variant="outline" className="mx-auto w-fit">

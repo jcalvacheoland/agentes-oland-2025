@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { type SyntheticEvent, useCallback, useEffect, useRef, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface CardCarruselProps {
@@ -31,6 +31,7 @@ interface ButtonCardProps {
   categoty?:string
 }
 
+type CarouselCard = NonNullable<CardCarruselProps["cards"]>[number]
 
 export default function CardCarrusel({
   autoPlayInterval = 3000,
@@ -69,7 +70,27 @@ export default function CardCarrusel({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [cardsPerView, setCardsPerView] = useState(3)
+  const [imageRatios, setImageRatios] = useState<Record<number, number>>({})
+  const [expandedCard, setExpandedCard] = useState<CarouselCard | null>(null)
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null)
+
+  const stopAutoPlay = useCallback(() => {
+    if (autoPlayRef.current) {
+      clearInterval(autoPlayRef.current)
+      autoPlayRef.current = null
+    }
+  }, [])
+
+  const startAutoPlay = useCallback(() => {
+    stopAutoPlay()
+
+    if (!isAutoPlay || expandedCard) return
+
+    autoPlayRef.current = setInterval(() => {
+      setCurrentIndex((prev) => prev + 1)
+      setIsTransitioning(true)
+    }, autoPlayInterval)
+  }, [autoPlayInterval, expandedCard, isAutoPlay, stopAutoPlay])
 
   // Crear carrusel infinito (3 copias del array)
   const extendedCards = [...cards, ...cards, ...cards]
@@ -117,62 +138,61 @@ export default function CardCarrusel({
 
   // AutoPlay
   useEffect(() => {
-    if (!isAutoPlay) return
-
-    const startAutoPlay = () => {
-      autoPlayRef.current = setInterval(() => {
-        setCurrentIndex((prev) => prev + 1)
-        setIsTransitioning(true)
-      }, autoPlayInterval)
-    }
-
     startAutoPlay()
-
-    return () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current)
-      }
-    }
-  }, [isAutoPlay, autoPlayInterval])
+    return () => stopAutoPlay()
+  }, [startAutoPlay, stopAutoPlay])
 
   const nextSlide = () => {
     if (isTransitioning) return
-    
-    // Reiniciar autoplay
-    if (autoPlayRef.current) {
-      clearInterval(autoPlayRef.current)
-    }
-    
+
+    stopAutoPlay()
     setIsTransitioning(true)
     setCurrentIndex((prev) => prev + 1)
+    startAutoPlay()
   }
 
   const prevSlide = () => {
     if (isTransitioning) return
-    
-    // Reiniciar autoplay
-    if (autoPlayRef.current) {
-      clearInterval(autoPlayRef.current)
-    }
-    
+
+    stopAutoPlay()
     setIsTransitioning(true)
     setCurrentIndex((prev) => prev - 1)
+    startAutoPlay()
   }
 
   const goToSlide = (index: number) => {
     if (isTransitioning) return
-    
-    // Reiniciar autoplay
-    if (autoPlayRef.current) {
-      clearInterval(autoPlayRef.current)
-    }
-    
+
+    stopAutoPlay()
     setIsTransitioning(true)
     setCurrentIndex(startIndex + index)
+    startAutoPlay()
   }
 
   // Calcular el índice actual normalizado para los dots
   const normalizedIndex = ((currentIndex % cards.length) + cards.length) % cards.length
+
+  const registerImageRatio = (cardId: number) => (event: SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget
+    if (!img.naturalWidth || !img.naturalHeight) return
+
+    const ratio = img.naturalWidth / img.naturalHeight
+    setImageRatios((prev) => {
+      if (prev[cardId] === ratio) return prev
+      return { ...prev, [cardId]: ratio }
+    })
+  }
+
+  const handleImageClick = (card: CarouselCard) => {
+    if (!card.img) return
+
+    stopAutoPlay()
+    setExpandedCard(card)
+  }
+
+  const closeExpandedView = () => {
+    setExpandedCard(null)
+  }
 
   return (
     <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -190,12 +210,17 @@ export default function CardCarrusel({
             >
               <Card className="h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                 <CardContent className="p-0">
-                  <div className={`${card.color} h-48 sm:h-56 relative`}>
+                  <div
+                    className={`${card.color ?? ""} relative overflow-hidden flex items-center justify-center`}
+                    style={{ aspectRatio: imageRatios[card.id] ?? 16 / 9 }}
+                  >
                     {card.img && (
-                      <img 
-                        src={card.img} 
+                      <img
+                        src={card.img}
                         alt={card.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain cursor-zoom-in transition-opacity"
+                        onLoad={registerImageRatio(card.id)}
+                        onClick={() => handleImageClick(card)}
                       />
                     )}
                   </div>
@@ -203,7 +228,7 @@ export default function CardCarrusel({
                     <h3 className="text-black text-xl sm:text-2xl font-bold mb-3 text-left">
                       {card.title}
                     </h3>
-                    <p className="text-muted-foreground text-sm sm:text-base leading-relaxed text-left">
+                    <p className=" text-gray-800 text-sm sm:text-base leading-relaxed text-justify">
                       {card.description}
                     </p>
                   </div>
@@ -251,6 +276,32 @@ export default function CardCarrusel({
           />
         ))}
       </div>
+
+      {expandedCard?.img && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4 py-8"
+          onClick={closeExpandedView}
+        >
+          <div
+            className="relative w-full max-w-4xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="absolute right-4 top-4 rounded-full bg-black/70 p-2 text-white hover:bg-black/80 focus:outline-none"
+              onClick={closeExpandedView}
+              aria-label="Cerrar imagen ampliada"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img
+              src={expandedCard.img}
+              alt={expandedCard.title}
+              className="w-full max-h-[80vh] rounded-lg object-contain shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

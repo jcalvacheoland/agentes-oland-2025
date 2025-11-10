@@ -41,10 +41,13 @@ function resolveRestBase(bitrix: BitrixSession) {
     process.env.BITRIX_API_URL,
     bitrix.serverDomain ? `https://${bitrix.serverDomain}/rest/` : undefined,
     bitrix.domain ? `https://${bitrix.domain}/rest/` : undefined,
-    process.env.BITRIX_DOMAIN ? `https://${process.env.BITRIX_DOMAIN}/rest/` : undefined,
+    process.env.BITRIX_DOMAIN
+      ? `https://${process.env.BITRIX_DOMAIN}/rest/`
+      : undefined,
   ].filter((candidate): candidate is string => Boolean(candidate));
 
-  const preferred = candidates.find((candidate) => !isOAuthHost(candidate)) ?? candidates[0];
+  const preferred =
+    candidates.find((candidate) => !isOAuthHost(candidate)) ?? candidates[0];
   return preferred ? ensureRestBase(preferred) : undefined;
 }
 
@@ -89,7 +92,17 @@ export async function GET(request: NextRequest) {
         "User-Agent": BITRIX_USER_AGENT,
       },
       body: JSON.stringify({
-        select: ["ID", "TITLE", "ASSIGNED_BY_ID", "DATE_CREATE", "STAGE_ID", "OPPORTUNITY","UF_CRM_1757947153789"],
+        select: [
+          "ID",
+          "TITLE",
+          "ASSIGNED_BY_ID",
+          "DATE_CREATE",
+          "STAGE_ID",
+          "OPPORTUNITY",
+          "UF_CRM_1757947153789",
+          "UF_CRM_1733258852031",//prima neta
+          "UF_CRM_1760390697734",//comisión
+        ],
         filter: { ASSIGNED_BY_ID: userId },
         order: { ID: "DESC" },
       }),
@@ -98,7 +111,10 @@ export async function GET(request: NextRequest) {
     const payload = (await response.json()) as BitrixDealsResponse;
 
     if (!response.ok || payload?.error) {
-      const message = payload?.error_description ?? payload?.error ?? `HTTP ${response.status}`;
+      const message =
+        payload?.error_description ??
+        payload?.error ??
+        `HTTP ${response.status}`;
       return NextResponse.json(
         { error: "Failed to fetch Bitrix deals", details: message },
         { status: response.status }
@@ -108,6 +124,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(payload);
   } catch (error) {
     console.error("Bitrix deals fetch error", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
