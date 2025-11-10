@@ -69,7 +69,10 @@ export const ComparadorModal = ({
 
   // 👇 Si no está abierto, no renderizar nada
   if (!isOpen) return null;
-
+  
+  const planNombres: Record<string, string> = {
+    "s123 chubb": "CHUBB",
+  };
   return (
     <>
       {/* Overlay */}
@@ -131,7 +134,8 @@ export const ComparadorModal = ({
                   <td className="p-2 font-semibold">Plan</td>
                   {selectedPlans.map((plan, index) => (
                     <td key={index} className="p-2 text-gray-600">
-                      {plan.planName}
+                      {planNombres[plan.planName?.toLowerCase()] || plan.planName}
+
                     </td>
                   ))}
                 </tr>

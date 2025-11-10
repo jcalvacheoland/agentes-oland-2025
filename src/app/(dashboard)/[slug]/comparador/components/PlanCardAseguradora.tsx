@@ -49,6 +49,10 @@ export const PlanCardAseguradora = ({
     maximumFractionDigits: 2,
   });
   };
+  
+  const planNombres: Record<string, string> = {
+    "s123 chubb": "CHUBB",
+  };
 
   return (
     <div
@@ -113,7 +117,7 @@ export const PlanCardAseguradora = ({
             {/* Nombre de la aseguradora y del plan */}
             <div className="mb-4">
               <h3 className="text-xl font-bold text-foreground mb-1">
-                {nombreAseguradora} - {nombrePlan}
+                {nombreAseguradora} - {planNombres[nombrePlan.toLowerCase()] || nombrePlan}
               </h3>
             </div>
 
