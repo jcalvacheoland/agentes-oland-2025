@@ -139,7 +139,7 @@ export const ComparadorModal = ({
                     </td>
                   ))}
                 </tr>
-                {/*  prima Total mensual */}
+                {/*  prima Total mensual  */}
                 <tr className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="p-2 font-semibold">
                     Prima Total (valor mensual)
