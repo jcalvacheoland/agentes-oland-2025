@@ -10,9 +10,9 @@ export const Header=()=>{
         <div className="flex ">    
             <div className="object-cover  ">
             <img src="/img/logos/logoGrupoOlandHDWhite.png"
-            className="hidden sm:block" 
-            width={200}
-            height={200}
+            className="hidden sm:block ml-5" 
+            width={120}
+            height={120}
             alt="Grupo Oland - Agentes Oland" />
           </div>
        
