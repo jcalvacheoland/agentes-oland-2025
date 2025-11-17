@@ -1,14 +1,27 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import { ChevronUp, ChevronDown, CheckCircle2 } from "lucide-react";
-import { AseguradorasLogo } from "@/configuration/constants";
 import { updateBitrixDealWithPlanSelected } from "@/actions/bitrixActions";
 import { updatePlanSelection } from "@/actions/planesComparados.actions";
 import { WhatsAppLinkPdf } from "./WhatsAppLinkPdf";
-import { number } from "zod";
-import { formatPrecioUSD } from "@/lib/utils";
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  formatPrecioUSD,
+  normalizarTelefono,
+  planNombres,
+  obtenerPrimerNombre,
+} from "@/lib/utils";
+import { PlanInTheCarousel } from "./PlanInTheCarusel";
 
-type Plan = {
+export interface IPlan {
   id: string;
   aseguradora: string | null;
   nombrePlan: string | null;
@@ -18,18 +31,24 @@ type Plan = {
   version: number;
   selected?: boolean;
   pdfUrl?: string | null;
-};
+}
 
-type PlanSelectorProps = {
+export interface IPlanSelectorProps {
   dealId: string;
-  plans: Plan[];
+  slug?: string;
+  plans: IPlan[];
   cotizacion: {
     name?: string | null;
     phone?: string | null;
   };
-};
+}
 
-export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
+export function PlanSelector({
+  dealId,
+  plans,
+  cotizacion,
+  slug
+}: IPlanSelectorProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(
     () => plans.find((plan) => plan.selected)?.id ?? null
   );
@@ -41,35 +60,8 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
   const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [showSelectionMessage, setShowSelectionMessage] = useState(false);
-
-  const aseguradoraNombres: Record<string, string> = {
-    asur: "Aseguradora del Sur",
-    zurich: "Zurich",
-    mapfre: "Mapfre",
-    equinoccial: "Equinoccial",
-    sweaden: "Suecia",
-    chubb: "CHUBB",
-  };
-
-  const planNombres: Record<string, string> = {
-    "s123 chubb": "CHUBB",
-  };
-  
-    function normalizarTelefono(phone?: string | null) {
-    if (!phone) return "";
-    // Elimina espacios, guiones y paréntesis
-    let limpio = phone.replace(/\D/g, "");
-    // Si no empieza con 593, lo agrega
-    if (!limpio.startsWith("593")) {
-      limpio = `593${limpio}`;
-    }
-    return limpio;
-  }
-  function obtenerPrimerNombre(nombreCompleto?: string | null) {
-    if (!nombreCompleto) return "Cliente";
-    const partes = nombreCompleto.trim().split(/\s+/);
-    return partes[0] || "Cliente";
-  }
+  const [planAConfirmar, setPlanAConfirmar] = useState<IPlan | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Agrupar planes por versión
   const planesPorVersion = plans.reduce((acc, plan) => {
@@ -78,7 +70,7 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
     }
     acc[plan.version].push(plan);
     return acc;
-  }, {} as Record<number, Plan[]>);
+  }, {} as Record<number, IPlan[]>);
 
   // Ordenar versiones de mayor a menor
   const versionesOrdenadas = Object.keys(planesPorVersion)
@@ -88,14 +80,10 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
   const totalVersiones = versionesOrdenadas.length;
   const canGoUp = currentVersionIndex > 0;
   const canGoDown = currentVersionIndex < totalVersiones - 1;
-  
+
   // Obtener información del plan seleccionado
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
-  const selectedPlanAseguradora = selectedPlan
-    ? aseguradoraNombres[selectedPlan.aseguradora?.toLowerCase() ?? ""] ||
-      selectedPlan.aseguradora ||
-      "Aseguradora no especificada"
-    : "";
+
   const selectedPlanNombre = selectedPlan
     ? planNombres[selectedPlan.nombrePlan?.toLowerCase() ?? ""] ||
       selectedPlan.nombrePlan ||
@@ -126,9 +114,9 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
       // Mostrar el mensaje de selección al cargar
       setShowSelectionMessage(true);
     }
-  }, [plans.length]); // Solo ejecutar cuando cambia la cantidad de planes
+  }, [plans.length]);
 
-  const handleSelect = (plan: Plan) => {
+  const handleSelect = (plan: IPlan) => {
     if (isPending) return;
 
     // Si el plan ya está seleccionado, desactivarlo
@@ -138,10 +126,6 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
     setFeedbackType(null);
     setPendingPlanId(plan.id);
     setShowSelectionMessage(false);
-
-    const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? "";
-    const aseguradoraNombre =
-      aseguradoraNombres[aseguradoraKey] || plan.aseguradora || "";
 
     startTransition(async () => {
       if (isDeselecting) {
@@ -169,7 +153,7 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
 
       // Seleccionar el plan (flujo original)
       const result = await updateBitrixDealWithPlanSelected(dealId, {
-        aseguradora: aseguradoraNombre,
+        aseguradora: plan.aseguradora ?? "",
         plan: plan.nombrePlan ?? "",
         tasa: plan.Tasa ?? 0,
         primaNeta: plan.primaNeta ?? 0,
@@ -226,13 +210,11 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
     );
   }
 
-  const currentVersion = versionesOrdenadas[currentVersionIndex];
-  const planesDeVersion = planesPorVersion[currentVersion];
-
-  return (
-    <div className="space-y-4">
-      {/* Mensaje del plan seleccionado */}
-      {showSelectionMessage && selectedPlan && (
+  // ⭐ Si ya hay un plan seleccionado, solo mostrar el mensaje
+  if (selectedPlanId && selectedPlan) {
+    return (
+      <div className="space-y-4">
+        {/* Mensaje del plan seleccionado */}
         <div className="bg-gradient-to-r from-azul-oland-100/10 to-rojo-oland-100/10 border-2 border-azul-oland-100 rounded-lg p-4 shadow-sm">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="w-6 h-6 text-rojo-oland-100 flex-shrink-0 mt-0.5" />
@@ -241,7 +223,7 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
                 El plan seleccionado para tu cliente es:
               </p>
               <p className="text-base font-bold text-azul-oland-100 mt-1">
-                {selectedPlanAseguradora} - {selectedPlanNombre}
+                {selectedPlan.aseguradora} - {selectedPlanNombre}
               </p>
               <p className="text-xs text-slate-600 mt-1">
                 Prima total:{" "}
@@ -252,7 +234,32 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
             </div>
           </div>
         </div>
-      )}
+
+        {feedback && (
+          <div
+            className={`p-3 rounded-lg ${
+              feedbackType === "error"
+                ? "bg-red-50 text-red-700"
+                : "bg-green-50 text-green-700"
+            }`}
+          >
+            <p className="text-sm">{feedback}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const currentVersion = versionesOrdenadas[currentVersionIndex];
+  const planesDeVersion = planesPorVersion[currentVersion];
+
+  return (
+    <div className="space-y-4">
+      <div className="justify-end flex">
+        <Button asChild variant="oland" className="cursor-pointer">
+          <Link href={`/${slug}/comparador`}>Volver a Comparar Planes</Link>
+        </Button>
+      </div>
 
       {/* Botón superior */}
       <div className="flex justify-center">
@@ -284,97 +291,75 @@ export function PlanSelector({ dealId, plans, cotizacion }: PlanSelectorProps) {
           {planesDeVersion.map((plan) => {
             const isSelected = plan.id === selectedPlanId;
             const isProcessing = isPending && plan.id === pendingPlanId;
-            const primaTotalPlan = plan.primaTotal;
-            const primaNetaPlan=plan.primaNeta;
-            const aseguradoraKey = plan.aseguradora?.toLowerCase() ?? "";
-            
-            const planKey = plan.nombrePlan?.toLowerCase() ?? "";
-            const planNombreLimpio =
-              planNombres[planKey] || plan.nombrePlan || "Sin nombre";
-
             return (
-              <button
+              <PlanInTheCarousel
                 key={plan.id}
-                type="button"
-                onClick={() => handleSelect(plan)}
-                className={`text-left rounded-lg border p-4 transition-all hover:shadow-md ${
-                  isSelected
-                    ? "border-azul-oland-100 border-2 bg-blue-50 shadow-sm"
-                    : "border-slate-200 hover:border-blue-300 hover:bg-blue-50/40"
-                } ${isPending ? "cursor-wait opacity-80" : ""}`}
-                disabled={isPending}
-              >
-                <div className="space-y-3">
-                  {/* <div className="w-6 h-6 place-content-center grid">
-                      <img
-                        src={
-                          AseguradorasLogo.find((logo) =>
-                            logo.name
-                              .toLowerCase()
-                              .includes((plan.aseguradora ?? "").toLowerCase())
-                          )?.img || ""
-                        }
-                        alt=""
-                      />
-                    </div> */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {plan.aseguradora}
-                      </p>
-                      <p className="text-xs text-slate-600 mt-1">
-                        Plan: {planNombreLimpio}
-                      </p>
-                    </div>
-                    <span
-                      className={`flex-shrink-0 inline-flex h-5 w-5 items-center justify-center rounded-full border ${
-                        isSelected
-                          ? "border-rojo-oland-100  bg-rojo-oland-100 text-white"
-                          : "border-slate-300 text-slate-300"
-                      }`}
-                      aria-hidden
-                    >
-                      {isSelected ? "✓" : ""}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs text-slate-600">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Prima total:</span>
-                      <span className="font-medium text-slate-700">
-                        {formatPrecioUSD(primaTotalPlan)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Prima neta:</span>
-                      <span className="font-medium text-slate-700">
-                        {formatPrecioUSD(primaNetaPlan)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Tasa:</span>
-                      <span className="font-medium text-slate-700">
-                        {Number((plan.Tasa ?? 0) * 100).toFixed(2)}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                {isProcessing && (
-                  <div className="mt-3 pt-3 border-t border-slate-200">
-                    <p className="text-xs text-rojo-oland-100">
-                      Actualizando cotización...
-                    </p>
-                  </div>
-                )}
-              </button>
+                plan={plan}
+                isSelected={isSelected}
+                isPending={isPending}
+                isProcessing={isProcessing}
+                planNombres={planNombres}
+                formatPrecioUSD={formatPrecioUSD}
+                onSelect={(plan) => {
+                  setPlanAConfirmar(plan);
+                  setShowConfirmDialog(true);
+                }}
+              />
             );
           })}
         </div>
+        <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>¿Seleccionar este plan?</DialogTitle>
+              <DialogDescription>
+                Confirma que deseas seleccionar este plan para continuar.
+              </DialogDescription>
+            </DialogHeader>
+
+            {planAConfirmar && (
+              <div className="space-y-2 text-sm mt-4 border p-3 rounded-md bg-slate-50">
+                <p>
+                  <strong>Aseguradora:</strong> {planAConfirmar.aseguradora}
+                </p>
+                <p>
+                  <strong>Plan:</strong> {planAConfirmar.nombrePlan}
+                </p>
+                <p>
+                  <strong>Prima total:</strong>{" "}
+                  {formatPrecioUSD(planAConfirmar.primaTotal)}
+                </p>
+                <p>
+                  <strong>Prima neta:</strong>{" "}
+                  {formatPrecioUSD(planAConfirmar.primaNeta)}
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-center gap-3 mt-6">
+              <Button
+                variant="danger"
+                onClick={() => setShowConfirmDialog(false)}
+              >
+                No
+              </Button>
+
+              <Button
+                variant={"oland"}
+                onClick={() => {
+                  if (planAConfirmar) handleSelect(planAConfirmar);
+                  setShowConfirmDialog(false);
+                }}
+              >
+                Sí, seleccionar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Botones de acciones para la versión actual */}
         <div className="flex justify-center gap-3 mt-4">
           {(() => {
-
             const pdfPlan = planesDeVersion.find((p) => p.pdfUrl);
 
             const pdfButton = pdfPlan?.pdfUrl ? (

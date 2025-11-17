@@ -221,18 +221,15 @@ export default async function DealPage(props: DealPageProps) {
             <h2>¿Tu cliente ya escogio un plan? Ahora! Escoge 1 de los planes comparados</h2>
             </div>
             <div>
-             {/*  Botón */}
-            <div>
-              <Button asChild variant="oland" className="cursor-pointer">
-                <Link href={`/${slug}/comparador`}>Volver a Comparar Planes</Link>
-              </Button>
-            </div>
+             {/*  Botón para volver a comparar */}
+           
 
           </div>
           </CardHeader>
           <CardContent className="space-y-4 ">
             <PlanSelector
               dealId={deal.ID}
+              slug={slug}
               plans={cotizacion.planesComparados ?? []}
               cotizacion={{
               name: deal.UF_CRM_1675696681 || "Cliente",

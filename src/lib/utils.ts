@@ -1,21 +1,26 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { CheckCircle, XCircle } from "lucide-react";
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 //función para formatear placa al extraer de base de datos en el comparador de [page]/comparador
-export const formatoPlaca = (placaFromDataBase: string | undefined | null): string => {
+export const formatoPlaca = (
+  placaFromDataBase: string | undefined | null
+): string => {
   if (!placaFromDataBase) return "";
   // Eliminar espacios y convertir a mayúsculas
-  const cleanPlaca = placaFromDataBase.trim().toUpperCase().replace(/[\s-]/g, "");
+  const cleanPlaca = placaFromDataBase
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]/g, "");
   if (cleanPlaca.length < 6) return placaFromDataBase.toUpperCase();
-  
+
   // Separar letras y números
   const letters = cleanPlaca.slice(0, 3); // Primeras 3 letras
-  const numbers = cleanPlaca.slice(3);     // El resto son números
-  
+  const numbers = cleanPlaca.slice(3); // El resto son números
+
   // Formato: ABC-1234
   return `${letters}-${numbers}`;
 };
@@ -34,7 +39,7 @@ export function extraerCobertura(principals: any, tipo: string): string {
  * @param {boolean} [conSimbolo=true] - Si se muestra o no el símbolo "$".
  * @returns {string} Ejemplo: "$5,434.10" o "5,434.10 USD"
  */
-export function formatPrecioUSD(valor:any, conSimbolo = true) {
+export function formatPrecioUSD(valor: any, conSimbolo = true) {
   if (typeof valor !== "number" || isNaN(valor)) return "—";
 
   if (conSimbolo) {
@@ -106,4 +111,27 @@ export function formatearNumeroMoneda(valor: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+}
+
+//funcion para cambiar el nombre de s123 chubb a CHUBB
+export const planNombres: Record<string, string> = {
+  "s123 chubb": "CHUBB",
+};
+
+//funcion para normalizar el telefono al enviar mensaje de WhatsApp usado en PlanSelector
+export function normalizarTelefono(phone?: string | null) {
+  if (!phone) return "";
+  // Elimina espacios, guiones y paréntesis
+  let limpio = phone.replace(/\D/g, "");
+  // Si no empieza con 593, lo agrega
+  if (!limpio.startsWith("593")) {
+    limpio = `593${limpio}`;
+  }
+  return limpio;
+}
+//funcion para enviar el nombre del cliente al componenete WhatsAppLinkPdf usado en PlanSelector
+export function obtenerPrimerNombre(nombreCompleto?: string | null) {
+  if (!nombreCompleto) return "Cliente";
+  const partes = nombreCompleto.trim().split(/\s+/);
+  return partes[0] || "Cliente";
 }

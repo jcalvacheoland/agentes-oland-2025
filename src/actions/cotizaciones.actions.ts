@@ -20,7 +20,7 @@ export async function createCotizacion(
     // Obtener el usuario autenticado
     const session = await auth();
     //logs para ver sesion
-   /*  console.log("🔍 Sesión completa en server action:", JSON.stringify(session, null, 2));
+    /*  console.log("🔍 Sesión completa en server action:", JSON.stringify(session, null, 2));
     console.log("🔍 User ID:", session?.user?.id);
     console.log("🔍 User email:", session?.user?.email); */
 
@@ -59,8 +59,8 @@ export async function createCotizacion(
         cityCodeMapfre: data.cityCodeMapfre || null,
         chubb_mm: data.chubb_mm || null,
         status: "draft",
-        email:data.email||null,
-        phone:data.phone||null
+        email: data.email || null,
+        phone: data.phone || null,
       },
     });
 
@@ -89,7 +89,7 @@ export async function updateCotizacion(
 ) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return {
         success: false,
@@ -119,8 +119,10 @@ export async function updateCotizacion(
     // Actualizar la cotización
     const cotizacion = await prisma.cotizacion.update({
       where: { id },
-       data: {
-        ...(data.bitrixDealId !== undefined && { bitrixDealId: data.bitrixDealId }),
+      data: {
+        ...(data.bitrixDealId !== undefined && {
+          bitrixDealId: data.bitrixDealId,
+        }),
         ...(data.plate && { plate: data.plate }),
         ...(data.submodelEqui && { submodelEqui: data.submodelEqui }),
         ...(data.brand && { brand: data.brand }),
@@ -131,17 +133,29 @@ export async function updateCotizacion(
         ...(data.subtype !== undefined && { subtype: data.subtype }),
         ...(data.extras !== undefined && { extras: data.extras }),
         ...(data.newVehicle !== undefined && { newVehicle: data.newVehicle }),
-        ...(data.useOfVehicle !== undefined && { useOfVehicle: data.useOfVehicle }),
+        ...(data.useOfVehicle !== undefined && {
+          useOfVehicle: data.useOfVehicle,
+        }),
         ...(data.city !== undefined && { city: data.city }),
-        ...(data.identification !== undefined && { identification: data.identification }),
+        ...(data.identification !== undefined && {
+          identification: data.identification,
+        }),
         ...(data.name !== undefined && { name: data.name }),
-        ...(data.firstLastName !== undefined && { firstLastName: data.firstLastName }),
-        ...(data.secondLastName !== undefined && { secondLastName: data.secondLastName }),
+        ...(data.firstLastName !== undefined && {
+          firstLastName: data.firstLastName,
+        }),
+        ...(data.secondLastName !== undefined && {
+          secondLastName: data.secondLastName,
+        }),
         ...(data.gender !== undefined && { gender: data.gender }),
-        ...(data.civilStatus !== undefined && { civilStatus: data.civilStatus }),
+        ...(data.civilStatus !== undefined && {
+          civilStatus: data.civilStatus,
+        }),
         ...(data.birthdate !== undefined && { birthdate: data.birthdate }),
         ...(data.age !== undefined && { age: String(data.age) }),
-        ...(data.cityCodeMapfre !== undefined && { cityCodeMapfre: data.cityCodeMapfre }),
+        ...(data.cityCodeMapfre !== undefined && {
+          cityCodeMapfre: data.cityCodeMapfre,
+        }),
         ...(data.chubb_mm !== undefined && { chubb_mm: data.chubb_mm }),
         ...(data.status && { status: data.status }),
       },
@@ -167,7 +181,7 @@ export async function updateCotizacion(
 export async function getUserCotizaciones() {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return {
         success: false,
@@ -205,7 +219,7 @@ export async function getUserCotizaciones() {
 export async function getCotizacionById(id: string) {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return {
         success: false,
@@ -247,49 +261,47 @@ export async function getCotizacionById(id: string) {
 export async function getCotizacionByBitrixId(dealId: string) {
   try {
     // Inicializa cookies (importante si estás usando autenticación por sesión)
-    await cookies()
+    await cookies();
 
     // Obtener el usuario autenticado (opcional si no lo necesitas)
-    const session = await auth()
+    const session = await auth();
     if (!session?.user) {
-      throw new Error("Usuario no autenticado")
+      throw new Error("Usuario no autenticado");
     }
 
     // Buscar la cotización por Bitrix Deal ID
-          // 1️⃣ Obtener las dos versiones más recientes
-      const ultimasVersiones = await prisma.planesComparados.findMany({
-        where: { cotizacion: { bitrixDealId: dealId } },
-        distinct: ["version"],
-        orderBy: { version: "desc" },
-        take: 3,
-        select: { version: true },
-      })
+    // 1️⃣ Obtener las dos versiones más recientes
+    const ultimasVersiones = await prisma.planesComparados.findMany({
+      where: { cotizacion: { bitrixDealId: dealId } },
+      distinct: ["version"],
+      orderBy: { version: "desc" },
+      /* take: 3, */ //comentado para traer todas las versiones 
+      select: { version: true },
+    });
 
-      const versiones = ultimasVersiones.map((v) => v.version)
+    const versiones = ultimasVersiones.map((v) => v.version);
 
-      // 2️⃣ Traer todos los planes que tengan esas versiones
-      const cotizacion = await prisma.cotizacion.findFirst({
-        where: { bitrixDealId: dealId },
-        include: {
-          planesComparados: {
-            where: {
-              version: { in: versiones },
-            },
-            orderBy: { version: "desc" },
+    // 2️⃣ Traer todos los planes que tengan esas versiones
+    const cotizacion = await prisma.cotizacion.findFirst({
+      where: { bitrixDealId: dealId },
+      include: {
+        planesComparados: {
+          where: {
+            version: { in: versiones },
           },
+          orderBy: { version: "desc" },
         },
-      })
-
-
+      },
+    });
 
     if (!cotizacion) {
-      throw new Error("No se encontró la cotización con ese Bitrix ID")
+      throw new Error("No se encontró la cotización con ese Bitrix ID");
     }
 
-    return { ok: true, cotizacion }
+    return { ok: true, cotizacion };
   } catch (error) {
-    console.error("Error en getCotizacionByBitrixId:", error)
-    return { ok: false, error: (error as Error).message }
+    console.error("Error en getCotizacionByBitrixId:", error);
+    return { ok: false, error: (error as Error).message };
   }
 }
 
@@ -297,23 +309,22 @@ export async function getCotizacionByBitrixId(dealId: string) {
 export async function searchJustCotizacionByBitrixId(dealId: string) {
   try {
     // Inicializa cookies (importante si estás usando autenticación por sesión)
-    await cookies()
+    await cookies();
 
     // Obtener el usuario autenticado (opcional si no lo necesitas)
-    const session = await auth()
+    const session = await auth();
     if (!session?.user) {
-      throw new Error("Usuario no autenticado")
+      throw new Error("Usuario no autenticado");
     }
-    
+
     const cotizacion = await prisma.cotizacion.findFirst({
       where: { bitrixDealId: dealId },
-    })
+    });
 
     // Retornar el resultado
-    return cotizacion
-
+    return cotizacion;
   } catch (error) {
-    console.error("Error al buscar cotización para comparar:", error)
-    throw error // o return null según tu manejo de errores
+    console.error("Error al buscar cotización para comparar:", error);
+    throw error; // o return null según tu manejo de errores
   }
 }
