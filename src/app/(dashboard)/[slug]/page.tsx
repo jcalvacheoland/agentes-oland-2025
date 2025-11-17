@@ -58,6 +58,7 @@ export default async function DealPage(props: DealPageProps) {
   }
 
   const cotizacion = cotizacionResponse.cotizacion!;
+  const hasCotizaciones = (cotizacion.planesComparados?.length ?? 0) > 0;
 
   const clienteItems = [
     { icon: User, label: "Nombre", value: deal.UF_CRM_1675696681 },
@@ -222,7 +223,13 @@ export default async function DealPage(props: DealPageProps) {
             </div>
             <div>
              {/*  Botón para volver a comparar */}
-           
+            {!hasCotizaciones && (
+              <div>
+                <Button asChild variant="oland" className="cursor-pointer">
+                  <Link href={`/${slug}/comparador`}>Volver a Comparar Planes</Link>
+                </Button>
+              </div>
+            )}
 
           </div>
           </CardHeader>
