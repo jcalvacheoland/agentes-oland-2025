@@ -54,6 +54,9 @@ export const PlanCardAseguradora = ({
     "s123 chubb": "CHUBB",
   };
 
+  const aseguradoraKey = typeof nombreAseguradora === "string" ? nombreAseguradora.toLowerCase() : "";
+  const planKey = typeof nombrePlan === "string" ? nombrePlan.toLowerCase() : "";
+
   return (
     <div
       className={`border rounded-xl shadow-sm transition-all ${
@@ -101,12 +104,10 @@ export const PlanCardAseguradora = ({
               <img
                 className="w-24 h-24"
                 src={
-                  AseguradorasLogo.find((logo) =>
-                    logo.name
-                      .toLowerCase()
-                      .includes(nombreAseguradora.toLowerCase())
-                  )?.img || ""
-                }
+                      AseguradorasLogo.find((logo) =>
+                        logo?.name?.toLowerCase().includes(nombreAseguradora?.toLowerCase() || "")
+                      )?.img || ""
+                    }
                 alt={nombreAseguradora}
               />
             </div>
@@ -117,7 +118,7 @@ export const PlanCardAseguradora = ({
             {/* Nombre de la aseguradora y del plan */}
             <div className="mb-4">
               <h3 className="text-xl font-bold text-foreground mb-1">
-                {nombreAseguradora} - {planNombres[nombrePlan.toLowerCase()] || nombrePlan}
+                {nombreAseguradora} - {planNombres[planKey] || nombrePlan}
               </h3>
             </div>
 

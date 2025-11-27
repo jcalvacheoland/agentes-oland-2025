@@ -48,6 +48,7 @@ export async function createCotizacion(
         newVehicle: data.newVehicle,
         useOfVehicle: data.useOfVehicle || null,
         city: data.city || null,
+        province: data.province || null,
         identification: data.identification || null,
         name: data.name || null,
         firstLastName: data.firstLastName || null,

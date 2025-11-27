@@ -119,6 +119,10 @@ export const obtenerPlanPorAseguradora2 = async (aseguradora: string, planReques
             "Content-Type": "application/json",
         }
     )
+    if (aseguradora.toLowerCase() === "aig") {
+        console.log("[AIG] request body:", planRequest);
+        console.log("[AIG] raw response:", response);
+    }
     
     if (response && response.status === 200) {
         return response.data;

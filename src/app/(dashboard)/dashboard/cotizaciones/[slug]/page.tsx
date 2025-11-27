@@ -35,6 +35,7 @@ export default async function PageComparadorPostForm({
     cityCodeMapfre: cotizacion?.cityCodeMapfre || 0,
     useOfVehicle: cotizacion?.useOfVehicle || "",
     chubb_mm: cotizacion?.chubb_mm || "AD",
+    province: cotizacion?.province || "PICHINCHA",
   };
 
   return (

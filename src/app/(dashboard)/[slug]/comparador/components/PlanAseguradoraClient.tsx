@@ -34,6 +34,17 @@ export function PlanAseguradoraClient({
           aseguradora,
           planRequest
         );
+        if (aseguradora.toLowerCase() === "aig") {
+          console.log("[AIG] request:", planRequest);
+          console.log("[AIG] respuesta API:", response);
+          if (!response) {
+            console.warn("[AIG] respuesta vacía/undefined");
+          }
+        }
+        if (!response) {
+          setError(`Respuesta vacía de ${aseguradora}`);
+          return;
+        }
         //Mi api retorna un array de objetos
         const plans = Array.isArray(response) ? response : [response];
         setPlanData(plans);
@@ -56,35 +67,33 @@ export function PlanAseguradoraClient({
     return <LoadingPlan aseguradora={aseguradora} />;
   }
 
-  // Función para procesar el string de deducible
-  const procesarDeducible = (principals?: {
-    "PRINCIPALES COBERTURAS"?: string;
-    "BENEFICIOS ESPECIALES"?: string;
-    DEDUCIBLE?: string;
-  }): string[] => {
-    if (!principals || !principals.DEDUCIBLE) {
-      console.log("❌ No hay principals o DEDUCIBLE");
-      return [];
-    }
+  // Procesar DEDUCIBLE
+const procesarDeducible = (principals?: {
+  "PRINCIPALES COBERTURAS"?: string;
+  "BENEFICIOS ESPECIALES"?: string;
+  DEDUCIBLE?: string;
+}): string[] => {
+  const valor = principals?.DEDUCIBLE;
+  if (!valor) return [];
 
-    return principals.DEDUCIBLE.split("/*/") // Separador en tu API
-      .map((item) => item.trim()) // Eliminar espacios
-      .filter((item) => item.length > 0 && item !== "\n"); // Filtrar vacíos y saltos de línea
-  };
-  const procesarBeneficios = (principals?: {
-    "PRINCIPALES COBERTURAS"?: string;
-    "BENEFICIOS ESPECIALES"?: string;
-    DEDUCIBLE?: string;
-  }): string[] => {
-    if (!principals || !principals["BENEFICIOS ESPECIALES"]) {
-      console.log("❌ No hay principals o DEDUCIBLE");
-      return [];
-    }
-    return principals["BENEFICIOS ESPECIALES"]
-      .split("/*/") // Separador en tu API
-      .map((item) => item.trim()) // Eliminar espacios
-      .filter((item) => item.length > 0 && item !== "\n"); // Filtrar vacíos y saltos de línea
-  };
+  return valor.includes("/*/")
+    ? valor.split("/*/").map(v => v.trim()).filter(Boolean)
+    : [valor.trim()];
+};
+
+// Procesar BENEFICIOS ESPECIALES
+const procesarBeneficios = (principals?: {
+  "PRINCIPALES COBERTURAS"?: string;
+  "BENEFICIOS ESPECIALES"?: string;
+  DEDUCIBLE?: string;
+}): string[] => {
+  const valor = principals?.["BENEFICIOS ESPECIALES"];
+  if (!valor) return [];
+
+  return valor.includes("/*/")
+    ? valor.split("/*/").map(v => v.trim()).filter(Boolean)
+    : [valor.trim()];
+};
 
   if (error) {
     return (
