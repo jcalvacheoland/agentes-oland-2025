@@ -92,6 +92,7 @@ model Cotizacion {
   name           String?
   firstLastName  String?
   secondLastName String?
+  province       String?
   gender         String?
   civilStatus    String?
   birthdate      String?
