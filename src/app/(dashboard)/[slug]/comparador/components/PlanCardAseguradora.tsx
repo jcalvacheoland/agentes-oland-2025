@@ -9,7 +9,7 @@ export interface PlanCardAseguradoraProps {
   logoUrl?: string;
   nombrePlan: string;
   precioAnual: number;
-  coberturas?: Array<{ name: string; detail: string }> | null;
+  coberturas?: string[] | null;
   deducible?: string[] | null;
   beneficios?: string[] | null;
   isSelected?: boolean;
@@ -173,7 +173,7 @@ export const PlanCardAseguradora = ({
                       {coberturas.map((cobertura, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <span className="mt-2 h-2 w-2 rounded-full bg-azul-oland-100" />
-                          <span className="font-normal">{cobertura.name}</span>
+                          <span className="font-normal">{cobertura}</span>
                         </div>
                       ))}
                     </div>

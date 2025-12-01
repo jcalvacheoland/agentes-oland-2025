@@ -66,6 +66,19 @@ export function PlanAseguradoraClient({
   if (loading) {
     return <LoadingPlan aseguradora={aseguradora} />;
   }
+ // Procesar principales coberturas
+  const procesarCoberturasPrincipales = (principals?: {
+  "PRINCIPALES COBERTURAS"?: string;
+  "BENEFICIOS ESPECIALES"?: string;
+  DEDUCIBLE?: string;
+}): string[] => {
+  const valor = principals?.["PRINCIPALES COBERTURAS"];
+  if (!valor) return [];
+
+  return valor.includes("/*/")
+    ? valor.split("/*/").map(v => v.trim()).filter(Boolean)
+    : [valor.trim()];
+};
 
   // Procesar DEDUCIBLE
 const procesarDeducible = (principals?: {
@@ -124,7 +137,7 @@ const procesarBeneficios = (principals?: {
               nombreAseguradora={plan.insurer}
               nombrePlan={plan.planName}
               precioAnual={plan.totalPremium}
-              coberturas={plan.secondaries}
+              coberturas={procesarCoberturasPrincipales(plan.principals)}
               deducible={procesarDeducible(plan.principals)}
               beneficios={procesarBeneficios(plan.principals)}
               period={plan.period}
