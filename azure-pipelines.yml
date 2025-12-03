@@ -9,6 +9,9 @@ variables:
   BITRIX_REDIRECT_URI: https://agentes-oland-2025-hvbahjaubue6d2c3.eastus-01.azurewebsites.net/api/auth/callback/bitrix
   BITRIX_CLIENT_ID: local.68e9bde3750888.43408850
   BITRIX_CLIENT_SECRET: vWtV2Ksg79Dk9zudSmeYQZ2GbHZdu9TOlBar20KFFrbrxMrArc
+  BITRIX_CLIENT_ID: local.68bf00b9af1a76.01260949
+  BITRIX_CLIENT_SECRET: Ij2YT8gjaSNqFImL4e5TRqeKUEbbYRfGEIZ2Ls1bQRFuQJYRrJ
+  BITRIX_DOMAIN: oland.bitrix24.com
 
 stages:
 - stage: Npm_build
