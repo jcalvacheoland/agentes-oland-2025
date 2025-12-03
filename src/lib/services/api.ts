@@ -16,7 +16,23 @@ import {
 } from "@/interfaces/interfaces.type";
 
 import { HOST_CATALOG,HOST_TOKEN,CLIENT_SECRET } from "@/configuration/constants";
+import { OCP_APIM_KEY } from "@/configuration/constants";
 
+const shouldLogPlanRequests =(process.env.DEBUG_PLAN_REQUESTS ?? "false").toLowerCase() === "true";
+
+const logPlanRequest = (
+  aseguradora: string,
+  planRequest: IPlanRequest,
+  response: any
+) => {
+  if (!shouldLogPlanRequests) return;
+  const prefix = `[${aseguradora.toUpperCase()}]`;
+  console.log(
+    `${prefix} identification: ${planRequest.identification} | plate: ${planRequest.plate}`
+  );
+  console.log(`${prefix} request body:`, planRequest);
+  console.log(`${prefix} raw response:`, response);
+};
 
 
 // contiene la logica para leer y mantener el token de autenticacion
@@ -56,8 +72,54 @@ export const obtenerPersonaPorCedula = async (
     return null;
   }
 
+  // 1️⃣ VERIFICAR LISTA NEGRA
+  const blacklistPayload = {
+    sUSERCODE: "USRDIRECTOS",
+    sDocId: cedula,
+    sNom1: "",
+    sNom2: "",
+    sApe1: "",
+    sApe2: "",
+    bEnviarEmailCumplimiento: false,
+    sTipoTransaccion: "COTIZACION",
+    sBroker: "NOMBRE CORREDOR",
+    sEjComercial: "NOMBRE CORREDOR",
+  };
+
+  const blacklistHeaders = {
+    "Content-Type": "application/json",
+    Accept: "*/*",
+    "Ocp-Apim-Subscription-Key": OCP_APIM_KEY,
+  };
+
+  const blacklistResponse = await postData(
+    "https://apimgr.equinoccialonline.com/cotizacion/staging/api/v1.1/gestioncliente/mantenimiento/gci/cliente-lista-negra-avanzado",
+    blacklistPayload,
+    blacklistHeaders
+  );
+
+  /* onsole.log("Respuesta lista negra:", blacklistResponse); */
+
+  /**
+   * ❌ Si respuesta === true → ESTÁ EN LISTA NEGRA → BLOQUEAR
+   * ✔ Si respuesta === false → SE PERMITE CONTINUAR
+   */
+  if (!blacklistResponse || blacklistResponse.error !== 0) {
+    /* console.log("Error consultando lista negra:", blacklistResponse); */
+    return null;
+  }
+
+  if (blacklistResponse.respuesta === true) {
+    /* console.log("🚫 Cedula BLOQUEADA en lista negra:", cedula); */
+    return null;
+  }
+
+  /* console.log("✅ Cedula limpia (NO está en lista negra):", cedula); */
+
+  // 2️⃣ OBTENER TOKEN DEL CATALOGO
   const token = await devolverToken();
 
+  // 3️⃣ CONSULTAR PERSONA NORMAL
   const response: IResponseAPI = await postData(
     `${HOST_CATALOG}/comparator/api/catalogs/person`,
     {
@@ -68,18 +130,20 @@ export const obtenerPersonaPorCedula = async (
       "Content-Type": "application/json",
     }
   );
-// Debe mostrar la URL base
+
   if (response && response.status === 200) {
-    console.log(cedula)
-    console.log(response)
-    console.log(response.status)
+   /*  console.log("CEDULA:", cedula);
+    console.log("RESPONSE API:", response);
+    console.log("STATUS:", response.status); */
+
     return response.data;
-    
   }
 
   return null;
- 
 };
+
+
+
 
 export const obtenerVehiculoPorPlaca = async (
   placa: string
@@ -119,10 +183,7 @@ export const obtenerPlanPorAseguradora2 = async (aseguradora: string, planReques
             "Content-Type": "application/json",
         }
     )
-    if (aseguradora.toLowerCase() === "aig") {
-        console.log("[AIG] request body:", planRequest);
-        console.log("[AIG] raw response:", response);
-    }
+    logPlanRequest(aseguradora, planRequest, response);
     
     if (response && response.status === 200) {
         return response.data;

@@ -29,17 +29,17 @@ export function PlanAseguradoraClient({
   useEffect(() => {
     const fetchPlan = async () => {
       try {
-        console.log(`🌐 Llamando API para ${aseguradora}`);
+       
         const response = await obtenerPlanPorAseguradora2(
           aseguradora,
           planRequest
         );
         if (aseguradora.toLowerCase() === "aig") {
-          console.log("[AIG] request:", planRequest);
-          console.log("[AIG] respuesta API:", response);
-          if (!response) {
+         /*  console.log("[AIG] request:", planRequest);
+          console.log("[AIG] respuesta API:", response); */
+          /* if (!response) {
             console.warn("[AIG] respuesta vacía/undefined");
-          }
+          } */
         }
         if (!response) {
           setError(`Respuesta vacía de ${aseguradora}`);
@@ -53,7 +53,7 @@ export function PlanAseguradoraClient({
           onPlanLoaded(plans);
         }
       } catch (err) {
-        console.error(`Error fetching plan for ${aseguradora}:`, err);
+       /*  console.error(`Error fetching plan for ${aseguradora}:`, err); */
         setError(`Error al cargar ${aseguradora}`);
       } finally {
         setLoading(false);
@@ -108,22 +108,6 @@ const procesarBeneficios = (principals?: {
     : [valor.trim()];
 };
 
-  if (error) {
-    return (
-      <div className="border border-red-200 p-4 rounded shadow-sm bg-red-50">
-        <h3 className="text-xl font-semibold mb-2 capitalize flex items-center gap-2">
-          <span className="w-3 h-3 bg-red-500 rounded-full"></span>
-          {aseguradora}
-        </h3>
-        <div className="space-y-2">
-          <p className="text-red-600 text-sm">⚠ Error al cargar planes</p>
-          <p className="text-xs text-gray-600">
-            No se pudo obtener información de esta aseguradora
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   // Renderizar el plan exitosamente
   return (
