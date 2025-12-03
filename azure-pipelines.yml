@@ -1,21 +1,27 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
 - main
 
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '22.x'
-  displayName: 'Install Node.js'
+variables:
+  NEXTAUTH_URL: http://localhost:3000
+  BITRIX_REDIRECT_URI: https://agentes-oland-2025-hvbahjaubue6d2c3.eastus-01.azurewebsites.net/api/auth/callback/bitrix
+  BITRIX_CLIENT_ID: local.68e9bde3750888.43408850
+  BITRIX_CLIENT_SECRET: vWtV2Ksg79Dk9zudSmeYQZ2GbHZdu9TOlBar20KFFrbrxMrArc
 
-- script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+stages:
+- stage: Npm_build
+  jobs:
+    - job: Build
+      continueOnError: false
+      steps:
+        - task: NodeTool@0
+          inputs:
+            versionSpec: '22.x'
+          displayName: 'Install Node.js'
+
+        - script: |
+            npm install
+            npm run build
+          displayName: 'npm install and build'
