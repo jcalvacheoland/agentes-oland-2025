@@ -9,10 +9,23 @@ variables:
   BITRIX_REDIRECT_URI: https://agentes-oland-2025-hvbahjaubue6d2c3.eastus-01.azurewebsites.net/api/auth/callback/bitrix
   BITRIX_CLIENT_ID: local.68e9bde3750888.43408850
   BITRIX_CLIENT_SECRET: vWtV2Ksg79Dk9zudSmeYQZ2GbHZdu9TOlBar20KFFrbrxMrArc
-  BITRIX_CLIENT_ID: local.68bf00b9af1a76.01260949
-  BITRIX_CLIENT_SECRET: Ij2YT8gjaSNqFImL4e5TRqeKUEbbYRfGEIZ2Ls1bQRFuQJYRrJ
   BITRIX_DOMAIN: oland.bitrix24.com
-
+  AUTH_SECRET: JmVcoT+O42n+8LKBNx0aKq/0G+nXgvZCaYKrtgk0F30=
+  AUTH_TRUST_HOST: true
+  KEY_ENCRIPTACION_TOKEN: yQw%g-E0Pq-A8e]Kc/KW|2%>T?SZ*B
+  HOST_CATALOG: https://s123-cat-pro.azurewebsites.net
+  HOST_TOKEN: https://s123-cat-pro.azurewebsites.net/oauth/token
+  CLIENT_SECRET: NMYsnrcJsM7S9dPypVcq5ONnYbPzVoZltlVYXpcT
+  BITRIX_USER_ID: 7004
+  BITRIX_SECRET: ixla2zjdc971jkch
+  api_add_dead: https://oland.bitrix24.com/rest/7004/ixla2zjdc971jkch/crm.deal.add.json?fields[TITLE]=Negocio%20de%20Prueba&fields[CATEGORY_ID]=24&fields[STAGE_ID]=C24:NEW&fields[NAME]=Carlos&fields[LAST_NAME]=Perez&fields[COMPANY_TITLE]=Empresa%20Falsa%20S.A.&fields[OPPORTUNITY]=1500&fields[CURRENCY_ID]=USD&fields[COMMENTS]=Este%20es%20un%20deal%20de%20prueba%20por%20API&fields[PHONE][0][VALUE]=+593999999999&fields[PHONE][0][VALUE_TYPE]=WORK&fields[EMAIL][0][VALUE]=carlos.perez@empresa-falsa.com&fields[EMAIL][0][VALUE_TYPE]=WORK
+  BITRIX_WEBHOOK: https://oland.bitrix24.com/rest/7004/ixla2zjdc971jkch
+  DATABASE_URL: postgresql://postgres.ubmfitpojduvisxiwfvj:7a9eWkosadQvQbscLIzN@aws-1-us-east-2.pooler.supabase.com:6543/postgres?schema=public&pgbouncer=true&connection_limit=1
+  HOST: db.ubmfitpojduvisxiwfvj.supabase.co
+  PORT: 5432
+  DATABASE: postgres
+  USER: postgres
+  PASSWORD: 7a9eWkosadQvQbscLIzN
 stages:
 - stage: Npm_build
   jobs:
