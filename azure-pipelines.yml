@@ -42,17 +42,28 @@ stages:
             npm run build
           displayName: 'npm install and build'
 
-        - task: CopyFiles@2
+        - task: ArchiveFiles@2
           inputs:
-              sourceFolder: '$(Build.SourcesDirectory)'
-              contents: |
-                src/**
-                public/**
-              targetFolder: '$(Build.ArtifactStagingDirectory)'
-          displayName: 'Copy project files'
+            rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+            includeRootFolder: false
+            archiveType: 'zip'
+            archiveFile: '$(Build.ArtifactStagingDirectory)/nodeapp.zip'
+            replaceExistingArchive: true
+          displayName: 'Archive app files'
           
         - task: PublishPipelineArtifact@1
           inputs:
-            artifactName: 'nodejs-app'
-            targetPath: '$(Build.ArtifactStagingDirectory)'
+            artifactName: 'drop'
+            publishLocation: filepath
+            targetPath: '$(Build.ArtifactStagingDirectory)/nodeapp.zip'
           displayName: 'Publish pipeline artifact'
+
+        - task: AzureRmWebAppDeployment@5
+          inputs:
+            ConnectionType: 'AzureRM'
+            azureSubscription: 'Azure subscription 1ORIGEN(c1d81bab-ce0f-47d0-9d7e-14e1a4373f98)'
+            appType: 'webAppLinux'
+            WebAppName: 'agentes-oland-2025'
+            packageForLinux: '$(Build.ArtifactStagingDirectory)/nodeapp.zip'
+            RuntimeStack: 'NODE|22-lts'
+            DeploymentTypeLinux: 'oneDeploy'
