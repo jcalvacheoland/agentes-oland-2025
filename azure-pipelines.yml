@@ -54,7 +54,6 @@ stages:
         - task: PublishPipelineArtifact@1
           inputs:
             artifactName: 'drop'
-            publishLocation: filepath
             targetPath: '$(Build.ArtifactStagingDirectory)/nodeapp.zip'
           displayName: 'Publish pipeline artifact'
 
