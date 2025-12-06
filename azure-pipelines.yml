@@ -64,5 +64,5 @@ stages:
             appType: 'webAppLinux'
             WebAppName: 'agentes-oland-2025'
             packageForLinux: '$(Build.ArtifactStagingDirectory)/nodeapp.zip'
-            RuntimeStack: 'NODE|22-lts'
+            RuntimeStack: 'NODE|20-lts'
             DeploymentTypeLinux: 'oneDeploy'
