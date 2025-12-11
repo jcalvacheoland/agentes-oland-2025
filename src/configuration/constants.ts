@@ -9,7 +9,7 @@ export const HOST_TOKEN= process.env.HOST_TOKEN;
 //equisuiza
 export const OCP_APIM_KEY = process.env.OCP_APIM_KEY; 
 
-export const Aseguradoras = ["equisuiza","zurich", "chubb","sweaden", "aig", ]; 
+export const Aseguradoras = ["zurich", "atlantida", "chubb","sweaden", "aig", ]; 
 
 export const ECUADOR_CITIES = [
   "QUITO",
